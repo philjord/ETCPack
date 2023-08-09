@@ -119,9 +119,6 @@ public class ETCPack {
 	}
 	
 	//helpers
-	double sqrt(double x) {
-		return Math.sqrt(x);
-	}
 	private static void strcpy(String[] string, String string2) {
 		string[0]=string2;	
 	}
@@ -131,6 +128,14 @@ public class ETCPack {
 	private static boolean strcmp(String string, String string2) {	
 		return string.equals(string2);
 	}
+	
+	private Random rand = new Random(10000);
+	
+	//precalc to ensure the hotspot gets it
+	float sqrtW13 = (float)(1.0/Math.sqrt(1.0*3));
+	float sqrtW12 = (float)(1.0/Math.sqrt(1.0*2));
+	float sqrtW16 = (float)(1.0/Math.sqrt(1.0*6));
+	float sqrtW26 = (float)(2.0/Math.sqrt(1.0*6));
 	
 //Functions needed for decompression ---- in etcdec.cxx
 /*
@@ -371,7 +376,7 @@ public static final int  GL_COMPRESSED_RGBA8_ETC2_EAC                     =0x927
 public static final int  GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC              =0x9279;
 
 
-static int RAND_MAX = 2147483647;//https://en.cppreference.com/w/cpp/numeric/random/RAND_MAX
+//static int RAND_MAX = 2147483647;//https://en.cppreference.com/w/cpp/numeric/random/RAND_MAX
 
 //int[] ktx_identifier; 
 
@@ -5247,7 +5252,7 @@ void computeColorLBGHalfIntensityFast(byte[] img,int width,int startx,int starty
 
 	// reset rand so that we get predictable output per block
 	//srand(10000);
-	Random rand = new Random(10000);
+	rand.setSeed(10000);
 	//LBG-algorithm
 	double D = 0, oldD, bestD = MAXIMUM_ERROR, eps = 0.0000000001;
 	double error_a, error_b;
@@ -5267,7 +5272,9 @@ void computeColorLBGHalfIntensityFast(byte[] img,int width,int startx,int starty
 
 	max_v[R] = -512.0;   max_v[G] = -512.0;   max_v[B] = -512.0; 
 	min_v[R] =  512.0;   min_v[G] =  512.0;   min_v[B] =  512.0;
+	
 
+	
 	// resolve trainingdata
 	for (y = 0; y < BLOCKHEIGHT; ++y) 
 	{
@@ -5285,9 +5292,13 @@ void computeColorLBGHalfIntensityFast(byte[] img,int width,int startx,int starty
 			//
 			// The LGB algorithm will only act on the r and s variables and not on q.
 			// 
-			original_colors[x][y][R] = (1.0/Math.sqrt(1.0*3))*red + (1.0/Math.sqrt(1.0*3))*green + (1.0/Math.sqrt(1.0*3))*blue;
-			original_colors[x][y][G] = (1.0/Math.sqrt(1.0*2))*red - (1.0/Math.sqrt(1.0*2))*green;
-			original_colors[x][y][B] = (1.0/Math.sqrt(1.0*6))*red + (1.0/Math.sqrt(1.0*6))*green - (2.0/Math.sqrt(1.0*6))*blue;
+			
+
+			
+			
+			original_colors[x][y][R] = sqrtW13*red + sqrtW13*green + sqrtW13*blue;
+			original_colors[x][y][G] = sqrtW12*red - sqrtW12*green;
+			original_colors[x][y][B] = sqrtW16*red + sqrtW16*green - sqrtW26*blue;
 		
 			// find max
 			if (original_colors[x][y][R] > max_v[R]) max_v[R] = original_colors[x][y][R];
@@ -5316,7 +5327,7 @@ void computeColorLBGHalfIntensityFast(byte[] img,int width,int startx,int starty
 		{
 			for (byte c = 0; c < 3; ++c) 
 			{ 
-				current_colors[s][c] = (double)(((double)(rand.nextDouble())/RAND_MAX)*(max_v[c]-min_v[c])) + min_v[c];
+				current_colors[s][c] = (double)(((double)(rand.nextDouble()))*(max_v[c]-min_v[c])) + min_v[c];
 			}
 		}
 		
@@ -5422,14 +5433,14 @@ void computeColorLBGHalfIntensityFast(byte[] img,int width,int startx,int starty
 		rr = best_colors[x][1];
 		ss = best_colors[x][2];
 
-		current_colors[x][0] = CLAMP(0, (1.0/Math.sqrt(1.0*3))*qq + (1.0/Math.sqrt(1.0*2))*rr + (1.0/Math.sqrt(1.0*6))*ss, 255);
-		current_colors[x][1] = CLAMP(0, (1.0/Math.sqrt(1.0*3))*qq - (1.0/Math.sqrt(1.0*2))*rr + (1.0/Math.sqrt(1.0*6))*ss, 255);
-		current_colors[x][2] = CLAMP(0, (1.0/Math.sqrt(1.0*3))*qq + (0.0        )*rr - (2.0/Math.sqrt(1.0*6))*ss, 255);
+		current_colors[x][0] = CLAMP(0, sqrtW13*qq + sqrtW12*rr + sqrtW16*ss, 255);
+		current_colors[x][1] = CLAMP(0, sqrtW13*qq - sqrtW12*rr + sqrtW16*ss, 255);
+		current_colors[x][2] = CLAMP(0, sqrtW13*qq + (0.0        )*rr - sqrtW26*ss, 255);
 	}
 
 	for(x=0;x<2;x++)
 		for(y=0;y<3;y++)
-			LBG_colors[x][y] = (byte)JAS_ROUND(current_colors[x][y]);//SUSPECT
+			LBG_colors[x][y] = (byte)JAS_ROUND(current_colors[x][y]);
 }
 
 //Calculation of the two block colors using the LBG-algorithm
@@ -5443,7 +5454,7 @@ void computeColorLBGNotIntensityFast(byte[] img,int width,int startx,int starty,
 
 	// reset rand so that we get predictable output per block
 	//srand(10000);
-	Random rand = new Random(10000);
+	rand.setSeed(10000);
 	//LBG-algorithm
 	double D = 0, oldD, bestD = MAXIMUM_ERROR, eps = 0.0000000001;
 	double error_a, error_b;
@@ -5481,9 +5492,9 @@ void computeColorLBGNotIntensityFast(byte[] img,int width,int startx,int starty,
 			//
 			// The LGB algorithm will only act on the r and s variables and not on q.
 			// 
-			original_colors[x][y][R] = (1.0/Math.sqrt(1.0*3))*red + (1.0/Math.sqrt(1.0*3))*green + (1.0/Math.sqrt(1.0*3))*blue;
-			original_colors[x][y][G] = (1.0/Math.sqrt(1.0*2))*red - (1.0/Math.sqrt(1.0*2))*green;
-			original_colors[x][y][B] = (1.0/Math.sqrt(1.0*6))*red + (1.0/Math.sqrt(1.0*6))*green - (2.0/Math.sqrt(1.0*6))*blue;
+			original_colors[x][y][R] = sqrtW13*red + sqrtW13*green + sqrtW13*blue;
+			original_colors[x][y][G] = sqrtW12*red - sqrtW12*green;
+			original_colors[x][y][B] = sqrtW16*red + sqrtW13*green - sqrtW26*blue;
 		
 			// find max
 			if (original_colors[x][y][R] > max_v[R]) max_v[R] = original_colors[x][y][R];
@@ -5512,7 +5523,7 @@ void computeColorLBGNotIntensityFast(byte[] img,int width,int startx,int starty,
 		{
 			for (byte c = 0; c < 3; ++c) 
 			{ 
-				current_colors[s][c] = (double)(((double)(rand.nextDouble())/RAND_MAX)*(max_v[c]-min_v[c])) + min_v[c];
+				current_colors[s][c] = (double)(((double)(rand.nextDouble()))*(max_v[c]-min_v[c])) + min_v[c];
 			}
 		}
 		// divide into two quantization sets and calculate distortion
@@ -5617,9 +5628,9 @@ void computeColorLBGNotIntensityFast(byte[] img,int width,int startx,int starty,
 		rr = best_colors[x][1];
 		ss = best_colors[x][2];
 
-		current_colors[x][0] = CLAMP(0, (1.0/Math.sqrt(1.0*3))*qq + (1.0/Math.sqrt(1.0*2))*rr + (1.0/Math.sqrt(1.0*6))*ss, 255);
-		current_colors[x][1] = CLAMP(0, (1.0/Math.sqrt(1.0*3))*qq - (1.0/Math.sqrt(1.0*2))*rr + (1.0/Math.sqrt(1.0*6))*ss, 255);
-		current_colors[x][2] = CLAMP(0, (1.0/Math.sqrt(1.0*3))*qq + (0.0        )*rr - (2.0/Math.sqrt(1.0*6))*ss, 255);
+		current_colors[x][0] = CLAMP(0, sqrtW13*qq + sqrtW12*rr + sqrtW16*ss, 255);
+		current_colors[x][1] = CLAMP(0, sqrtW13*qq - sqrtW12*rr + sqrtW16*ss, 255);
+		current_colors[x][2] = CLAMP(0, sqrtW13*qq + (0.0        )*rr - sqrtW26*ss, 255);
 	}
 
 	for(x=0;x<2;x++)
@@ -5637,26 +5648,26 @@ void computeColorLBGNotIntensity(byte[] img,int width,int startx,int starty, byt
 
 	// reset rand so that we get predictable output per block
 	//srand(10000);
-	Random rand = new Random(10000);
+	rand.setSeed(10000);
 	//LBG-algorithm
-	double D = 0, oldD, bestD = MAXIMUM_ERROR, eps = 0.0000000001;
-	double error_a, error_b;
+	float D = 0, oldD, bestD = MAXIMUM_ERROR, eps = 0.0000000001f;
+	float error_a, error_b;
 	int number_of_iterations = 10;
-	double[][] t_color= new double[2][3];
-	double[][][] original_colors= new double[4][4][3];
-	double[][] current_colors= new double[2][3];
-	double[][] best_colors= new double[2][3];
-	double[] max_v= new double[3];
-	double[] min_v= new double[3];
+	float[][] t_color= new float[2][3];
+	float[][][] original_colors= new float[4][4][3];
+	float[][] current_colors= new float[2][3];
+	float[][] best_colors= new float[2][3];
+	float[] max_v= new float[3];
+	float[] min_v= new float[3];
 	int x,y,i;
-	double red, green, blue;
+	float red, green, blue;
 	boolean continue_seeding;
 	int maximum_number_of_seedings = 10;
 	int seeding;
 	boolean continue_iterate;
 
-	max_v[R] = -512.0;   max_v[G] = -512.0;   max_v[B] = -512.0; 
-	min_v[R] =  512.0;   min_v[G] =  512.0;   min_v[B] =  512.0;
+	max_v[R] = -512.0f;   max_v[G] = -512.0f;   max_v[B] = -512.0f; 
+	min_v[R] =  512.0f;   min_v[G] =  512.0f;   min_v[B] =  512.0f;
 
 	// resolve trainingdata
 	for (y = 0; y < BLOCKHEIGHT; ++y) 
@@ -5675,9 +5686,9 @@ void computeColorLBGNotIntensity(byte[] img,int width,int startx,int starty, byt
 			//
 			// The LGB algorithm will only act on the r and s variables and not on q.
 			// 
-			original_colors[x][y][R] = (1.0/Math.sqrt(1.0*3))*red + (1.0/sqrt(1.0*3))*green + (1.0/sqrt(1.0*3))*blue;
-			original_colors[x][y][G] = (1.0/Math.sqrt(1.0*2))*red - (1.0/sqrt(1.0*2))*green;
-			original_colors[x][y][B] = (1.0/sqrt(1.0*6))*red + (1.0/sqrt(1.0*6))*green - (2.0/sqrt(1.0*6))*blue;
+			original_colors[x][y][R] = sqrtW13*red + sqrtW13*green + sqrtW13*blue;
+			original_colors[x][y][G] = sqrtW12*red - sqrtW12*green;
+			original_colors[x][y][B] = sqrtW16*red + sqrtW16*green - sqrtW26*blue;
 
 			// find max
 			if (original_colors[x][y][R] > max_v[R]) max_v[R] = original_colors[x][y][R];
@@ -5690,8 +5701,8 @@ void computeColorLBGNotIntensity(byte[] img,int width,int startx,int starty, byt
 		}
 	}
 
-	D = 512*512*3*16.0; 
-	bestD = 512*512*3*16.0; 
+	D = 512*512*3*16.0f; 
+	bestD = 512*512*3*16.0f; 
 
 	continue_seeding = true;
 
@@ -5706,7 +5717,7 @@ void computeColorLBGNotIntensity(byte[] img,int width,int startx,int starty, byt
 		{
 			for (byte c = 0; c < 3; ++c) 
 			{ 
-				current_colors[s][c] = (double)(((double)(rand.nextDouble())/RAND_MAX)*(max_v[c]-min_v[c])) + min_v[c];
+				current_colors[s][c] = (float)(rand.nextDouble()*(max_v[c]-min_v[c])) + min_v[c];
 			}
 		}
 		
@@ -5722,10 +5733,10 @@ void computeColorLBGNotIntensity(byte[] img,int width,int startx,int starty, byt
 			{
 				for (x = 0; x < BLOCKWIDTH; ++x) 
 				{
-					error_a = 0.0*SQUARE(original_colors[x][y][R] - current_colors[0][R]) + 
+					error_a = (float)0.0*SQUARE(original_colors[x][y][R] - current_colors[0][R]) + 
 							  SQUARE(original_colors[x][y][G] - current_colors[0][G]) +
 							  SQUARE(original_colors[x][y][B] - current_colors[0][B]);
-					error_b = 0.0*SQUARE(original_colors[x][y][R] - current_colors[1][R]) + 
+					error_b = (float)0.0*SQUARE(original_colors[x][y][R] - current_colors[1][R]) + 
 							  SQUARE(original_colors[x][y][G] - current_colors[1][G]) +
 							  SQUARE(original_colors[x][y][B] - current_colors[1][B]);
 					if (error_a < error_b) 
@@ -5812,9 +5823,9 @@ void computeColorLBGNotIntensity(byte[] img,int width,int startx,int starty, byt
 		rr = best_colors[x][1];
 		ss = best_colors[x][2];
 
-		current_colors[x][0] = CLAMP(0, (1.0/sqrt(1.0*3))*qq + (1.0/sqrt(1.0*2))*rr + (1.0/sqrt(1.0*6))*ss, 255);
-		current_colors[x][1] = CLAMP(0, (1.0/sqrt(1.0*3))*qq - (1.0/sqrt(1.0*2))*rr + (1.0/sqrt(1.0*6))*ss, 255);
-		current_colors[x][2] = CLAMP(0, (1.0/sqrt(1.0*3))*qq + (0.0        )*rr - (2.0/sqrt(1.0*6))*ss, 255);
+		current_colors[x][0] = (float)CLAMP(0, sqrtW13*qq + sqrtW12*rr + sqrtW16*ss, 255);
+		current_colors[x][1] = (float)CLAMP(0, sqrtW13*qq - sqrtW12*rr + sqrtW16*ss, 255);
+		current_colors[x][2] = (float)CLAMP(0, sqrtW13*qq + (0.0        )*rr - sqrtW26*ss, 255);
 	}
 
 	for(x=0;x<2;x++)
@@ -5831,7 +5842,7 @@ void computeColorLBG(byte[] img,int width,int startx,int starty, byte[][] LBG_co
 
 	// reset rand so that we get predictable output per block
 	//srand(10000);
-	Random rand = new Random(10000);
+	rand.setSeed(10000);
 	//LBG-algorithm
 	double D = 0, oldD, bestD = MAXIMUM_ERROR, eps = 0.0000000001;
 	double error_a, error_b;
@@ -5892,7 +5903,7 @@ void computeColorLBG(byte[] img,int width,int startx,int starty, byte[][] LBG_co
 		{
 			for (byte c = 0; c < 3; ++c) 
 			{ 
-				current_colors[s][c] = (double)(((double)(rand.nextDouble())/RAND_MAX)*(max_v[c]-min_v[c])) + min_v[c];
+				current_colors[s][c] = (double)(((double)(rand.nextDouble()))*(max_v[c]-min_v[c])) + min_v[c];
 			}
 		}
 		
@@ -6013,25 +6024,25 @@ void computeColorLBGfast(byte[] img,int width,int startx,int starty, byte[][] LB
 
 	// reset rand so that we get predictable output per block
 	//srand(10000);
-	Random rand = new Random(10000);
+	rand.setSeed(10000);
 	//LBG-algorithm
-	double D = 0, oldD, bestD = MAXIMUM_ERROR, eps = 0.0000000001;
-	double error_a, error_b;
+	float D = 0, oldD, bestD = MAXIMUM_ERROR, eps = 0.0000000001f;
+	float error_a, error_b;
 	int number_of_iterations = 10;
-	double[][] t_color= new double[2][3];
+	float[][] t_color= new float[2][3];
 	byte[][][] original_colors = new byte[4][4][3];
-	double[][] current_colors= new double[2][3];
-	double[][] best_colors= new double[2][3];
-	double[] max_v= new double[3];
-	double[] min_v= new double[3];
+	float[][] current_colors= new float[2][3];
+	float[][] best_colors= new float[2][3];
+	float[] max_v= new float[3];
+	float[] min_v= new float[3];
 	int x,y,i;
 	boolean continue_seeding;
 	int maximum_number_of_seedings = 10;
 	int seeding;
 	boolean continue_iterate;
 
-	max_v[R] = -512.0;   max_v[G] = -512.0;   max_v[B] = -512.0; 
-	min_v[R] =  512.0;   min_v[G] =  512.0;   min_v[B] =  512.0;
+	max_v[R] = -512.0f;   max_v[G] = -512.0f;   max_v[B] = -512.0f; 
+	min_v[R] =  512.0f;   min_v[G] =  512.0f;   min_v[B] =  512.0f;
 
 	// resolve trainingdata
 	for (y = 0; y < BLOCKHEIGHT; ++y) 
@@ -6053,8 +6064,8 @@ void computeColorLBGfast(byte[] img,int width,int startx,int starty, byte[][] LB
 		}
 	}
 
-	D = 512*512*3*16.0; 
-	bestD = 512*512*3*16.0; 
+	D = 512*512*3*16.0f; 
+	bestD = 512*512*3*16.0f; 
 
 	continue_seeding = true;
 
@@ -6069,7 +6080,7 @@ void computeColorLBGfast(byte[] img,int width,int startx,int starty, byte[][] LB
 		{
 			for (byte c = 0; c < 3; ++c) 
 			{ 
-				current_colors[s][c] = (double)(((double)(rand.nextDouble())/RAND_MAX)*(max_v[c]-min_v[c])) + min_v[c];
+				current_colors[s][c] = (float)(rand.nextDouble()*(max_v[c]-min_v[c])) + min_v[c];
 			}
 		}
 		
@@ -6084,12 +6095,12 @@ void computeColorLBGfast(byte[] img,int width,int startx,int starty, byte[][] LB
 			{
 				for (x = 0; x < BLOCKWIDTH; ++x) 
 				{
-					error_a = SQUARE((original_colors[x][y][R]&0xff) - JAS_ROUND(current_colors[0][R])) + 
+					error_a = (float)(SQUARE((original_colors[x][y][R]&0xff) - JAS_ROUND(current_colors[0][R])) + 
 							  SQUARE((original_colors[x][y][G]&0xff) - JAS_ROUND(current_colors[0][G])) +
-							  SQUARE((original_colors[x][y][B]&0xff) - JAS_ROUND(current_colors[0][B]));
-					error_b = SQUARE((original_colors[x][y][R]&0xff) - JAS_ROUND(current_colors[1][R])) + 
+							  SQUARE((original_colors[x][y][B]&0xff) - JAS_ROUND(current_colors[0][B])));
+					error_b = (float)(SQUARE((original_colors[x][y][R]&0xff) - JAS_ROUND(current_colors[1][R])) + 
 							  SQUARE((original_colors[x][y][G]&0xff) - JAS_ROUND(current_colors[1][G])) +
-							  SQUARE((original_colors[x][y][B]&0xff) - JAS_ROUND(current_colors[1][B]));
+							  SQUARE((original_colors[x][y][B]&0xff) - JAS_ROUND(current_colors[1][B])));
 					if (error_a < error_b) 
 					{
 						block_mask[x][y] = 0;
@@ -8566,10 +8577,14 @@ void compressBlockETC2FastPerceptual(byte[] img, byte[] imgdec,int width,int hei
 	double error_best;
 	//char best_char;
 	//MODE1 best_mode;
-
-	compressBlockDiffFlipFastPerceptual(img, imgdec, width, height, startx, starty, etc1_word1, etc1_word2);
-	decompressBlockDiffFlip(etc1_word1[0], etc1_word2[0], imgdec, width, height, startx, starty);
-	error_etc1 = 1000*calcBlockPerceptualErrorRGB(img, imgdec, width, height, startx, starty);
+	
+	
+	//This ETC1 style compression uses 35% of the cpu and NEVER results in a better error value! 
+	//compressBlockDiffFlipFastPerceptual(img, imgdec, width, height, startx, starty, etc1_word1, etc1_word2);
+	//decompressBlockDiffFlip(etc1_word1[0], etc1_word2[0], imgdec, width, height, startx, starty);
+	//error_etc1 = 1000*calcBlockPerceptualErrorRGB(img, imgdec, width, height, startx, starty);
+	// set it really high and use it as a last ditch effort
+	error_etc1 = 1000*10000*10000;
 
 	compressBlockPlanar57(img, width, height, startx, starty, planar57_word1, planar57_word2);
 	decompressBlockPlanar57(planar57_word1[0], planar57_word2[0], imgdec, width, height, startx, starty);
@@ -8590,6 +8605,7 @@ void compressBlockETC2FastPerceptual(byte[] img, byte[] imgdec,int width,int hei
 		compressed1[0] = planar_word1[0];
 		compressed2[0] = planar_word2[0];
 		//best_char = 'p';
+		//System.out.print("p");
 		error_best = error_planar;	
 		//best_mode = MODE1.MODE_PLANAR;
 	}
@@ -8599,6 +8615,7 @@ void compressBlockETC2FastPerceptual(byte[] img, byte[] imgdec,int width,int hei
 		compressed1[0] = thumbT_word1[0];
 		compressed2[0] = thumbT_word2[0];
 		//best_char = 'T';
+		//System.out.print("T");
 		error_best = error_thumbT;
 		//best_mode = MODE1.MODE_THUMB_T;
 		
@@ -8619,6 +8636,7 @@ void compressBlockETC2FastPerceptual(byte[] img, byte[] imgdec,int width,int hei
 		compressed1[0] = thumbH_word1[0];
 		compressed2[0] = thumbH_word2[0];
 		//best_char = 'H';
+		//System.out.print("H");
 		error_best = error_thumbH;
 		//best_mode = MODE1.MODE_THUMB_H;
 		
@@ -8634,10 +8652,15 @@ void compressBlockETC2FastPerceptual(byte[] img, byte[] imgdec,int width,int hei
 		}
 	} 
 	else
-	{		
+	{	
+		// Not calculated above, a last ditch effort
+		compressBlockDiffFlipFastPerceptual(img, imgdec, width, height, startx, starty, etc1_word1, etc1_word2);
+		decompressBlockDiffFlip(etc1_word1[0], etc1_word2[0], imgdec, width, height, startx, starty);
+		
 		compressed1[0] = etc1_word1[0];
 		compressed2[0] = etc1_word2[0];
 		//best_char = '.';
+		//System.out.print(".");
 		//best_mode = MODE1.MODE_ETC1;
 	}		
 }
@@ -10365,15 +10388,40 @@ double calculatePSNRTwoFiles(char *srcfile1,char *srcfile2)
 public static void main(String args[])
 {
 	
-	args = new String[] {"D:\\game_media\\Morrowind\\Icons_tga\\gold.tga", "D:\\game_media\\Morrowind\\Icons_tga\\gold2.ktx", "-f", "RGBA"};
+	//args = new String[] {"D:\\game_media\\Morrowind\\Icons_tga\\gold.tga", "D:\\game_media\\Morrowind\\Icons_tga\\gold2.ktx", "-f", "RGBA"};
 	//args = new String[] {"D:\\game_media\\Morrowind\\Icons_tga\\handtohand.tga", "D:\\game_media\\Morrowind\\Icons_tga\\handtohand2.ktx", "-f", "RGB"};
 	
 	//args = new String[] {"D:\\game_media\\Morrowind\\Textures_tga\\menu_morrowind.tga", "D:\\game_media\\Morrowind\\Textures_tga\\menu_morrowind.ktx", "-f", "RGBA"};
+	
+	/*new ETCPack(new String[] {"D:\\game_media\\FalloutNV\\Fallout - Textures2_tga\\textures\\pimpboy3billion\\pimpboy3billion.tga", 
+		"D:\\game_media\\FalloutNV\\Fallout - Textures2_tga\\textures\\pimpboy3billion\\pimpboy3billion.ktx", 
+		"-f", "RGBA"});
+	new ETCPack(new String[] {"D:\\game_media\\FalloutNV\\Fallout - Textures2_tga\\textures\\pimpboy3billion\\pimpboy3billion_m.tga", 
+		"D:\\game_media\\FalloutNV\\Fallout - Textures2_tga\\textures\\pimpboy3billion\\pimpboy3billion_m.ktx", 
+		"-f", "RGBA"});
+	new ETCPack(new String[] {"D:\\game_media\\FalloutNV\\Fallout - Textures2_tga\\textures\\pimpboy3billion\\pimpboy3billion_n.tga", 
+		"D:\\game_media\\FalloutNV\\Fallout - Textures2_tga\\textures\\pimpboy3billion\\pimpboy3billion_n.ktx",
+		"-f", "RGBA"});*/
+	
+	new ETCPack(new String[] {"D:\\game_media\\Fallout4\\texture_archives\\Fallout4_Textures5_ba2_out_tga\\Textures\\Actors\\Dogmeat\\DogmeatBody_d2k.tga", 
+		"D:\\game_media\\Fallout4\\texture_archives\\Fallout4_Textures5_ba2_out_tga\\Textures\\Actors\\Dogmeat\\DogmeatBody_d2k.ktx", 
+		"-f", "RGBA"});
+	new ETCPack(new String[] {"D:\\game_media\\Fallout4\\texture_archives\\Fallout4_Textures5_ba2_out_tga\\Textures\\Actors\\Dogmeat\\DogmeatBody_n2k.tga", 
+		"D:\\game_media\\Fallout4\\texture_archives\\Fallout4_Textures5_ba2_out_tga\\Textures\\Actors\\Dogmeat\\DogmeatBody_n2k.ktx",  
+		"-f", "RGBA"});
+	new ETCPack(new String[] {"D:\\game_media\\Fallout4\\texture_archives\\Fallout4_Textures5_ba2_out_tga\\Textures\\Actors\\Dogmeat\\DogmeatBody_s2k.tga", 
+		"D:\\game_media\\Fallout4\\texture_archives\\Fallout4_Textures5_ba2_out_tga\\Textures\\Actors\\Dogmeat\\DogmeatBody_s2k.ktx", 
+		"-f", "RGBA"});
+	
+	
+	
+	
+	
 
-		// why deosn't my code accept these? cos that's 4.0.1!
+		// why doesn't my code accept these? cos that's 4.0.1!
 		//"-mipmaps", "-ktx"};
 	
-	new ETCPack(args);
+	//new ETCPack(args);
 }
 
 public ETCPack(String args[]) {
