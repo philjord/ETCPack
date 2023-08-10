@@ -1844,7 +1844,7 @@ static void decompressBlockAlpha16bitC(byte[] data, byte[] img, int width, int h
 	{
 		//if we have a signed format, the base value is given as a signed byte. We convert it to (0-255) here,
 		//so more code can be shared with the unsigned mode.
-		alpha = data[0];//WTF?*((signed char*)(&data[0]));
+		alpha = (data[0]&0xff);//WTF?*((signed char*)(&data[0]));
 		alpha = alpha+128;
 	}
 

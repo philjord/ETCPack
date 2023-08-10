@@ -151,6 +151,7 @@ class TargaReader {
                  imgalpha[idxA++] = buf[offset++];
                  idx+=3;    
                  n-=1;
+
              }
          } else if (buf[2]==0x02 && buf[16]==0x18) {  // uncompressed BGR
         	 imgData.type = ImgData.TYPE.RGB;
