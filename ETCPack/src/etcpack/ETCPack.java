@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.util.Random;
 
@@ -341,18 +342,19 @@ static enum MODE1{MODE_ETC1, MODE_THUMB_T, MODE_THUMB_H, MODE_PLANAR};
 //(GL_COMPRESSED_R11_EAC) and signed (GL_COMPRESSED_SIGNED_R11_EAC) version of 
 //the codec.
 //
-static enum FORMAT{ETC1_RGB_NO_MIPMAPS,ETC2PACKAGE_RGB_NO_MIPMAPS,ETC2PACKAGE_RGBA_NO_MIPMAPS_OLD,ETC2PACKAGE_RGBA_NO_MIPMAPS,ETC2PACKAGE_RGBA1_NO_MIPMAPS,ETC2PACKAGE_R_NO_MIPMAPS,ETC2PACKAGE_RG_NO_MIPMAPS,ETC2PACKAGE_R_SIGNED_NO_MIPMAPS,ETC2PACKAGE_RG_SIGNED_NO_MIPMAPS,ETC2PACKAGE_sRGB_NO_MIPMAPS,ETC2PACKAGE_sRGBA_NO_MIPMAPS,ETC2PACKAGE_sRGBA1_NO_MIPMAPS};
-static enum MODE2{MODE_COMPRESS, MODE_UNCOMPRESS, MODE_PSNR};
-static enum SPEED{SPEED_SLOW, SPEED_FAST, SPEED_MEDIUM};
-static enum METRIC{METRIC_PERCEPTUAL, METRIC_NONPERCEPTUAL};
-static enum CODEC{CODEC_ETC, CODEC_ETC2};
+public static enum FORMAT{ETC1_RGB,ETC2PACKAGE_RGB,ETC2PACKAGE_RGBA_OLD,ETC2PACKAGE_RGBA,ETC2PACKAGE_RGBA1,ETC2PACKAGE_R,ETC2PACKAGE_RG,ETC2PACKAGE_R_SIGNED,ETC2PACKAGE_RG_SIGNED,ETC2PACKAGE_sRGB,ETC2PACKAGE_sRGBA,ETC2PACKAGE_sRGBA1};
+public static enum MODE2{MODE_COMPRESS, MODE_UNCOMPRESS, MODE_PSNR};
+public static enum SPEED{SPEED_SLOW, SPEED_FAST, SPEED_MEDIUM};
+public static enum METRIC{METRIC_PERCEPTUAL, METRIC_NONPERCEPTUAL};
+public static enum CODEC{CODEC_ETC, CODEC_ETC2};
 
 MODE2 mode = MODE2.MODE_COMPRESS;
 SPEED speed = SPEED.SPEED_FAST;
 METRIC metric = METRIC.METRIC_PERCEPTUAL;
 CODEC codec = CODEC.CODEC_ETC2;
-FORMAT format = FORMAT.ETC2PACKAGE_RGB_NO_MIPMAPS;
+FORMAT format = FORMAT.ETC2PACKAGE_RGB;
 boolean verbose = true;
+boolean generateMipMaps = false;
 //extern 
 int formatSigned = 0;
 boolean ktxFile=false;
@@ -648,7 +650,7 @@ boolean readSrcFile(String filename,byte[][] img,byte[][] imgalpha, int[] width,
 	}
 
 	int bitrate=8;
-	if(format==FORMAT.ETC2PACKAGE_RG_NO_MIPMAPS)
+	if(format==FORMAT.ETC2PACKAGE_RG)
 		bitrate=16;
 	if(imgData!= null)//fReadPPM("tmp.ppm",w1,h1,img,bitrate))
 	{		
@@ -830,7 +832,7 @@ void readArguments(String[] args,String[] src,String[] dst)
 					System.out.println("Error: "+args[i+1]+" not part of flag "+args[i]+"\n");
 					System.exit(1);
 				}
-			}
+			}			
 			//error metric flag
 			else if(strcmp(args[i],"-e")) 	
 			{
@@ -863,36 +865,42 @@ void readArguments(String[] args,String[] src,String[] dst)
 			else if(strcmp(args[i],"-f")) 
 			{
 				if(strcmp(args[i+1],"R"))
-					format=FORMAT.ETC2PACKAGE_R_NO_MIPMAPS;
+					format=FORMAT.ETC2PACKAGE_R;
 				else if(strcmp(args[i+1],"RG"))
-					format=FORMAT.ETC2PACKAGE_RG_NO_MIPMAPS;
+					format=FORMAT.ETC2PACKAGE_RG;
 				else if(strcmp(args[i+1],"R_signed")) 
 				{
-					format=FORMAT.ETC2PACKAGE_R_NO_MIPMAPS;
+					format=FORMAT.ETC2PACKAGE_R;
 					formatSigned=1;
 				}
 				else if(strcmp(args[i+1],"RG_signed")) 
 				{
-					format=FORMAT.ETC2PACKAGE_RG_NO_MIPMAPS;
+					format=FORMAT.ETC2PACKAGE_RG;
 					formatSigned=1;
 				}
 				else if(strcmp(args[i+1],"RGB"))
-					format=FORMAT.ETC2PACKAGE_RGB_NO_MIPMAPS;
+					format=FORMAT.ETC2PACKAGE_RGB;
 				else if(strcmp(args[i+1],"sRGB"))
-					format=FORMAT.ETC2PACKAGE_sRGB_NO_MIPMAPS;
+					format=FORMAT.ETC2PACKAGE_sRGB;
 				else if(strcmp(args[i+1],"RGBA")||strcmp(args[i+1],"RGBA8"))
-					format=FORMAT.ETC2PACKAGE_RGBA_NO_MIPMAPS;
+					format=FORMAT.ETC2PACKAGE_RGBA;
 				else if(strcmp(args[i+1],"sRGBA")||strcmp(args[i+1],"sRGBA8"))
-					format=FORMAT.ETC2PACKAGE_sRGBA_NO_MIPMAPS;
+					format=FORMAT.ETC2PACKAGE_sRGBA;
 				else if(strcmp(args[i+1],"RGBA1"))
-					format=FORMAT.ETC2PACKAGE_RGBA1_NO_MIPMAPS;
+					format=FORMAT.ETC2PACKAGE_RGBA1;
 				else if(strcmp(args[i+1],"sRGBA1"))
-					format=FORMAT.ETC2PACKAGE_sRGBA1_NO_MIPMAPS;
+					format=FORMAT.ETC2PACKAGE_sRGBA1;
 				else 
 				{
 					System.out.println("Error: "+args[i+1]+" not part of flag "+args[i]+"\n");
 					System.exit(1);
 				}
+			}
+			// handle mip maps flag
+			else if(strcmp(args[i],"-mipmaps"))  
+			{
+				generateMipMaps = true;
+				i--; //ugly way of negating the increment of i done later because -p doesn't have an argument.
 			}
 			else if(strcmp(args[i],"-p")) 
 			{
@@ -984,13 +992,13 @@ void readArguments(String[] args,String[] src,String[] dst)
 		}
 	}
 	//do some sanity check stuff..
-	if(codec==CODEC.CODEC_ETC&&format!=FORMAT.ETC2PACKAGE_RGB_NO_MIPMAPS) 
+	if(codec==CODEC.CODEC_ETC&&format!=FORMAT.ETC2PACKAGE_RGB) 
 	{
 		System.out.println("ETC1 codec only supports RGB format\n");
 		System.exit(1);
 	}
 	else if(codec==CODEC.CODEC_ETC)
-		format=FORMAT.ETC1_RGB_NO_MIPMAPS;
+		format=FORMAT.ETC1_RGB;
 }
 
 int[][] compressParams = new int[][]//16][4];
@@ -8454,7 +8462,7 @@ void compressBlockETC2Fast(byte[] img, byte[] alphaimg, byte[] imgdec,int width,
 	char best_char; //???
 	MODE1 best_mode;
 	
-	if(format==FORMAT.ETC2PACKAGE_RGBA1_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_sRGBA1_NO_MIPMAPS)
+	if(format==FORMAT.ETC2PACKAGE_RGBA1||format==FORMAT.ETC2PACKAGE_sRGBA1)
 	{
 		/*                if we have one-bit alpha, we never use the individual mode,
 		                  instead that bit flags that one of our four offsets will instead
@@ -8845,11 +8853,11 @@ void readAlpha(byte[][] data, byte[] imgalpha, int width, int height, int[] exte
 	//width and height are already known..?
 	//byte[][] tempdata = new byte[1][0];
 	int wantedBitDepth=0;
-	if(format==FORMAT.ETC2PACKAGE_RGBA_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_RGBA1_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_sRGBA_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_sRGBA1_NO_MIPMAPS) 
+	if(format==FORMAT.ETC2PACKAGE_RGBA||format==FORMAT.ETC2PACKAGE_RGBA1||format==FORMAT.ETC2PACKAGE_sRGBA||format==FORMAT.ETC2PACKAGE_sRGBA1) 
 	{
 		wantedBitDepth=8;
 	}
-	else if(format==FORMAT.ETC2PACKAGE_R_NO_MIPMAPS) 
+	else if(format==FORMAT.ETC2PACKAGE_R) 
 	{
 		wantedBitDepth=16;
 	}
@@ -8897,7 +8905,7 @@ void readAlpha(byte[][] data, byte[] imgalpha, int width, int height, int[] exte
 			}
 		}
 	}
-	if(format==FORMAT.ETC2PACKAGE_RGBA1_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_sRGBA1_NO_MIPMAPS) 
+	if(format==FORMAT.ETC2PACKAGE_RGBA1||format==FORMAT.ETC2PACKAGE_sRGBA1) 
 	{
 		for(int x=0; x<extendedwidth[0]; x++) 
 		{
@@ -9436,7 +9444,7 @@ double calculatePSNR(byte[] lossyimg, byte[] origimg, int width, int height)
 	// 1/(N*M) * sum ( 1/3 * ((R' - R)^2 + (G' - G)^2 + (B' - B)^2) ) 
 	//
 	// The reason for having the 1/3 factor is the following:
-	// Presume we have a grayscale image, that is acutally just the red component 
+	// Presume we have a grayscale image, that is actually just the red component 
 	// of a color image.. The squared error is then (R' - R)^2.
 	// Assume that we have a certain signal to noise ratio, say 30 dB. If we add
 	// another two components (say green and blue) with the same signal to noise 
@@ -10054,7 +10062,7 @@ void compressImageFile(byte[] img, byte[] alphaimg,int width,int height,String d
 			int halfbytes=1;
 			//header.glInternalFormat=?
 			//header.glBaseInternalFormat=?
-			if(format==FORMAT.ETC2PACKAGE_R_NO_MIPMAPS) 
+			if(format==FORMAT.ETC2PACKAGE_R) 
 			{
 				header.glBaseInternalFormat=GL_R;
 				if(formatSigned!=0)
@@ -10062,7 +10070,7 @@ void compressImageFile(byte[] img, byte[] alphaimg,int width,int height,String d
 				else
 					header.glInternalFormat=GL_COMPRESSED_R11_EAC;
 			}
-			else if(format==FORMAT.ETC2PACKAGE_RG_NO_MIPMAPS) 
+			else if(format==FORMAT.ETC2PACKAGE_RG) 
 			{
 				halfbytes=2;
 				header.glBaseInternalFormat=GL_RG;
@@ -10071,39 +10079,39 @@ void compressImageFile(byte[] img, byte[] alphaimg,int width,int height,String d
 				else
 					header.glInternalFormat=GL_COMPRESSED_RG11_EAC;
 			}
-			else if(format==FORMAT.ETC2PACKAGE_RGB_NO_MIPMAPS) 
+			else if(format==FORMAT.ETC2PACKAGE_RGB) 
 			{
 				header.glBaseInternalFormat=GL_RGB;
 				header.glInternalFormat=GL_COMPRESSED_RGB8_ETC2;
 			}
-			else if(format==FORMAT.ETC2PACKAGE_sRGB_NO_MIPMAPS) 
+			else if(format==FORMAT.ETC2PACKAGE_sRGB) 
 			{
 				header.glBaseInternalFormat=GL_SRGB;
 				header.glInternalFormat=GL_COMPRESSED_SRGB8_ETC2;
 			}
-			else if(format==FORMAT.ETC2PACKAGE_RGBA_NO_MIPMAPS) 
+			else if(format==FORMAT.ETC2PACKAGE_RGBA) 
 			{
 				halfbytes=2;
 				header.glBaseInternalFormat=GL_RGBA;
 				header.glInternalFormat=GL_COMPRESSED_RGBA8_ETC2_EAC;
 			}
-			else if(format==FORMAT.ETC2PACKAGE_sRGBA_NO_MIPMAPS) 
+			else if(format==FORMAT.ETC2PACKAGE_sRGBA) 
 			{
 				halfbytes=2;
 				header.glBaseInternalFormat=GL_SRGB8_ALPHA8;
 				header.glInternalFormat=GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC;
 			}
-			else if(format==FORMAT.ETC2PACKAGE_RGBA1_NO_MIPMAPS) 
+			else if(format==FORMAT.ETC2PACKAGE_RGBA1) 
 			{
 				header.glBaseInternalFormat=GL_RGBA;
 				header.glInternalFormat=GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2;
 			}
-			else if(format==FORMAT.ETC2PACKAGE_sRGBA1_NO_MIPMAPS) 
+			else if(format==FORMAT.ETC2PACKAGE_sRGBA1) 
 			{
 				header.glBaseInternalFormat=GL_SRGB8_ALPHA8;
 				header.glInternalFormat=GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2;
 			}
-			else if(format==FORMAT.ETC1_RGB_NO_MIPMAPS) 
+			else if(format==FORMAT.ETC1_RGB) 
 			{
 				header.glBaseInternalFormat=GL_RGB;
 				header.glInternalFormat=GL_ETC1_RGB8_OES;
@@ -10135,14 +10143,14 @@ void compressImageFile(byte[] img, byte[] alphaimg,int width,int height,String d
 			fwrite(version[1], 1, f);
 
 			// Write texture type
-			if(texture_type==FORMAT.ETC2PACKAGE_RG_NO_MIPMAPS&&formatSigned!=0) 
+			if(texture_type==FORMAT.ETC2PACKAGE_RG&&formatSigned!=0) 
 			{
-				short temp = (short)FORMAT.ETC2PACKAGE_RG_SIGNED_NO_MIPMAPS.ordinal();
+				short temp = (short)FORMAT.ETC2PACKAGE_RG_SIGNED.ordinal();
 				write_big_endian_2byte_word(temp,f);
 			}
-			else if(texture_type==FORMAT.ETC2PACKAGE_R_NO_MIPMAPS&&formatSigned!=0) 
+			else if(texture_type==FORMAT.ETC2PACKAGE_R&&formatSigned!=0) 
 			{
-				short temp = (short)FORMAT.ETC2PACKAGE_R_SIGNED_NO_MIPMAPS.ordinal();
+				short temp = (short)FORMAT.ETC2PACKAGE_R_SIGNED.ordinal();
 				write_big_endian_2byte_word(temp,f);
 			}
 			else
@@ -10172,7 +10180,7 @@ void compressImageFile(byte[] img, byte[] alphaimg,int width,int height,String d
 		double percentageblocks=-1.0;
 		double oldpercentageblocks;
 		
-		if(format==FORMAT.ETC2PACKAGE_RG_NO_MIPMAPS) 
+		if(format==FORMAT.ETC2PACKAGE_RG) 
 		{
 			//extract data from red and green channel into two alpha channels.
 			//note that the image will be 16-bit per channel in this case.
@@ -10230,11 +10238,11 @@ void compressImageFile(byte[] img, byte[] alphaimg,int width,int height,String d
 				}
 				else 
 				{
-					if(format==FORMAT.ETC2PACKAGE_R_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_RG_NO_MIPMAPS) 
+					if(format==FORMAT.ETC2PACKAGE_R||format==FORMAT.ETC2PACKAGE_RG) 
 					{
 						//don't compress color
 					}
-					else if(format==FORMAT.ETC2PACKAGE_RGBA1_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_sRGBA1_NO_MIPMAPS) 
+					else if(format==FORMAT.ETC2PACKAGE_RGBA1||format==FORMAT.ETC2PACKAGE_sRGBA1) 
 					{
 						//this is only available for fast/nonperceptual
 						if(speed == SPEED.SPEED_SLOW && first_time_message)
@@ -10269,7 +10277,7 @@ void compressImageFile(byte[] img, byte[] alphaimg,int width,int height,String d
 				}
 				
 				//compression of alpha channel in case of 4-bit alpha. Uses 8-bit alpha channel as input, and has 8-bit precision.
-				if(format==FORMAT.ETC2PACKAGE_RGBA_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_sRGBA_NO_MIPMAPS) 
+				if(format==FORMAT.ETC2PACKAGE_RGBA||format==FORMAT.ETC2PACKAGE_sRGBA) 
 				{
 					byte[] alphadata= new byte[8];
 					if(speed==SPEED.SPEED_SLOW)
@@ -10281,21 +10289,21 @@ void compressImageFile(byte[] img, byte[] alphaimg,int width,int height,String d
 				}
 
 				//store compressed color channels
-				if(format!=FORMAT.ETC2PACKAGE_R_NO_MIPMAPS&&format!=FORMAT.ETC2PACKAGE_RG_NO_MIPMAPS) 
+				if(format!=FORMAT.ETC2PACKAGE_R&&format!=FORMAT.ETC2PACKAGE_RG) 
 				{
 					write_big_endian_4byte_word(block1, f);
 					write_big_endian_4byte_word(block2, f);
 				}
 
 				//1-channel or 2-channel alpha compression: uses 16-bit data as input, and has 11-bit precision
-				if(format==FORMAT.ETC2PACKAGE_R_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_RG_NO_MIPMAPS) 
+				if(format==FORMAT.ETC2PACKAGE_R||format==FORMAT.ETC2PACKAGE_RG) 
 				{ 
 					byte[] alphadata= new byte[8];
 					compressBlockAlpha16(alphaimg,4*x,4*y,expandedwidth,expandedheight,alphadata);
 					fwrite(alphadata,1,8,f);
 				}
 				//compression of second alpha channel in RG-compression
-				if(format==FORMAT.ETC2PACKAGE_RG_NO_MIPMAPS) 
+				if(format==FORMAT.ETC2PACKAGE_RG) 
 				{
 					byte[] alphadata = new byte[8];
 					compressBlockAlpha16(alphaimg2,4*x,4*y,expandedwidth,expandedheight,alphadata);
@@ -10365,19 +10373,19 @@ void compressFile(String srcfile,String dstfile)
 		System.out.print("PERCEPTUAL error metric, ");
 	else
 		System.out.print("NONPERCEPTUAL error metric, ");
-	if(format==FORMAT.ETC2PACKAGE_RGBA_NO_MIPMAPS)
+	if(format==FORMAT.ETC2PACKAGE_RGBA)
 		System.out.print("in RGBA format");
-	else if(format==FORMAT.ETC2PACKAGE_sRGBA_NO_MIPMAPS)
+	else if(format==FORMAT.ETC2PACKAGE_sRGBA)
 		System.out.print("in sRGBA format");
-	else if(format==FORMAT.ETC2PACKAGE_RGBA1_NO_MIPMAPS)
+	else if(format==FORMAT.ETC2PACKAGE_RGBA1)
 		System.out.print("in RGB + punch-through alpha format");
-	else if(format==FORMAT.ETC2PACKAGE_sRGBA1_NO_MIPMAPS)
+	else if(format==FORMAT.ETC2PACKAGE_sRGBA1)
 		System.out.print("in sRGB + punch-through alpha format");
-	else if(format==FORMAT.ETC2PACKAGE_R_NO_MIPMAPS)
+	else if(format==FORMAT.ETC2PACKAGE_R)
 		System.out.print("in R format");
-	else if(format==FORMAT.ETC2PACKAGE_RGB_NO_MIPMAPS||format==FORMAT.ETC1_RGB_NO_MIPMAPS)
+	else if(format==FORMAT.ETC2PACKAGE_RGB||format==FORMAT.ETC1_RGB)
 		System.out.print("in RGB format");
-	else if(format==FORMAT.ETC2PACKAGE_RG_NO_MIPMAPS)
+	else if(format==FORMAT.ETC2PACKAGE_RG)
 		System.out.print("in RG format");
 	else
 		System.out.print("in OTHER format");
@@ -10389,11 +10397,11 @@ void compressFile(String srcfile,String dstfile)
 		byte[][] alphatemp=new byte[1][];
 		
 		//I only have one readerr now, not eh magick PPM/POGM splitter, so hamd the alph into the targa reader
-		if(format==FORMAT.ETC2PACKAGE_R_NO_MIPMAPS||readSrcFile(srcfile,srcimg,alphatemp,width,height,extendedwidth, extendedheight))
+		if(format==FORMAT.ETC2PACKAGE_R||readSrcFile(srcfile,srcimg,alphatemp,width,height,extendedwidth, extendedheight))
 		{
 			//make sure that alphasrcimg contains the alpha channel or is null here, and pass it to compressimagefile
 			byte[][] alphaimg=new byte[1][];
-			if(format==FORMAT.ETC2PACKAGE_RGBA_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_RGBA1_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_sRGBA_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_sRGBA1_NO_MIPMAPS) 
+			if(format==FORMAT.ETC2PACKAGE_RGBA||format==FORMAT.ETC2PACKAGE_RGBA1||format==FORMAT.ETC2PACKAGE_sRGBA||format==FORMAT.ETC2PACKAGE_sRGBA1) 
 			{
 				// If the input file has alpha it will have been read in by readSrcFile above
 				//System.out.println("reading alpha channel....");
@@ -10404,7 +10412,7 @@ void compressFile(String srcfile,String dstfile)
 				//System.out.println("ok!\n");
 				setupAlphaTableAndValtab();
 			}
-			else if(format==FORMAT.ETC2PACKAGE_R_NO_MIPMAPS) 
+			else if(format==FORMAT.ETC2PACKAGE_R) 
 			{
 				throw new UnsupportedOperationException();
 				//TODO: This format assumes the macick exe has put the R data into the odd seperate pgm alpha file
@@ -10445,16 +10453,35 @@ void compressFile(String srcfile,String dstfile)
  * @param srcimgalpha only A size = width*height*1 or null
  * @param width must be divisible by 4 for now
  * @param height must be divisible by 4 for now
+ * @param format ETC2PACKAGE_RGBA, ETC2PACKAGE_sRGBA, 
+ * ETC2PACKAGE_RGBA1, ETC2PACKAGE_sRGBA1 must have a valid alphaimg array
+ * ETC2PACKAGE_RGB alphaimage should be null
+ * @return a ByteBuffer that looks exactly like a loaded ktx file with a KTX header and formatted data as requested
+ */
+public ByteBuffer compressImageBytes(byte[] srcimg, byte[] srcimgalpha, int width, int height, FORMAT format)
+{
+	return compressImageBytesMipMap(srcimg, srcimgalpha,  width,  height, 
+			CODEC.CODEC_ETC2, SPEED.SPEED_FAST, METRIC.METRIC_PERCEPTUAL, format, true, false);
+}
+/**
+ * 
+ * @param srcimg only RGB  size = width*height*3
+ * @param srcimgalpha only A size = width*height*1 or null
+ * @param width must be divisible by 4 for now
+ * @param height must be divisible by 4 for now
  * @param codec CODEC_ETC2 is best
  * @param speed SPEED_FAST is best
  * @param metric METRIC_PERCEPTUAL is best
- * @param format ETC2PACKAGE_RGBA_NO_MIPMAPS, ETC2PACKAGE_sRGBA_NO_MIPMAPS, 
- * ETC2PACKAGE_RGBA1_NO_MIPMAPS, ETC2PACKAGE_sRGBA1_NO_MIPMAPS must have a valid alphaimg array
- * ETC2PACKAGE_RGB_NO_MIPMAPS alphaimage should be null
- * @return a Byte Buffer ready to hand to the OpenGL pipeline
+ * @param format ETC2PACKAGE_RGBA, ETC2PACKAGE_sRGBA, 
+ * ETC2PACKAGE_RGBA1, ETC2PACKAGE_sRGBA1 must have a valid alphaimg array
+ * ETC2PACKAGE_RGB alphaimage should be null
+ * @return a ByteBuffer that looks exactly like a loaded ktx file with a KTX header and formatted data as requested
  */
-ByteBuffer compressImageBytes(byte[] srcimg, byte[] srcimgalpha, int width, int height, CODEC codec, SPEED speed, METRIC metric, FORMAT format)
+public ByteBuffer compressImageBytes(byte[] srcimg, byte[] srcimgalpha, int width, int height, 
+                                           CODEC codec, SPEED speed, METRIC metric, FORMAT format, boolean ktxFile, boolean verbose)
 {
+	this.ktxFile = ktxFile;// not sure if I ever care about pkm
+	this.verbose = verbose;
 	this.codec = codec;
 	this.speed = speed;
 	this.metric = metric;
@@ -10493,7 +10520,7 @@ ByteBuffer compressImageBytes(byte[] srcimg, byte[] srcimgalpha, int width, int 
 		{
 			//make sure that alphasrcimg contains the alpha channel or is null here, and pass it to compressimagefile
 			byte[][] alphaimg=new byte[1][];
-			if(format==FORMAT.ETC2PACKAGE_RGBA_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_RGBA1_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_sRGBA_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_sRGBA1_NO_MIPMAPS) 
+			if(format==FORMAT.ETC2PACKAGE_RGBA||format==FORMAT.ETC2PACKAGE_RGBA1||format==FORMAT.ETC2PACKAGE_sRGBA||format==FORMAT.ETC2PACKAGE_sRGBA1) 
 			{
 				// If the input file has alpha it will have been read in by readSrcFile above
 				//System.out.println("reading alpha channel....");
@@ -10504,7 +10531,7 @@ ByteBuffer compressImageBytes(byte[] srcimg, byte[] srcimgalpha, int width, int 
 				//System.out.println("ok!\n");
 				setupAlphaTableAndValtab();
 			}
-			else if(format==FORMAT.ETC2PACKAGE_R_NO_MIPMAPS) 
+			else if(format==FORMAT.ETC2PACKAGE_R) 
 			{
 				throw new UnsupportedOperationException();
 				//TODO: This format assumes the macick exe has put the R data into the odd seperate pgm alpha file
@@ -10543,6 +10570,7 @@ ByteBuffer compressImageBytes(byte[] srcimg, byte[] srcimgalpha, int width, int 
 ByteBuffer compressImageFile(byte[] img, byte[] alphaimg,int width,int height, int expandedwidth, int expandedheight) throws IOException
 {	
 	ByteBuffer dstBB;
+	long tstart = System.currentTimeMillis();
 	int x,y,w,h;
 	int[] block1=new int[1], block2=new int[1];
 	short wi, hi;
@@ -10611,7 +10639,7 @@ ByteBuffer compressImageFile(byte[] img, byte[] alphaimg,int width,int height, i
 			int halfbytes=1;
 			//header.glInternalFormat=?
 			//header.glBaseInternalFormat=?
-			if(format==FORMAT.ETC2PACKAGE_R_NO_MIPMAPS) 
+			if(format==FORMAT.ETC2PACKAGE_R) 
 			{
 				header.glBaseInternalFormat=GL_R;
 				if(formatSigned!=0)
@@ -10619,7 +10647,7 @@ ByteBuffer compressImageFile(byte[] img, byte[] alphaimg,int width,int height, i
 				else
 					header.glInternalFormat=GL_COMPRESSED_R11_EAC;
 			}
-			else if(format==FORMAT.ETC2PACKAGE_RG_NO_MIPMAPS) 
+			else if(format==FORMAT.ETC2PACKAGE_RG) 
 			{
 				halfbytes=2;
 				header.glBaseInternalFormat=GL_RG;
@@ -10628,39 +10656,39 @@ ByteBuffer compressImageFile(byte[] img, byte[] alphaimg,int width,int height, i
 				else
 					header.glInternalFormat=GL_COMPRESSED_RG11_EAC;
 			}
-			else if(format==FORMAT.ETC2PACKAGE_RGB_NO_MIPMAPS) 
+			else if(format==FORMAT.ETC2PACKAGE_RGB) 
 			{
 				header.glBaseInternalFormat=GL_RGB;
 				header.glInternalFormat=GL_COMPRESSED_RGB8_ETC2;
 			}
-			else if(format==FORMAT.ETC2PACKAGE_sRGB_NO_MIPMAPS) 
+			else if(format==FORMAT.ETC2PACKAGE_sRGB) 
 			{
 				header.glBaseInternalFormat=GL_SRGB;
 				header.glInternalFormat=GL_COMPRESSED_SRGB8_ETC2;
 			}
-			else if(format==FORMAT.ETC2PACKAGE_RGBA_NO_MIPMAPS) 
+			else if(format==FORMAT.ETC2PACKAGE_RGBA) 
 			{
 				halfbytes=2;
 				header.glBaseInternalFormat=GL_RGBA;
 				header.glInternalFormat=GL_COMPRESSED_RGBA8_ETC2_EAC;
 			}
-			else if(format==FORMAT.ETC2PACKAGE_sRGBA_NO_MIPMAPS) 
+			else if(format==FORMAT.ETC2PACKAGE_sRGBA) 
 			{
 				halfbytes=2;
 				header.glBaseInternalFormat=GL_SRGB8_ALPHA8;
 				header.glInternalFormat=GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC;
 			}
-			else if(format==FORMAT.ETC2PACKAGE_RGBA1_NO_MIPMAPS) 
+			else if(format==FORMAT.ETC2PACKAGE_RGBA1) 
 			{
 				header.glBaseInternalFormat=GL_RGBA;
 				header.glInternalFormat=GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2;
 			}
-			else if(format==FORMAT.ETC2PACKAGE_sRGBA1_NO_MIPMAPS) 
+			else if(format==FORMAT.ETC2PACKAGE_sRGBA1) 
 			{
 				header.glBaseInternalFormat=GL_SRGB8_ALPHA8;
 				header.glInternalFormat=GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2;
 			}
-			else if(format==FORMAT.ETC1_RGB_NO_MIPMAPS) 
+			else if(format==FORMAT.ETC1_RGB) 
 			{
 				header.glBaseInternalFormat=GL_RGB;
 				header.glInternalFormat=GL_ETC1_RGB8_OES;
@@ -10674,9 +10702,9 @@ ByteBuffer compressImageFile(byte[] img, byte[] alphaimg,int width,int height, i
 			//write size of compressed data.. which depend on the expanded size..
 			int imagesize=(w*h*halfbytes)/2;
 			
-			// allocate header and image data
-			dstBB = ByteBuffer.allocateDirect((12 + 13*4) + imagesize);
-			//FIXME:!!! does the ktx header need to be returned? or the pkm one??
+			// allocate header space, 1 int size, and image data
+			dstBB = ByteBuffer.allocateDirect((12 + (13*4) + (1*4)) + imagesize);
+			dstBB.order(ByteOrder.BIG_ENDIAN);
 			
 			//write header
 			fwrite( header, 1,dstBB);
@@ -10689,7 +10717,7 @@ ByteBuffer compressImageFile(byte[] img, byte[] alphaimg,int width,int height, i
 			//.pkm file, contains small header..
 			
 			int halfbytes=1;
-			if(format==FORMAT.ETC2PACKAGE_RGBA_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_sRGBA_NO_MIPMAPS) 
+			if(format==FORMAT.ETC2PACKAGE_RGBA||format==FORMAT.ETC2PACKAGE_sRGBA) 
 				halfbytes=2;
 			
 			int imagesize=(w*h*halfbytes)/2;
@@ -10707,14 +10735,14 @@ ByteBuffer compressImageFile(byte[] img, byte[] alphaimg,int width,int height, i
 			fwrite(version[1], 1, dstBB);
 
 			// Write texture type
-			if(texture_type==FORMAT.ETC2PACKAGE_RG_NO_MIPMAPS&&formatSigned!=0) 
+			if(texture_type==FORMAT.ETC2PACKAGE_RG&&formatSigned!=0) 
 			{
-				short temp = (short)FORMAT.ETC2PACKAGE_RG_SIGNED_NO_MIPMAPS.ordinal();
+				short temp = (short)FORMAT.ETC2PACKAGE_RG_SIGNED.ordinal();
 				write_big_endian_2byte_word(temp,dstBB);
 			}
-			else if(texture_type==FORMAT.ETC2PACKAGE_R_NO_MIPMAPS&&formatSigned!=0) 
+			else if(texture_type==FORMAT.ETC2PACKAGE_R&&formatSigned!=0) 
 			{
-				short temp = (short)FORMAT.ETC2PACKAGE_R_SIGNED_NO_MIPMAPS.ordinal();
+				short temp = (short)FORMAT.ETC2PACKAGE_R_SIGNED.ordinal();
 				write_big_endian_2byte_word(temp,dstBB);
 			}
 			else
@@ -10744,7 +10772,7 @@ ByteBuffer compressImageFile(byte[] img, byte[] alphaimg,int width,int height, i
 		double percentageblocks=-1.0;
 		double oldpercentageblocks;
 		
-		if(format==FORMAT.ETC2PACKAGE_RG_NO_MIPMAPS) 
+		if(format==FORMAT.ETC2PACKAGE_RG) 
 		{
 			//extract data from red and green channel into two alpha channels.
 			//note that the image will be 16-bit per channel in this case.
@@ -10767,8 +10795,10 @@ ByteBuffer compressImageFile(byte[] img, byte[] alphaimg,int width,int height, i
 				}
 			}
 		}
+		
+		
 		for(y=0;y<expandedheight/4;y++)
-		{
+		{ 
 			for(x=0;x<expandedwidth/4;x++)
 			{
 				countblocks++;
@@ -10802,11 +10832,11 @@ ByteBuffer compressImageFile(byte[] img, byte[] alphaimg,int width,int height, i
 				}
 				else 
 				{
-					if(format==FORMAT.ETC2PACKAGE_R_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_RG_NO_MIPMAPS) 
+					if(format==FORMAT.ETC2PACKAGE_R||format==FORMAT.ETC2PACKAGE_RG) 
 					{
 						//don't compress color
 					}
-					else if(format==FORMAT.ETC2PACKAGE_RGBA1_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_sRGBA1_NO_MIPMAPS) 
+					else if(format==FORMAT.ETC2PACKAGE_RGBA1||format==FORMAT.ETC2PACKAGE_sRGBA1) 
 					{
 						//this is only available for fast/nonperceptual
 						if(speed == SPEED.SPEED_SLOW && first_time_message)
@@ -10841,33 +10871,33 @@ ByteBuffer compressImageFile(byte[] img, byte[] alphaimg,int width,int height, i
 				}
 				
 				//compression of alpha channel in case of 4-bit alpha. Uses 8-bit alpha channel as input, and has 8-bit precision.
-				if(format==FORMAT.ETC2PACKAGE_RGBA_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_sRGBA_NO_MIPMAPS) 
+				if(format==FORMAT.ETC2PACKAGE_RGBA||format==FORMAT.ETC2PACKAGE_sRGBA) 
 				{
 					byte[] alphadata= new byte[8];
 					if(speed==SPEED.SPEED_SLOW)
 						compressBlockAlphaSlow(alphaimg,4*x,4*y,expandedwidth,expandedheight,alphadata);
 					else
 						compressBlockAlphaFast(alphaimg,4*x,4*y,expandedwidth,expandedheight,alphadata);
-					//write the 8 bytes of alphadata into f.
+					//write the 8 bytes of alphadata into dstBB.
 					fwrite(alphadata,1,8,dstBB);
 				}
 
 				//store compressed color channels
-				if(format!=FORMAT.ETC2PACKAGE_R_NO_MIPMAPS&&format!=FORMAT.ETC2PACKAGE_RG_NO_MIPMAPS) 
+				if(format!=FORMAT.ETC2PACKAGE_R&&format!=FORMAT.ETC2PACKAGE_RG) 
 				{
 					write_big_endian_4byte_word(block1, dstBB);
-					write_big_endian_4byte_word(block2, dstBB);
+					write_big_endian_4byte_word(block2, dstBB);					
 				}
 
 				//1-channel or 2-channel alpha compression: uses 16-bit data as input, and has 11-bit precision
-				if(format==FORMAT.ETC2PACKAGE_R_NO_MIPMAPS||format==FORMAT.ETC2PACKAGE_RG_NO_MIPMAPS) 
+				if(format==FORMAT.ETC2PACKAGE_R||format==FORMAT.ETC2PACKAGE_RG) 
 				{ 
 					byte[] alphadata= new byte[8];
 					compressBlockAlpha16(alphaimg,4*x,4*y,expandedwidth,expandedheight,alphadata);
 					fwrite(alphadata,1,8,dstBB);
 				}
 				//compression of second alpha channel in RG-compression
-				if(format==FORMAT.ETC2PACKAGE_RG_NO_MIPMAPS) 
+				if(format==FORMAT.ETC2PACKAGE_RG) 
 				{
 					byte[] alphadata = new byte[8];
 					compressBlockAlpha16(alphaimg2,4*x,4*y,expandedwidth,expandedheight,alphadata);
@@ -10887,17 +10917,482 @@ ByteBuffer compressImageFile(byte[] img, byte[] alphaimg,int width,int height, i
 //#endif
 			}
 		}
-		//System.out.println("\n");
-		//f.close();
-		//System.out.println("Saved file <"+dstfile+">.\n");
+
+		System.out.print( "It took "+(System.currentTimeMillis() - tstart)+" milliseconds to compress:\n" );
+		//dstBB is all loaded up, now set it up for reading
+		dstBB.rewind();
 		return dstBB;
 	}
 }
 
+/**
+ * 
+ * @param srcimg only RGB  size = width*height*3
+ * @param srcimgalpha only A size = width*height*1 or null
+ * @param width must be divisible by 4 for now
+ * @param height must be divisible by 4 for now
+ * @param format ETC2PACKAGE_RGBA, ETC2PACKAGE_sRGBA, 
+ * ETC2PACKAGE_RGBA1, ETC2PACKAGE_sRGBA1 must have a valid alphaimg array
+ * ETC2PACKAGE_RGB alphaimage should be null
+ * @return a ByteBuffer that looks exactly like a loaded ktx file with a KTX header and formatted data as requested, along with mip maps
+ */
+public ByteBuffer compressImageBytesMipMap(byte[] srcimg, byte[] srcimgalpha, int width, int height, FORMAT format)
+{
+	return compressImageBytesMipMap(srcimg, srcimgalpha,  width,  height, 
+			CODEC.CODEC_ETC2, SPEED.SPEED_FAST, METRIC.METRIC_PERCEPTUAL, format, true, false);
+}
+public ByteBuffer compressImageBytesMipMap(byte[] srcimg, byte[] srcimgalpha, int width, int height, 
+                                           CODEC codec, SPEED speed, METRIC metric, FORMAT format, boolean ktxFile, boolean verbose)
+{
+	this.ktxFile = ktxFile;// not sure if I ever care about pkm
+	this.verbose = verbose;
+	this.codec = codec;
+	this.speed = speed;
+	this.metric = metric;
+	this.format = format;
+
+	int[] extendedwidth = new int[1], extendedheight = new int[1];
+
+	//make sure width and height are div 4 able
+	extendedwidth [0] = width;
+	extendedheight [0] = height;
+	int wdiv4 = width / 4;
+	int hdiv4 = height / 4;
+
+	if (!(wdiv4 * 4 == width)) {
+		System.out.println(" Width = " + width + " is not divisible by four... ");
+		return null;
+	}
+	if (!(hdiv4 * 4 == height)) {
+		System.out.println(" Height = " + height + " is not divisible by four... ");
+		return null;
+	}
+
+	//make sure that alphasrcimg contains the alpha channel or is null here, and pass it to compressimagefile
+	byte[][] alphaimg = new byte[1][];
+	if (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_RGBA1
+		|| format == FORMAT.ETC2PACKAGE_sRGBA || format == FORMAT.ETC2PACKAGE_sRGBA1) {
+		readAlpha(alphaimg, srcimgalpha, width, height, extendedwidth, extendedheight);
+		setupAlphaTableAndValtab();
+	} else if (format == FORMAT.ETC2PACKAGE_R) {
+		throw new UnsupportedOperationException();
+	}
+
+	try {
+		return compressImageFileMipMap(srcimg, alphaimg [0], width, height, extendedwidth [0], extendedheight [0]);
+	} catch (IOException e) {
+		e.printStackTrace();
+	}
+
+	System.out.println("No image decompressed, soz");
+	return null;
+}
+protected static int computeLog(int value) {
+	int i = 0;
+
+	if (value == 0)
+		return -1;
+	for (;;) {
+		if (value == 1)
+			return i;
+		value >>= 1;
+		i++;
+	}
+}
+ByteBuffer compressImageFileMipMap(	byte[] img, byte[] alphaimg, int width, int height, int expandedwidth,
+									int expandedheight)
+		throws IOException {
+	ByteBuffer dstBB;
+	long tstart = System.currentTimeMillis();
+	int w, h;
+	short wi, hi;
+	
+	char[] version = new char[2];
+	FORMAT texture_type = format;
+	
+
+	if (codec == CODEC.CODEC_ETC2) {
+		version [0] = '2';
+		version [1] = '0';
+	} else {
+		version [0] = '1';
+		version [1] = '0';
+	}
+
+	w = expandedwidth / 4;
+	w *= 4;
+	h = expandedheight / 4;
+	h *= 4;
+	wi = (short)w;
+	hi = (short)h;
+	
+	int mipMapCount = Math.max(computeLog(expandedwidth), computeLog(expandedheight)) + 1;
+	int halfbytes = 1; 
+
+	if (ktxFile) {
+		//.ktx file: KTX header followed by compressed binary data.
+		KTX_header header = new KTX_header();
+		//identifier
+		for (int i = 0; i < 12; i++) {
+			header.identifier [i] = KTX_IDENTIFIER_REF [i];
+		}
+		//endianess int.. if this comes out reversed, all of the other ints will too.
+		header.endianness = KTX_ENDIAN_REF;
+
+		//these values are always 0/1 for compressed textures.
+		header.glType = 0;
+		header.glTypeSize = 1;
+		header.glFormat = 0;
+
+		header.pixelWidth = width;
+		header.pixelHeight = height;
+		header.pixelDepth = 0;
+
+		//we only support single non-mipmapped non-cubemap textures..
+		header.numberOfArrayElements = 0;
+		header.numberOfFaces = 1;
+		header.numberOfMipmapLevels = mipMapCount;
+
+		//and no metadata..
+		header.bytesOfKeyValueData = 0;
+
+
+		//header.glInternalFormat=?
+		//header.glBaseInternalFormat=?
+		if (format == FORMAT.ETC2PACKAGE_R) {
+			header.glBaseInternalFormat = GL_R;
+			if (formatSigned != 0)
+				header.glInternalFormat = GL_COMPRESSED_SIGNED_R11_EAC;
+			else
+				header.glInternalFormat = GL_COMPRESSED_R11_EAC;
+		} else if (format == FORMAT.ETC2PACKAGE_RG) {
+			halfbytes = 2;
+			header.glBaseInternalFormat = GL_RG;
+			if (formatSigned != 0)
+				header.glInternalFormat = GL_COMPRESSED_SIGNED_RG11_EAC;
+			else
+				header.glInternalFormat = GL_COMPRESSED_RG11_EAC;
+		} else if (format == FORMAT.ETC2PACKAGE_RGB) {
+			header.glBaseInternalFormat = GL_RGB;
+			header.glInternalFormat = GL_COMPRESSED_RGB8_ETC2;
+		} else if (format == FORMAT.ETC2PACKAGE_sRGB) {
+			header.glBaseInternalFormat = GL_SRGB;
+			header.glInternalFormat = GL_COMPRESSED_SRGB8_ETC2;
+		} else if (format == FORMAT.ETC2PACKAGE_RGBA) {
+			halfbytes = 2;
+			header.glBaseInternalFormat = GL_RGBA;
+			header.glInternalFormat = GL_COMPRESSED_RGBA8_ETC2_EAC;
+		} else if (format == FORMAT.ETC2PACKAGE_sRGBA) {
+			halfbytes = 2;
+			header.glBaseInternalFormat = GL_SRGB8_ALPHA8;
+			header.glInternalFormat = GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC;
+		} else if (format == FORMAT.ETC2PACKAGE_RGBA1) {
+			header.glBaseInternalFormat = GL_RGBA;
+			header.glInternalFormat = GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2;
+		} else if (format == FORMAT.ETC2PACKAGE_sRGBA1) {
+			header.glBaseInternalFormat = GL_SRGB8_ALPHA8;
+			header.glInternalFormat = GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2;
+		} else if (format == FORMAT.ETC1_RGB) {
+			header.glBaseInternalFormat = GL_RGB;
+			header.glInternalFormat = GL_ETC1_RGB8_OES;
+		} else {
+			System.out.println("internal error: bad format!\n");
+			System.exit(1);
+		}
+
+		//write size of compressed data.. which depend on the expanded size..
+		//one int for level size, then base level
+		//add the mipsizes
+		int allimagesize = 4 + (w * h * halfbytes) / 2;
+		int mw = w;
+		int mh = h;
+		for(int m = 1;m < mipMapCount; m++) {			
+			int widthDropFactor = mw/2 < 4 ? 1 : 2;// only drop down if new size would be half current (don't drop below 4x4)
+			int heightDropFactor = mh/2 < 4 ? 1 : 2;
+			mw=mw/widthDropFactor;
+			mh=mh/widthDropFactor;
+			int mipsize = (mw * mh * halfbytes) / 2;		
+			mipsize = mipsize < halfbytes*8 ? halfbytes*8 : mipsize;// minimum halfbytes*8 bytes (8 or 16)
+			allimagesize += 4 + mipsize;
+		}		
+		// note mips can't go below 4x4 in compressed size, 
+		//but the mip map sizing sorts that out for actual image size
+
+		// allocate header space, and image data
+		dstBB = ByteBuffer.allocateDirect((12 + (13 * 4)) + allimagesize);
+		dstBB.order(ByteOrder.BIG_ENDIAN);
+
+		//write header
+		fwrite(header, 1, dstBB);		
+
+	} else {
+		//.pkm file, contains small header..
+		char[] magic = new char[4];
+		magic [0] = 'P';
+		magic [1] = 'K';
+		magic [2] = 'M';
+		magic [3] = ' ';
+
+		
+		if (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA)
+			halfbytes = 2;
+
+		int imagesize = (w * h * halfbytes) / 2;
+		// allocate header and image data
+		dstBB = ByteBuffer.allocateDirect((4 + 2 + 2 + 4 + 4) + imagesize);
+
+		// Write magic number
+		fwrite(magic [0], 1, dstBB);
+		fwrite(magic [1], 1, dstBB);
+		fwrite(magic [2], 1, dstBB);
+		fwrite(magic [3], 1, dstBB);
+
+		// Write version
+		fwrite(version [0], 1, dstBB);
+		fwrite(version [1], 1, dstBB);
+
+		// Write texture type
+		if (texture_type == FORMAT.ETC2PACKAGE_RG && formatSigned != 0) {
+			short temp = (short)FORMAT.ETC2PACKAGE_RG_SIGNED.ordinal();
+			write_big_endian_2byte_word(temp, dstBB);
+		} else if (texture_type == FORMAT.ETC2PACKAGE_R && formatSigned != 0) {
+			short temp = (short)FORMAT.ETC2PACKAGE_R_SIGNED.ordinal();
+			write_big_endian_2byte_word(temp, dstBB);
+		} else
+			write_big_endian_2byte_word((short)texture_type.ordinal(), dstBB);
+
+		// Write binary header: the width and height as unsigned 16-bit words
+		write_big_endian_2byte_word(wi, dstBB);
+		write_big_endian_2byte_word(hi, dstBB);
+
+		// Also write the active pixels. For instance, if we want to compress
+		// a 128 x 129 image, we have to extend it to 128 x 132 pixels.
+		// Then the wi and hi written above will be 128 and 132, but the
+		// additional information that we write below will be 128 and 129,
+		// to indicate that it is only the top 129 lines of data in the 
+		// decompressed image that will be valid data, and the rest will
+		// be just garbage. 
+
+		short activew, activeh;
+		activew = (short)width;
+		activeh = (short)height;
+
+		write_big_endian_2byte_word(activew, dstBB);
+		write_big_endian_2byte_word(activeh, dstBB);
+	}
+	
+	
+	for(int m = 0;m < mipMapCount; m++) {
+		int imagesize = (expandedwidth * expandedheight * halfbytes) / 2;
+		imagesize = imagesize < halfbytes * 8 ? halfbytes * 8 : imagesize;// minimum halfbytes*8 bytes (8 or 16)
+		
+		// write this mipmaps image size 
+		fwrite(imagesize, 1, dstBB);
+		// compress and write the mip map
+		compressImageFileMipMap(dstBB, img, alphaimg, expandedwidth, expandedheight);
+		
+		// use a 4 pixel gaussian from the previous mip to make the next
+		
+		int widthDropFactor = expandedwidth/2 < 4 ? 1 : 2;// only drop down if new size would be half current (don't drop below 4x4)
+		int heightDropFactor = expandedheight/2 < 4 ? 1 : 2;
+		
+		expandedwidth = expandedwidth/widthDropFactor;
+		expandedheight = expandedheight/heightDropFactor;
+		
+		byte[] currentImg = img;
+		byte[] currentAlphaimg = alphaimg;
+		
+		int newmipmapdatasize = img.length/(widthDropFactor*heightDropFactor);		
+		
+		img = new byte[newmipmapdatasize];
+		alphaimg = alphaimg == null ? null : new byte[newmipmapdatasize/3];
+		
+		for (int y2 = 0; y2 < expandedheight; y2++) {
+			for (int x2 = 0; x2 < expandedwidth; x2++) {									
+
+				img[(y2*expandedwidth+x2)*3 +0] = (byte)((
+						 (currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +0]&0xff)
+						+(currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +0]&0xff)
+						+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +0]&0xff)
+						+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +0]&0xff))/4);
+				img[(y2*expandedwidth+x2)*3 +1] = (byte)((
+						 (currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +1]&0xff)
+						+(currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +1]&0xff)
+						+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +1]&0xff)
+						+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +1]&0xff))/4);
+				img[(y2*expandedwidth+x2)*3 +2] = (byte)((
+						 (currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +2]&0xff)
+						+(currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +2]&0xff)
+						+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +2]&0xff)
+						+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +2]&0xff))/4);
+
+			}
+		}
+		if(alphaimg != null)
+			for (int y2 = 0; y2 < expandedheight; y2++) {
+				for (int x2 = 0; x2 < expandedwidth; x2++) {
+					if (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA) {
+						alphaimg[y2*(expandedwidth)+x2] = (byte)((
+								 (currentAlphaimg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*1 +0]&0xff)
+								+(currentAlphaimg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*1 +0]&0xff)
+								+(currentAlphaimg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*1 +0]&0xff)
+								+(currentAlphaimg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*1 +0]&0xff))/4);
+					}else if(format == FORMAT.ETC2PACKAGE_RGBA1 || format == FORMAT.ETC2PACKAGE_sRGBA1) {
+						int a = ((
+								 (currentAlphaimg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*1 +0]&0xff)
+								+(currentAlphaimg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*1 +0]&0xff)
+								+(currentAlphaimg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*1 +0]&0xff)
+								+(currentAlphaimg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*1 +0]&0xff))/4);
+						a = a <= 127 ? 0 : 255;
+						alphaimg[y2*(expandedwidth)+x2] = (byte)a;
+					}
+				}
+			}
+		
+		
+	}
+
+	System.out.print("It took " + (System.currentTimeMillis() - tstart) + " milliseconds to compress:\n");
+	//dstBB is all loaded up, now set it up for reading
+	dstBB.rewind();
+	return dstBB;
+}
+
+void compressImageFileMipMap(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int expandedwidth, int expandedheight)
+		throws IOException {
+	
+	// can only compress a 4x4 block of RGB
+	if(img.length<4*4*3)
+		return;
+	int x, y, w, h;
+	int[] block1 = new int[1], block2 = new int[1];
+	byte[] imgdec;
+	byte[] alphaimg2 = null;
+	imgdec = new byte[expandedwidth * expandedheight * 3];
+
+	int totblocks = expandedheight / 4 * expandedwidth / 4;
+	totblocks = totblocks < 1 ? 1: totblocks;
+	int countblocks = 0;
+	double percentageblocks = -1.0;
+	double oldpercentageblocks;
+
+	if (format == FORMAT.ETC2PACKAGE_RG) {
+		//extract data from red and green channel into two alpha channels.
+		//note that the image will be 16-bit per channel in this case.
+		alphaimg = new byte[expandedwidth * expandedheight * 2];
+		alphaimg2 = new byte[expandedwidth * expandedheight * 2];
+		setupAlphaTableAndValtab();
+		if (alphaimg == null || alphaimg2 == null) {
+			System.out.println("failed allocating space for alpha buffers!\n");
+			System.exit(1);
+		}
+		for (y = 0; y < expandedheight; y++) {
+			for (x = 0; x < expandedwidth; x++) {
+				alphaimg [2 * (y * expandedwidth + x)] = img [6 * (y * expandedwidth + x)];
+				alphaimg [2 * (y * expandedwidth + x) + 1] = img [6 * (y * expandedwidth + x) + 1];
+				alphaimg2 [2 * (y * expandedwidth + x)] = img [6 * (y * expandedwidth + x) + 2];
+				alphaimg2 [2 * (y * expandedwidth + x) + 1] = img [6 * (y * expandedwidth + x) + 3];
+			}
+		}
+	}
+
+	int ymax = expandedheight / 4;
+	ymax = ymax< 1?1:ymax;
+	int xmax = expandedheight / 4;
+	xmax = xmax< 1?1:xmax;
+	for (y = 0; y < expandedheight / 4; y++) {
+		for (x = 0; x < expandedwidth / 4; x++) {
+			countblocks++;
+			oldpercentageblocks = percentageblocks;
+			percentageblocks = 100.0 * countblocks / (1.0 * totblocks);
+			//compress color channels
+			if (codec == CODEC.CODEC_ETC) {
+				if (metric == METRIC.METRIC_NONPERCEPTUAL) {
+					if (speed == SPEED.SPEED_FAST)
+						compressBlockDiffFlipFast(img, imgdec, expandedwidth, expandedheight, 4 * x, 4 * y, block1,
+								block2);
+					else
+						System.out.println("Not implemented in this version\n");
+				} else {
+					if (speed == SPEED.SPEED_FAST)
+						compressBlockDiffFlipFastPerceptual(img, imgdec, expandedwidth, expandedheight, 4 * x, 4 * y,
+								block1, block2);
+					else
+						System.out.println("Not implemented in this version\n");
+				}
+			} else {
+				if (format == FORMAT.ETC2PACKAGE_R || format == FORMAT.ETC2PACKAGE_RG) {
+					//don't compress color
+				} else if (format == FORMAT.ETC2PACKAGE_RGBA1
+							|| format == FORMAT.ETC2PACKAGE_sRGBA1) {
+					//this is only available for fast/nonperceptual
+					if (speed == SPEED.SPEED_SLOW && first_time_message) {
+						System.out.println("Slow codec not implemented for RGBA1 --- using fast codec instead.\n");
+						first_time_message = false;
+					}
+					compressBlockETC2Fast(img, alphaimg, imgdec, expandedwidth, expandedheight, 4 * x, 4 * y, block1,
+							block2);
+				} else if (metric == METRIC.METRIC_NONPERCEPTUAL) {
+					if (speed == SPEED.SPEED_FAST)
+						compressBlockETC2Fast(img, alphaimg, imgdec, expandedwidth, expandedheight, 4 * x, 4 * y,
+								block1, block2);
+					else
+						System.out.println("Not implemented in this version\n");
+				} else {
+					if (speed == SPEED.SPEED_FAST)
+						compressBlockETC2FastPerceptual(img, imgdec, expandedwidth, expandedheight, 4 * x, 4 * y,
+								block1, block2);
+					else
+						System.out.println("Not implemented in this version\n");
+				}
+			}
+
+			//compression of alpha channel in case of 4-bit alpha. Uses 8-bit alpha channel as input, and has 8-bit precision.
+			if (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA) {
+				byte[] alphadata = new byte[8];
+				if (speed == SPEED.SPEED_SLOW)
+					compressBlockAlphaSlow(alphaimg, 4 * x, 4 * y, expandedwidth, expandedheight, alphadata);
+				else
+					compressBlockAlphaFast(alphaimg, 4 * x, 4 * y, expandedwidth, expandedheight, alphadata);
+				//write the 8 bytes of alphadata into dstBB.
+				fwrite(alphadata, 1, 8, dstBB);
+			}
+
+			//store compressed color channels
+			if (format != FORMAT.ETC2PACKAGE_R && format != FORMAT.ETC2PACKAGE_RG) {
+				write_big_endian_4byte_word(block1, dstBB);
+				write_big_endian_4byte_word(block2, dstBB);
+			}
+
+			//1-channel or 2-channel alpha compression: uses 16-bit data as input, and has 11-bit precision
+			if (format == FORMAT.ETC2PACKAGE_R || format == FORMAT.ETC2PACKAGE_RG) {
+				byte[] alphadata = new byte[8];
+				compressBlockAlpha16(alphaimg, 4 * x, 4 * y, expandedwidth, expandedheight, alphadata);
+				fwrite(alphadata, 1, 8, dstBB);
+			}
+			//compression of second alpha channel in RG-compression
+			if (format == FORMAT.ETC2PACKAGE_RG) {
+				byte[] alphadata = new byte[8];
+				compressBlockAlpha16(alphaimg2, 4 * x, 4 * y, expandedwidth, expandedheight, alphadata);
+				fwrite(alphadata, 1, 8, dstBB);
+			}
+			if (verbose) {
+				if (speed == SPEED.SPEED_FAST) {
+					if (((int)(percentageblocks) != (int)(oldpercentageblocks)) || percentageblocks == 100.0)
+						System.out.println("Compressed "	+ countblocks + " of " + totblocks + " blocks, "
+											+ (100.0 * countblocks / (1.0 * totblocks)) + " finished.");
+				} else
+					System.out.println("Compressed "	+ countblocks + " of " + totblocks + " blocks, "
+										+ (100.0 * countblocks / (1.0 * totblocks)) + " finished.");
+			}
+		}
+
+	}
+}
 
 //Calculates the PSNR between two files.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-double calculatePSNRTwoFiles(String srcfile1,String srcfile2)
+public double calculatePSNRTwoFiles(String srcfile1,String srcfile2)
 {
 	byte[][] srcimg1 = new byte[1][];;
 	byte[][] srcimg2 = new byte[1][];
@@ -10980,7 +11475,13 @@ public static void main(String args[])
 		new ETCPack(args);
 	}
 }
+/**
+ * Constructor to allow buffer based interactions, presumably the next call is 
+ * ByteBuffer compressImageFile(
+ */
+public ETCPack() {
 
+}
 public ETCPack(String args[]) {
 	if(args.length==3 || args.length==4 || args.length == 5 || args.length == 7 || args.length == 9 || args.length == 11 || args.length == 13)
 	{
@@ -11035,6 +11536,7 @@ public ETCPack(String args[]) {
 		System.out.println("                                         (1 equals punchthrough)\n");
 		System.out.println("                                         (default: RGB)\n");
 		System.out.println("      -v {on|off}                        Detailed progress info. (default on)\n");
+		System.out.println("      -mipmaps                           Generate Mip Maps. (default off)\n");
 		System.out.println("                                                            \n");
 		System.out.println("Examples: \n");
 		System.out.println("  etcpack img.ppm img.pkm                Compresses img.ppm to img.pkm in\n"); 
@@ -11059,8 +11561,8 @@ public ETCPack(String args[]) {
 
 
 
-
-
+//mali compression tool suggests:
+//https://github.com/google/etc2comp
 
 //https://github.com/wolfpld/etcpak much faster
 
