@@ -102,7 +102,8 @@ public class ETCPack {
 	}
 	private static void fwrite(ETCPack.KTX_header header, int i, FileChannel f) throws IOException {
 		ByteBuffer bb = ByteBuffer.allocate(12 + 13*4);
-		bb.put(header.identifier);//12
+		bb.put(header.KTX_IDENTIFIER_REF);//12
+		// now 13*4 bytes => 12+(13*4) = 64bytes
 		bb.putInt(header.endianness);
 		bb.putInt(header.glType);
 		bb.putInt(header.glTypeSize);
@@ -132,7 +133,8 @@ public class ETCPack {
 		bb.put(data); 
 	}
 	private static void fwrite(ETCPack.KTX_header header, int i, ByteBuffer bb) throws IOException {
-		bb.put(header.identifier);//12
+		bb.put(header.KTX_IDENTIFIER_REF);//12
+		// now 13*4 bytes => 12+(13*4) = 64bytes
 		bb.putInt(header.endianness);
 		bb.putInt(header.glType);
 		bb.putInt(header.glTypeSize);
@@ -159,7 +161,7 @@ public class ETCPack {
 		return string.equals(string2);
 	}
 	
-	private Random rand = new Random(10000);
+
 	
 	//precalc to ensure the hotspot gets it
 	float sqrtW13 = (float)(1.0/Math.sqrt(1.0*3));
@@ -176,47 +178,47 @@ void unstuff59bits(unsigned int thumbT_word1, unsigned int thumbT_word2, unsigne
 void unstuff58bits(unsigned int thumbH_word1, unsigned int thumbH_word2, unsigned int &thumbH58_word1, unsigned int &thumbH58_word2);
 */
 //uint8 (colors_RGB444)[2][3], uint8 (colors)[2][3]);
-void decompressColor(int R_B, int G_B, int B_B, byte[][] colors_RGB444, byte[][] colors)
+static void decompressColor(int R_B, int G_B, int B_B, byte[][] colors_RGB444, byte[][] colors)
 {ETCDec.decompressColor(R_B, G_B, B_B, colors_RGB444, colors);}
 //uint8 (colors)[2][3], uint8 (possible_colors)[4][3]
-void calculatePaintColors59T(byte d, PATTERN p, byte[][] colors, byte[][] possible_colors)
+static void calculatePaintColors59T(byte d, PATTERN p, byte[][] colors, byte[][] possible_colors)
 {ETCDec.calculatePaintColors59T(d, p, colors, possible_colors);}
 //uint8 (colors)[2][3], uint8 (possible_colors)[4][3]
-void calculatePaintColors58H(byte d, PATTERN p, byte[][] colors, byte[][] possible_colors)
+static void calculatePaintColors58H(byte d, PATTERN p, byte[][] colors, byte[][] possible_colors)
 {ETCDec.calculatePaintColors58H(d, p, colors, possible_colors);}
-void decompressBlockTHUMB59T(int block_part1, int block_part2, byte[] img,int width,int height,int startx,int starty)
+static void decompressBlockTHUMB59T(int block_part1, int block_part2, byte[] img,int width,int height,int startx,int starty)
 {ETCDec.decompressBlockTHUMB59T(block_part1, block_part2, img, width, height, startx, starty);}
-void decompressBlockTHUMB58H(int block_part1, int block_part2, byte[] img,int width,int height,int startx,int starty)
+static void decompressBlockTHUMB58H(int block_part1, int block_part2, byte[] img,int width,int height,int startx,int starty)
 {ETCDec.decompressBlockTHUMB58H(block_part1, block_part2, img, width, height, startx, starty);}
-void decompressBlockPlanar57(int compressed57_1, int compressed57_2, byte[] img,int width,int height,int startx,int starty)
+static void decompressBlockPlanar57(int compressed57_1, int compressed57_2, byte[] img,int width,int height,int startx,int starty)
 {ETCDec.decompressBlockPlanar57(compressed57_1, compressed57_2, img, width, height, startx, starty);}
-void decompressBlockDiffFlip(int block_part1, int block_part2, byte[] img,int width,int height,int startx,int starty)
+static void decompressBlockDiffFlip(int block_part1, int block_part2, byte[] img,int width,int height,int startx,int starty)
 {ETCDec.decompressBlockDiffFlip(block_part1, block_part2, img, width, height, startx, starty);}
 //void decompressBlockETC2( int block_part1, int block_part2, byte[] img,int width,int height,int startx,int starty)
 //{ETCDec.decompressBlockETC2(block_part1, block_part2, img, width, height, startx, starty);}
-void decompressBlockDifferentialWithAlpha( int block_part1, int block_part2, byte[] img, byte[] alpha, int width, int height, int startx, int starty)
+static void decompressBlockDifferentialWithAlpha( int block_part1, int block_part2, byte[] img, byte[] alpha, int width, int height, int startx, int starty)
 {ETCDec.decompressBlockDifferentialWithAlpha(block_part1, block_part2, img, alpha, width, height, startx, starty);}
 //void decompressBlockETC21BitAlpha( int block_part1, int block_part2, byte[] img, byte[] alphaimg, int width,int height,int startx,int starty)
 //{ETCDec.decompressBlockETC21BitAlpha(block_part1, block_part2, img, alphaimg, width, height, startx, starty);}
-void decompressBlockTHUMB58HAlpha( int block_part1, int block_part2, byte[] img, byte[] alpha,int width,int height,int startx,int starty)
+static void decompressBlockTHUMB58HAlpha( int block_part1, int block_part2, byte[] img, byte[] alpha,int width,int height,int startx,int starty)
 {ETCDec.decompressBlockTHUMB58HAlpha(block_part1, block_part2, img, alpha, width, height, startx, starty);}
-void decompressBlockTHUMB59TAlpha(int block_part1, int block_part2, byte[] img, byte[] alpha,int width,int height,int startx,int starty)
+static void decompressBlockTHUMB59TAlpha(int block_part1, int block_part2, byte[] img, byte[] alpha,int width,int height,int startx,int starty)
 {ETCDec.decompressBlockTHUMB59TAlpha(block_part1, block_part2, img, alpha, width, height, startx, starty);}
 //byte getbit(byte input, int frompos, int topos)
 //{return ETCDec.getbit(input, frompos, topos);}
-int getbit(int input, int frompos, int topos)
+static int getbit(int input, int frompos, int topos)
 {return ETCDec.getbit(input, frompos, topos);}
-int clamp(int val)
+static int clamp(int val)
 {return ETCDec.clamp(val);}
 //void decompressBlockAlpha(byte[] data,byte[] img,int width,int height,int ix,int iy)
 //{ETCDec.decompressBlockAlpha(data, img, width, height, ix, iy);}
-short get16bits11bits(int base, int table, int mul, int index)
+static short get16bits11bits(int base, int table, int mul, int index)
 {return ETCDec.get16bits11bits(base,  table,  mul, index);}
 //void decompressBlockAlpha16bit(byte[] data,byte[] img,int width,int height,int ix,int iy)
 //{ETCDec.decompressBlockAlpha16bit(data, img, width, height, ix, iy);} 
-short get16bits11signed(int base, int table, int mul, int index)
+static short get16bits11signed(int base, int table, int mul, int index)
 {return ETCDec.get16bits11signed(base, table, mul, index);}
-void setupAlphaTable()
+static void setupAlphaTable()
 {ETCDec.setupAlphaTable();}
 
 
@@ -227,77 +229,77 @@ void setupAlphaTable()
 //can then be removed.
  
 
-int CLAMP(int ll, int x, int ul) { return (((x)<(ll)) ? (ll) : (((x)>(ul)) ? (ul) : (x))); }
-byte CLAMP(int ll, byte x, int ul) { return (byte)(((x&0xff)<(ll)) ? (ll) : (((x&0xff)>(ul)) ? (ul) : (x&0xff))); }
-double CLAMP(double ll, double x, double ul) { return (((x)<(ll)) ? (ll) : (((x)>(ul)) ? (ul) : (x))); }
+static final int CLAMP(int ll, int x, int ul) { return (((x)<(ll)) ? (ll) : (((x)>(ul)) ? (ul) : (x))); }
+static final byte CLAMP(int ll, byte x, int ul) { return (byte)(((x&0xff)<(ll)) ? (ll) : (((x&0xff)>(ul)) ? (ul) : (x&0xff))); }
+static final double CLAMP(double ll, double x, double ul) { return (((x)<(ll)) ? (ll) : (((x)>(ul)) ? (ul) : (x))); }
 
 //The below code works as CLAMP(0, x, 255) if x < 255
-int CLAMP_LEFT_ZERO(int x){return ((~(((int)(x))>>31))&(x));}
+static final int CLAMP_LEFT_ZERO(int x){return ((~(((int)(x))>>31))&(x));}
 //The below code works as CLAMP(0, x, 255) if x is in [0,511]
-int CLAMP_RIGHT_255(int x){return (((( ((((int)(x))<<23)>>31)  ))|(x))&0x000000ff); }  
+static final int CLAMP_RIGHT_255(int x){return (((( ((((int)(x))<<23)>>31)  ))|(x))&0x000000ff); }  
 
-int SQUARE(int x){return ((x)*(x));}
-float SQUARE(float x){return ((x)*(x));}
-double SQUARE(double x){return ((x)*(x));}
+static final int SQUARE(int x){return ((x)*(x));}
+static final float SQUARE(float x){return ((x)*(x));}
+static final double SQUARE(double x){return ((x)*(x));}
 // careful with byte inputs and cast outputs
-int JAS_ROUND(int x){return (((x) < 0.0 ) ? ((int)((x)-0.5)) : ((int)((x)+0.5)));}
-double JAS_ROUND(double x){return (((x) < 0.0 ) ? ((int)((x)-0.5)) : ((int)((x)+0.5)));}
-int JAS_MIN(int a,int b){return ((a) < (b) ? (a) : (b));}
-int JAS_MAX(int a,int b){return ((a) > (b) ? (a) : (b));}
+static final int JAS_ROUND(int x){return (((x) < 0.0 ) ? ((int)((x)-0.5)) : ((int)((x)+0.5)));}
+static final double JAS_ROUND(double x){return (((x) < 0.0 ) ? ((int)((x)-0.5)) : ((int)((x)+0.5)));}
+static final int JAS_MIN(int a,int b){return ((a) < (b) ? (a) : (b));}
+static final int JAS_MAX(int a,int b){return ((a) > (b) ? (a) : (b));}
 
 //The error metric Wr Wg Wb should be defined so that Wr^2 + Wg^2 + Wb^2 = 1.
 //Hence it is easier to first define the squared values and derive the weights
 //as their square-roots.
 
-double PERCEPTUAL_WEIGHT_R_SQUARED =0.299;
-double PERCEPTUAL_WEIGHT_G_SQUARED =0.587;
-double PERCEPTUAL_WEIGHT_B_SQUARED =0.114;
+static final double PERCEPTUAL_WEIGHT_R_SQUARED =0.299;
+static final double PERCEPTUAL_WEIGHT_G_SQUARED =0.587;
+static final double PERCEPTUAL_WEIGHT_B_SQUARED =0.114;
 
-int PERCEPTUAL_WEIGHT_R_SQUARED_TIMES1000 =299;
-int PERCEPTUAL_WEIGHT_G_SQUARED_TIMES1000 =587;
-int PERCEPTUAL_WEIGHT_B_SQUARED_TIMES1000 =114;
+static final int PERCEPTUAL_WEIGHT_R_SQUARED_TIMES1000 =299;
+static final int PERCEPTUAL_WEIGHT_G_SQUARED_TIMES1000 =587;
+static final int PERCEPTUAL_WEIGHT_B_SQUARED_TIMES1000 =114;
 
-byte RED(byte[] img,int width,int x,int y){return  img[3*(y*width+x)+0];}
-byte GREEN(byte[] img,int width,int x,int y){return  img[3*(y*width+x)+1];}
-byte BLUE(byte[] img,int width,int x,int y){return   img[3*(y*width+x)+2];}
+static final byte RED(byte[] img,int width,int x,int y){return  img[3*(y*width+x)+0];}
+static final byte GREEN(byte[] img,int width,int x,int y){return  img[3*(y*width+x)+1];}
+static final byte BLUE(byte[] img,int width,int x,int y){return   img[3*(y*width+x)+2];}
 
-int SHIFT(int size,int startpos){return  ((startpos)-(size)+1);}
-int MASK(int size, int startpos){return  (((2<<(size-1))-1) << SHIFT(size,startpos));}
-void PUTBITS( int dest[], int data, int size, int startpos){dest[0] = ((dest[0] & ~MASK(size, startpos)) | ((data << SHIFT(size, startpos)) & MASK(size,startpos)));}
-int SHIFTHIGH(int size, int startpos){return  (((startpos)-32)-(size)+1);}
-int MASKHIGH(int size, int startpos){return  (((1<<(size))-1) << SHIFTHIGH(size,startpos));}
-void PUTBITSHIGH(int[] dest, int data, int size, int startpos){dest[0] = ((dest[0] & ~MASKHIGH(size, startpos)) | ((data << SHIFTHIGH(size, startpos)) & MASKHIGH(size,startpos)));}
-void PUTBITSHIGH(int[] dest, byte data, int size, int startpos){dest[0] = ((dest[0] & ~MASKHIGH(size, startpos)) | ((data << SHIFTHIGH(size, startpos)) & MASKHIGH(size,startpos)));}
+static final int SHIFT(int size,int startpos){return  ((startpos)-(size)+1);}
+static final int MASK(int size, int startpos){return  (((2<<(size-1))-1) << SHIFT(size,startpos));}
+static final void PUTBITS( int dest[], int data, int size, int startpos){dest[0] = ((dest[0] & ~MASK(size, startpos)) | ((data << SHIFT(size, startpos)) & MASK(size,startpos)));}
+static final int SHIFTHIGH(int size, int startpos){return  (((startpos)-32)-(size)+1);}
+static final int MASKHIGH(int size, int startpos){return  (((1<<(size))-1) << SHIFTHIGH(size,startpos));}
+static final void PUTBITSHIGH(int[] dest, int data, int size, int startpos){dest[0] = ((dest[0] & ~MASKHIGH(size, startpos)) | ((data << SHIFTHIGH(size, startpos)) & MASKHIGH(size,startpos)));}
+static final void PUTBITSHIGH(int[] dest, byte data, int size, int startpos){dest[0] = ((dest[0] & ~MASKHIGH(size, startpos)) | ((data << SHIFTHIGH(size, startpos)) & MASKHIGH(size,startpos)));}
 //Return is an int as more than 8 bits can be asked for
-int GETBITS(int source, int size, int startpos){return   (( (source) >> ((startpos)-(size)+1) ) & ((1<<(size)) -1));}
+static final int GETBITS(int source, int size, int startpos){return   (( (source) >> ((startpos)-(size)+1) ) & ((1<<(size)) -1));}
 //Return is an int as more than 8 bits can be asked for
-int GETBITSHIGH(int source, int size, int startpos){return   (( (source) >> (((startpos)-32)-(size)+1) ) & ((1<<(size)) -1));}
+static final int GETBITSHIGH(int source, int size, int startpos){return   (( (source) >> (((startpos)-32)-(size)+1) ) & ((1<<(size)) -1));}
 
 
 
 //Thumb macros and definitions
-int	R_BITS59T =4;
-int G_BITS59T =4;
-int	B_BITS59T =4;
-int	R_BITS58H =4;
-int G_BITS58H =4;
-int	B_BITS58H =4;
-int	MAXIMUM_ERROR =(255*255*16*1000);
-int R =0;
-int G =1;
-int B =2;
-int BLOCKHEIGHT =4;
-int BLOCKWIDTH =4;
-int BINPOW(int power) {return(1<<(power));}
+static final int	R_BITS59T =4;
+static final int G_BITS59T =4;
+static final int	B_BITS59T =4;
+static final int	R_BITS58H =4;
+static final int G_BITS58H =4;
+static final int	B_BITS58H =4;
+static final int	MAXIMUM_ERROR =(255*255*16*1000);
+static final int R =0;
+static final int G =1;
+static final int B =2;
+static final int BLOCKHEIGHT =4;
+static final int BLOCKWIDTH =4;
+static final int BINPOW(int power) {return(1<<(power));}
 //#define RADIUS 2
-int	TABLE_BITS_59T =3;
-int	TABLE_BITS_58H =3;
+static final int	TABLE_BITS_59T =3;
+static final int	TABLE_BITS_58H =3;
 
 
 //Global tables, used and found in ETCDec
 //byte[] table59T= new byte[]{3,6,11,16,23,32,41,64};  // 3-bit table for the 59 bit T-mode
 //byte[] table58H = new byte[]{3,6,11,16,23,32,41,64};  // 3-bit table for the 58 bit H-mode
-int[] weight = new int[]{1,1,1};			// Color weight
+static final int[] weight = new int[]{1,1,1};			// Color weight
 
 //Enums
 public static enum PATTERN{PATTERN_H, 	PATTERN_T};
@@ -348,24 +350,29 @@ public static enum SPEED{SPEED_SLOW, SPEED_FAST, SPEED_MEDIUM};
 public static enum METRIC{METRIC_PERCEPTUAL, METRIC_NONPERCEPTUAL};
 public static enum CODEC{CODEC_ETC, CODEC_ETC2};
 
-MODE2 mode = MODE2.MODE_COMPRESS;
-SPEED speed = SPEED.SPEED_FAST;
-METRIC metric = METRIC.METRIC_PERCEPTUAL;
-CODEC codec = CODEC.CODEC_ETC2;
-FORMAT format = FORMAT.ETC2PACKAGE_RGB;
-boolean verbose = true;
-boolean generateMipMaps = false;
-//extern 
-int formatSigned = 0;
-boolean ktxFile=false;
-boolean first_time_message = true;
 
-static int[] scramble= new int[]{3, 2, 0, 1};
-static int[] unscramble= new int[]{2, 3, 1, 0};
+//NOT static, used per instance
+private MODE2 mode = MODE2.MODE_COMPRESS;
+private SPEED speed = SPEED.SPEED_FAST;
+private METRIC metric = METRIC.METRIC_PERCEPTUAL;
+private CODEC codec = CODEC.CODEC_ETC2;
+private FORMAT format = FORMAT.ETC2PACKAGE_RGB;
+private boolean verbose = true;
+private boolean generateMipMaps = false;
+//extern 
+private int formatSigned = 0;
+private boolean ktxFile=false;
+private boolean first_time_message = true;
+
+private Random rand = new Random(10000);
+
+static final int[] scramble= new int[]{3, 2, 0, 1};
+static final int[] unscramble= new int[]{2, 3, 1, 0};
 // KTX Header has this stuff
-class KTX_header
+static class KTX_header
 {
-	byte[]  identifier=new byte[12];
+	static final byte[] KTX_IDENTIFIER_REF = new byte[] { (byte)0xAB, (byte)0x4B, (byte)0x54, (byte)0x58, (byte)0x20, (byte)0x31, (byte)0x31, (byte)0xBB, (byte)0x0D, (byte)0x0A, (byte)0x1A, (byte)0x0A };
+
 	 int endianness;
 	 int glType;
 	 int glTypeSize;
@@ -381,10 +388,9 @@ class KTX_header
 	 int bytesOfKeyValueData;
 }; 
 
-byte[] KTX_IDENTIFIER_REF = new byte[] { (byte)0xAB, (byte)0x4B, (byte)0x54, (byte)0x58, (byte)0x20, (byte)0x31, (byte)0x31, (byte)0xBB, (byte)0x0D, (byte)0x0A, (byte)0x1A, (byte)0x0A };
 
-int KTX_ENDIAN_REF   =   (0x04030201);
-int KTX_ENDIAN_REF_REV = (0x01020304) ;
+static final int KTX_ENDIAN_REF   =   (0x04030201);
+static final int KTX_ENDIAN_REF_REV = (0x01020304) ;
 
 public static final int  GL_R=0x1903;
 public static final int  GL_RG=0x8227;
@@ -415,7 +421,7 @@ public static final int  GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC              =0x927
 //converts indices from  |a0|a1|e0|e1|i0|i1|m0|m1|b0|b1|f0|f1|j0|j1|n0|n1|c0|c1|g0|g1|k0|k1|o0|o1|d0|d1|h0|h1|l0|l1|p0|p1| previously used by T- and H-modes 
 //				         into  |p0|o0|n0|m0|l0|k0|j0|i0|h0|g0|f0|e0|d0|c0|b0|a0|p1|o1|n1|m1|l1|k1|j1|i1|h1|g1|f1|e1|d1|c1|b1|a1| which should be used for all modes.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int indexConversion(int pixelIndices) 
+static int indexConversion(int pixelIndices) 
 {
 	int correctIndices = 0;
 	int[][] LSB = new int[4][4];
@@ -447,7 +453,7 @@ int indexConversion(int pixelIndices)
 
 //Tests if a file exists.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-boolean fileExist(String filename)
+static boolean fileExist(String filename)
 {	 
 	if(new File(filename).exists())
 	{
@@ -459,7 +465,7 @@ boolean fileExist(String filename)
 //Expand source image so that it is divisible by a factor of four in the x-dimension.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 // address pointers byte[1][] img, int[1] expandedwidth, int[1] expandedheight
-boolean expandToWidthDivByFour(byte[][] img, int width, int height, int[] expandedwidth, int[] expandedheight, int bitrate)
+static boolean expandToWidthDivByFour(byte[][] img, int width, int height, int[] expandedwidth, int[] expandedheight, int bitrate)
 {
 	int wdiv4;
 	int xx, yy;
@@ -520,7 +526,7 @@ boolean expandToWidthDivByFour(byte[][] img, int width, int height, int[] expand
 //Expand source image so that it is divisible by a factor of four in the y-dimension.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 // address pointers byte[1][] img, int[1] expandedwidth, int[1] expandedheight
-boolean expandToHeightDivByFour(byte[][] img, int width, int height, int[] expandedwidth, int[] expandedheight, int bitrate)
+static boolean expandToHeightDivByFour(byte[][] img, int width, int height, int[] expandedwidth, int[] expandedheight, int bitrate)
 {
 	int hdiv4;
 	int xx, yy;
@@ -535,11 +541,6 @@ boolean expandToHeightDivByFour(byte[][] img, int width, int height, int[] expan
 		expandedheight[0] = (hdiv4 + 1) * 4;
 		numlinesmissing = expandedheight[0] - height;
 		newimg= new byte[3*expandedwidth[0]*expandedheight[0]*bitrate/8];
-		if(newimg==null)
-		{
-			System.out.println("Could not allocate memory to expand height\n");
-			return false;
-		}
 		
 		// First copy image. No need to reformat data.
 
@@ -580,7 +581,7 @@ boolean expandToHeightDivByFour(byte[][] img, int width, int height, int[] expan
 
 //Find the position of a file extension such as .ppm or .pkm
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int find_pos_of_extension(String src)
+static int find_pos_of_extension(String src)
 {
 	return src.lastIndexOf(".");
 /*	int q=strlen(src);
@@ -715,7 +716,7 @@ boolean readSrcFile(String filename,byte[][] img,byte[][] imgalpha, int[] width,
 //Reads a file without expanding it to be divisible by 4.
 //Is used when doing PSNR calculation between two files.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-boolean readSrcFileNoExpand(String filename,byte[][] img, int[] width,int[] height)
+static boolean readSrcFileNoExpand(String filename,byte[][] img, int[] width,int[] height)
 {
 	//int w1,h1;
 	//String str;
@@ -786,7 +787,7 @@ boolean readSrcFileNoExpand(String filename,byte[][] img, int[] width,int[] heig
 //Parses the arguments from the command line.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address src dest
-void readArguments(String[] args,String[] src,String[] dst)
+boolean readArguments(String[] args,String[] src,String[] dst)
 {
 	int q;
 
@@ -798,122 +799,126 @@ void readArguments(String[] args,String[] src,String[] dst)
 		//first check for flags..
 		if(args[i].charAt(0)=='-') 
 		{
-			if(i==args.length-1) 
-			{
-				System.out.println("flag missing argument: %s!\n");
-				System.exit(1);
-			}
-			//handle speed flag
-			if(strcmp(args[i],"-s"))  
-			{
-				// We have argument -s. Now check for slow, medium or fast.
-				if(strcmp(args[i+1],"slow")) 
-					speed = SPEED.SPEED_SLOW;
-				else if(strcmp(args[i+1],"medium")) 
-					speed = SPEED.SPEED_MEDIUM;
-				else if(strcmp(args[i+1],"fast")) 
-					speed = SPEED.SPEED_FAST;
-				else 
-				{
-					System.out.println("Error: "+args[i+1]+" not part of flag "+args[i]+"\n");
-					System.exit(1);
-				}
-			}
-			//handle verbose flag
-			else if(strcmp(args[i],"-v"))  
-			{
-				// We have argument -s. Now check for slow, medium or fast.
-				if(strcmp(args[i+1],"off")) 
-					verbose = false;
-				else if(strcmp(args[i+1],"on")) 
-					verbose = true;
-				else 
-				{
-					System.out.println("Error: "+args[i+1]+" not part of flag "+args[i]+"\n");
-					System.exit(1);
-				}
-			}			
-			//error metric flag
-			else if(strcmp(args[i],"-e")) 	
-			{
-				// We have argument -e. Now check for perceptual or nonperceptual
-				if(strcmp(args[i+1],"perceptual")) 
-					metric = METRIC.METRIC_PERCEPTUAL;
-				else if(strcmp(args[i+1],"nonperceptual")) 
-					metric = METRIC.METRIC_NONPERCEPTUAL;
-				else 
-				{
-					System.out.println("Error: "+args[i+1]+" not part of flag "+args[i]+"\n");
-					System.exit(1);
-				}
-			}
-			//codec flag
-			else if(strcmp(args[i],"-c")) 
-			{
-				// We have argument -c. Now check for perceptual or nonperceptual
-				if(strcmp(args[i+1],"etc") || strcmp(args[i+1],"etc1"))
-					codec = CODEC.CODEC_ETC;
-				else if(strcmp(args[i+1],"etc2")) 
-					codec = CODEC.CODEC_ETC2;
-				else 
-				{
-					System.out.println("Error: "+args[i+1]+" not part of flag "+args[i]+"\n");
-					System.exit(1);
-				}
-			}
-			//format flag
-			else if(strcmp(args[i],"-f")) 
-			{
-				if(strcmp(args[i+1],"R"))
-					format=FORMAT.ETC2PACKAGE_R;
-				else if(strcmp(args[i+1],"RG"))
-					format=FORMAT.ETC2PACKAGE_RG;
-				else if(strcmp(args[i+1],"R_signed")) 
-				{
-					format=FORMAT.ETC2PACKAGE_R;
-					formatSigned=1;
-				}
-				else if(strcmp(args[i+1],"RG_signed")) 
-				{
-					format=FORMAT.ETC2PACKAGE_RG;
-					formatSigned=1;
-				}
-				else if(strcmp(args[i+1],"RGB"))
-					format=FORMAT.ETC2PACKAGE_RGB;
-				else if(strcmp(args[i+1],"sRGB"))
-					format=FORMAT.ETC2PACKAGE_sRGB;
-				else if(strcmp(args[i+1],"RGBA")||strcmp(args[i+1],"RGBA8"))
-					format=FORMAT.ETC2PACKAGE_RGBA;
-				else if(strcmp(args[i+1],"sRGBA")||strcmp(args[i+1],"sRGBA8"))
-					format=FORMAT.ETC2PACKAGE_sRGBA;
-				else if(strcmp(args[i+1],"RGBA1"))
-					format=FORMAT.ETC2PACKAGE_RGBA1;
-				else if(strcmp(args[i+1],"sRGBA1"))
-					format=FORMAT.ETC2PACKAGE_sRGBA1;
-				else 
-				{
-					System.out.println("Error: "+args[i+1]+" not part of flag "+args[i]+"\n");
-					System.exit(1);
-				}
-			}
+			//handle no arg flags first	
+			
 			// handle mip maps flag
-			else if(strcmp(args[i],"-mipmaps"))  
+			if(strcmp(args[i],"-mipmaps")||strcmp(args[i],"-mipmap"))  
 			{
 				generateMipMaps = true;
-				i--; //ugly way of negating the increment of i done later because -p doesn't have an argument.
 			}
+			// handle PSNR test flag
 			else if(strcmp(args[i],"-p")) 
 			{
 				mode=MODE2.MODE_PSNR;
-				i--; //ugly way of negating the increment of i done later because -p doesn't have an argument.
+			} 
+			else
+			{						
+				if(i==args.length-1) 
+				{
+					System.out.println("flag missing argument: %s!\n");
+					return false;
+				}
+				//handle speed flag
+				if(strcmp(args[i],"-s"))  
+				{
+					// We have argument -s. Now check for slow, medium or fast.
+					if(strcmp(args[i+1],"slow")) 
+						speed = SPEED.SPEED_SLOW;
+					else if(strcmp(args[i+1],"medium")) 
+						speed = SPEED.SPEED_MEDIUM;
+					else if(strcmp(args[i+1],"fast")) 
+						speed = SPEED.SPEED_FAST;
+					else 
+					{
+						System.out.println("Error: "+args[i+1]+" not part of flag "+args[i]+"\n");
+						return false;
+					}
+				}
+				//handle verbose flag
+				else if(strcmp(args[i],"-v"))  
+				{
+					// We have argument -s. Now check for slow, medium or fast.
+					if(strcmp(args[i+1],"off")) 
+						verbose = false;
+					else if(strcmp(args[i+1],"on")) 
+						verbose = true;
+					else 
+					{
+						System.out.println("Error: "+args[i+1]+" not part of flag "+args[i]+"\n");
+						return false;
+					}
+				}			
+				//error metric flag
+				else if(strcmp(args[i],"-e")) 	
+				{
+					// We have argument -e. Now check for perceptual or nonperceptual
+					if(strcmp(args[i+1],"perceptual")) 
+						metric = METRIC.METRIC_PERCEPTUAL;
+					else if(strcmp(args[i+1],"nonperceptual")) 
+						metric = METRIC.METRIC_NONPERCEPTUAL;
+					else 
+					{
+						System.out.println("Error: "+args[i+1]+" not part of flag "+args[i]+"\n");
+						return false;
+					}
+				}
+				//codec flag
+				else if(strcmp(args[i],"-c")) 
+				{
+					// We have argument -c. Now check for perceptual or nonperceptual
+					if(strcmp(args[i+1],"etc") || strcmp(args[i+1],"etc1"))
+						codec = CODEC.CODEC_ETC;
+					else if(strcmp(args[i+1],"etc2")) 
+						codec = CODEC.CODEC_ETC2;
+					else 
+					{
+						System.out.println("Error: "+args[i+1]+" not part of flag "+args[i]+"\n");
+						return false;
+					}
+				}
+				//format flag
+				else if(strcmp(args[i],"-f")) 
+				{
+					if(strcmp(args[i+1],"R"))
+						format=FORMAT.ETC2PACKAGE_R;
+					else if(strcmp(args[i+1],"RG"))
+						format=FORMAT.ETC2PACKAGE_RG;
+					else if(strcmp(args[i+1],"R_signed")) 
+					{
+						format=FORMAT.ETC2PACKAGE_R;
+						formatSigned=1;
+					}
+					else if(strcmp(args[i+1],"RG_signed")) 
+					{
+						format=FORMAT.ETC2PACKAGE_RG;
+						formatSigned=1;
+					}
+					else if(strcmp(args[i+1],"RGB"))
+						format=FORMAT.ETC2PACKAGE_RGB;
+					else if(strcmp(args[i+1],"sRGB"))
+						format=FORMAT.ETC2PACKAGE_sRGB;
+					else if(strcmp(args[i+1],"RGBA")||strcmp(args[i+1],"RGBA8"))
+						format=FORMAT.ETC2PACKAGE_RGBA;
+					else if(strcmp(args[i+1],"sRGBA")||strcmp(args[i+1],"sRGBA8"))
+						format=FORMAT.ETC2PACKAGE_sRGBA;
+					else if(strcmp(args[i+1],"RGBA1"))
+						format=FORMAT.ETC2PACKAGE_RGBA1;
+					else if(strcmp(args[i+1],"sRGBA1"))
+						format=FORMAT.ETC2PACKAGE_sRGBA1;
+					else 
+					{
+						System.out.println("Error: "+args[i+1]+" not part of flag "+args[i]+"\n");
+						return false;
+					}
+				}			
+				else 
+				{
+					System.out.println("Error: cannot interpret flag "+args[i]+" "+args[i+1]+"\n");
+					return false;
+				}
+				//don't read the flag argument next iteration..
+				i++;
 			}
-			else 
-			{
-				System.out.println("Error: cannot interpret flag "+args[i]+" "+args[i+1]+"\n");
-				System.exit(1);
-			}
-			//don't read the flag argument next iteration..
-			i++;
 		}
 		//this isn't a flag, so must be src or dst
 		else 
@@ -921,7 +926,7 @@ void readArguments(String[] args,String[] src,String[] dst)
 			if(srcfound&&dstfound) 
 			{
 				System.out.println("too many arguments! expecting src, dst; found "+src[0]+", "+dst[0]+", "+args[i]+"\n");
-				System.exit(1);
+				return false;
 			}
 			else if(srcfound) 
 			{
@@ -938,24 +943,24 @@ void readArguments(String[] args,String[] src,String[] dst)
 	if(!srcfound&&dstfound) 
 	{
 		System.out.println("too few arguments! expecting src, dst\n");
-		System.exit(1);
+		return false;
 	}
 	if(mode==MODE2.MODE_PSNR)
-		return;
+		return true;
 	//check source/destination.. is this compression or decompression?
 	q = find_pos_of_extension(src[0]);
 	if(q<0) 
 	{
 		System.out.println("invalid source file: "+src+"\n");
-		System.exit(1);
+		return false;
 	}
 
 	// If we have etcpack img.pkm img.any
-
 	if(strncmp(src[0],q,".pkm",4)) 
 	{
 		// First argument is .pkm. Decompress. 
 		mode = MODE2.MODE_UNCOMPRESS;			// uncompress from binary file format .pkm
+		System.out.println("decompressing pkm\n");
 	}
 	else if(strncmp(src[0],q,".ktx",4)) 
 	{
@@ -971,12 +976,13 @@ void readArguments(String[] args,String[] src,String[] dst)
 		if(q<0) 
 		{
 			System.out.println("invalid destination file: "+src+"\n");
-			System.exit(1);
+			return false;
 		}
 		if(strncmp(dst[0],q,".pkm",4)) 
 		{
 			// Second argument is .pkm. Compress. 
 			mode = MODE2.MODE_COMPRESS;			// compress to binary file format .pkm
+			System.out.println("compressing to pkm\n");
 		}
 		else if(strncmp(dst[0],q,".ktx",4)) 
 		{
@@ -988,20 +994,22 @@ void readArguments(String[] args,String[] src,String[] dst)
 		else 
 		{
 			System.out.println("source or destination must be a .pkm or .ktx file\n");
-			System.exit(1);
+			return false;
 		}
 	}
 	//do some sanity check stuff..
 	if(codec==CODEC.CODEC_ETC&&format!=FORMAT.ETC2PACKAGE_RGB) 
 	{
 		System.out.println("ETC1 codec only supports RGB format\n");
-		System.exit(1);
+		return false;
 	}
 	else if(codec==CODEC.CODEC_ETC)
 		format=FORMAT.ETC1_RGB;
+	
+	return true;
 }
 
-int[][] compressParams = new int[][]//16][4];
+static final int[][] compressParams = new int[][]//16][4];
 {
 	new int[]{-8,-2,2,8},
 	new int[]{-8,-2,2,8},
@@ -1020,7 +1028,7 @@ int[][] compressParams = new int[][]//16][4];
 	new int[]{-183,-47,47,183},
 	new int[]{-183,-47,47,183},	
 };
-int[] compressParamsFast = new int[]{  -8,  -2,  2,   8,
+static final int[] compressParamsFast = new int[]{  -8,  -2,  2,   8,
 									 -17,  -5,  5,  17,
 									 -29,  -9,  9,  29,
 									 -42, -13, 13,  42,
@@ -1029,6 +1037,7 @@ int[] compressParamsFast = new int[]{  -8,  -2,  2,   8,
 									-106, -33, 33, 106,
 									-183, -47, 47, 183};
 /*
+ *just a static now
 boolean readCompressParams()
 {
 	compressParams[0][0]  =  -8; compressParams[0][1]  =  -2; compressParams[0][2]  =  2; compressParams[0][3]  =   8;
@@ -1053,7 +1062,7 @@ boolean readCompressParams()
 
 //Computes the average color in a 2x4 area and returns the average color as a float.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-void computeAverageColor2x4noQuantFloat(byte[] img,int width,int height,int startx,int starty,float[] avg_color)
+static void computeAverageColor2x4noQuantFloat(byte[] img,int width,int height,int startx,int starty,float[] avg_color)
 {
 	int r=0,g=0,b=0;
 	for(int y=starty; y<starty+4; y++)
@@ -1074,7 +1083,7 @@ void computeAverageColor2x4noQuantFloat(byte[] img,int width,int height,int star
 
 //Computes the average color in a 4x2 area and returns the average color as a float.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-void computeAverageColor4x2noQuantFloat(byte[] img,int width,int height,int startx,int starty,float[] avg_color)
+static void computeAverageColor4x2noQuantFloat(byte[] img,int width,int height,int startx,int starty,float[] avg_color)
 {
 	int r=0,g=0,b=0;
 	for(int y=starty; y<starty+2; y++)
@@ -1094,7 +1103,7 @@ void computeAverageColor4x2noQuantFloat(byte[] img,int width,int height,int star
 
 //Finds all pixel indices for a 2x4 block.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int compressBlockWithTable2x4(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
+static int compressBlockWithTable2x4(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
 {
 	int[] orig= new int[3],approx= new int[3];
 	int[] pixel_indices_MSB=new int[] {0}, pixel_indices_LSB=new int[] {0};
@@ -1150,13 +1159,13 @@ int compressBlockWithTable2x4(byte[] img,int width,int height,int startx,int sta
 	return sum_error;
 }
 
-int MAXERR1000 = 1000*255*255*16;
+static final int MAXERR1000 = 1000*255*255*16;
 
 //Finds all pixel indices for a 2x4 block using perceptual weighting of error.
 //Done using fixed poinit arithmetics where weights are multiplied by 1000.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //unsigned 
-int compressBlockWithTable2x4percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table, int[] pixel_indices_MSBp,  int[] pixel_indices_LSBp)
+static int compressBlockWithTable2x4percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table, int[] pixel_indices_MSBp,  int[] pixel_indices_LSBp)
 {
 	int[] orig = new int[3], approx=new int[3];
 	//unsigned 
@@ -1222,7 +1231,7 @@ int compressBlockWithTable2x4percep1000(byte[] img,int width,int height,int star
 //Finds all pixel indices for a 2x4 block using perceptual weighting of error.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int[] pixel_indices_MSBp, int[] pixel_indices_LSBp
-float compressBlockWithTable2x4percep(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
+static float compressBlockWithTable2x4percep(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
 {
 	byte[] orig= new byte[3],approx= new byte[3];
 	int[] pixel_indices_MSB=new int[] {0}, pixel_indices_LSB=new int[] {0};
@@ -1287,7 +1296,7 @@ float compressBlockWithTable2x4percep(byte[] img,int width,int height,int startx
 //Finds all pixel indices for a 4x2 block.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int[] pixel_indices_MSBp, int[] pixel_indices_LSBp
-int compressBlockWithTable4x2(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
+static int compressBlockWithTable4x2(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
 {
 	byte[] orig= new byte[3],approx= new byte[3];
 	int[] pixel_indices_MSB=new int[] {0}, pixel_indices_LSB=new int[] {0};
@@ -1348,7 +1357,7 @@ int compressBlockWithTable4x2(byte[] img,int width,int height,int startx,int sta
 //Done using fixed point arithmetics where 1000 corresponds to 1.0.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int[] pixel_indices_MSBp, int[] pixel_indices_LSBp
-int compressBlockWithTable4x2percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
+static int compressBlockWithTable4x2percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
 {
 	byte[] orig= new byte[3],approx= new byte[3];
 	int[] pixel_indices_MSB=new int[] {0}, pixel_indices_LSB=new int[] {0};
@@ -1411,7 +1420,7 @@ int compressBlockWithTable4x2percep1000(byte[] img,int width,int height,int star
 //Finds all pixel indices for a 4x2 block using perceptual weighting of error.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int[] pixel_indices_MSBp, int[] pixel_indices_LSBp
-float compressBlockWithTable4x2percep(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
+static float compressBlockWithTable4x2percep(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
 {
 	byte[] orig= new byte[3],approx= new byte[3];
 	int[] pixel_indices_MSB=new int[] {0}, pixel_indices_LSB=new int[] {0};
@@ -1472,19 +1481,19 @@ float compressBlockWithTable4x2percep(byte[] img,int width,int height,int startx
 }
 
 //Table for fast implementation of clamping to the interval [0,255] followed by addition of 255.
-int[] clamp_table_plus_255 =new int[] {0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 
+static final int[] clamp_table_plus_255 =new int[] {0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 0+255, 
                        0+255, 1+255, 2+255, 3+255, 4+255, 5+255, 6+255, 7+255, 8+255, 9+255, 10+255, 11+255, 12+255, 13+255, 14+255, 15+255, 16+255, 17+255, 18+255, 19+255, 20+255, 21+255, 22+255, 23+255, 24+255, 25+255, 26+255, 27+255, 28+255, 29+255, 30+255, 31+255, 32+255, 33+255, 34+255, 35+255, 36+255, 37+255, 38+255, 39+255, 40+255, 41+255, 42+255, 43+255, 44+255, 45+255, 46+255, 47+255, 48+255, 49+255, 50+255, 51+255, 52+255, 53+255, 54+255, 55+255, 56+255, 57+255, 58+255, 59+255, 60+255, 61+255, 62+255, 63+255, 64+255, 65+255, 66+255, 67+255, 68+255, 69+255, 70+255, 71+255, 72+255, 73+255, 74+255, 75+255, 76+255, 77+255, 78+255, 79+255, 80+255, 81+255, 82+255, 83+255, 84+255, 85+255, 86+255, 87+255, 88+255, 89+255, 90+255, 91+255, 92+255, 93+255, 94+255, 95+255, 96+255, 97+255, 98+255, 99+255, 100+255, 101+255, 102+255, 103+255, 104+255, 105+255, 106+255, 107+255, 108+255, 109+255, 110+255, 111+255, 112+255, 113+255, 114+255, 115+255, 116+255, 117+255, 118+255, 119+255, 120+255, 121+255, 122+255, 123+255, 124+255, 125+255, 126+255, 127+255, 128+255, 129+255, 130+255, 131+255, 132+255, 133+255, 134+255, 135+255, 136+255, 137+255, 138+255, 139+255, 140+255, 141+255, 142+255, 143+255, 144+255, 145+255, 146+255, 147+255, 148+255, 149+255, 150+255, 151+255, 152+255, 153+255, 154+255, 155+255, 156+255, 157+255, 158+255, 159+255, 160+255, 161+255, 162+255, 163+255, 164+255, 165+255, 166+255, 167+255, 168+255, 169+255, 170+255, 171+255, 172+255, 173+255, 174+255, 175+255, 176+255, 177+255, 178+255, 179+255, 180+255, 181+255, 182+255, 183+255, 184+255, 185+255, 186+255, 187+255, 188+255, 189+255, 190+255, 191+255, 192+255, 193+255, 194+255, 195+255, 196+255, 197+255, 198+255, 199+255, 200+255, 201+255, 202+255, 203+255, 204+255, 205+255, 206+255, 207+255, 208+255, 209+255, 210+255, 211+255, 
 						212+255, 213+255, 214+255, 215+255, 216+255, 217+255, 218+255, 219+255, 220+255, 221+255, 222+255, 223+255, 224+255, 225+255, 226+255, 227+255, 228+255, 229+255, 230+255, 231+255, 232+255, 233+255, 234+255, 235+255, 236+255, 237+255, 238+255, 239+255, 240+255, 241+255, 242+255, 243+255, 244+255, 245+255, 246+255, 247+255, 248+255, 249+255, 250+255, 251+255, 252+255, 253+255, 254+255, 255+255,
 						255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 
 						255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255, 255+255};
 
 //Table for fast implementation of clamping to the interval [0,255]
-int[] clamp_table=new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+static final int[] clamp_table=new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
                        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
 						255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255};
 
 //Table for fast implementation of squaring for numbers in the interval [-255, 255]
-int[] square_table=new int[] {65025, 64516, 64009, 63504, 63001, 62500, 62001, 61504, 61009, 60516, 60025, 59536, 59049, 58564, 58081, 57600, 
+static final int[] square_table=new int[] {65025, 64516, 64009, 63504, 63001, 62500, 62001, 61504, 61009, 60516, 60025, 59536, 59049, 58564, 58081, 57600, 
 						 57121, 56644, 56169, 55696, 55225, 54756, 54289, 53824, 53361, 52900, 52441, 51984, 51529, 51076, 50625, 50176, 
 						 49729, 49284, 48841, 48400, 47961, 47524, 47089, 46656, 46225, 45796, 45369, 44944, 44521, 44100, 43681, 43264, 
 						 42849, 42436, 42025, 41616, 41209, 40804, 40401, 40000, 39601, 39204, 38809, 38416, 38025, 37636, 37249, 36864, 
@@ -1501,7 +1510,7 @@ int[] square_table=new int[] {65025, 64516, 64009, 63504, 63001, 62500, 62001, 6
 						 961, 900, 841, 784, 729, 676, 625, 576, 529, 484, 441, 400, 361, 324, 289, 256,
 						 225, 196, 169, 144, 121, 100, 81, 64, 49, 36, 25, 16, 9, 4, 1, 
 					     0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144, 169, 196, 225, 
-                        256, 289, 324, 361, 400, 441, 484, 529, 576, 625, 676, 729, 784, 841, 900, 961, 
+                         256, 289, 324, 361, 400, 441, 484, 529, 576, 625, 676, 729, 784, 841, 900, 961, 
 						 1024, 1089, 1156, 1225, 1296, 1369, 1444, 1521, 1600, 1681, 1764, 1849, 1936, 2025, 2116, 2209, 
 						 2304, 2401, 2500, 2601, 2704, 2809, 2916, 3025, 3136, 3249, 3364, 3481, 3600, 3721, 3844, 3969, 
 						 4096, 4225, 4356, 4489, 4624, 4761, 4900, 5041, 5184, 5329, 5476, 5625, 5776, 5929, 6084, 6241, 
@@ -1518,12 +1527,12 @@ int[] square_table=new int[] {65025, 64516, 64009, 63504, 63001, 62500, 62001, 6
 						 57600, 58081, 58564, 59049, 59536, 60025, 60516, 61009, 61504, 62001, 62500, 63001, 63504, 64009, 64516, 65025}; 
 
 //Abbreviated variable names to make below tables smaller in source code size
-int KR =PERCEPTUAL_WEIGHT_R_SQUARED_TIMES1000;
-int KG =PERCEPTUAL_WEIGHT_G_SQUARED_TIMES1000;
-int KB =PERCEPTUAL_WEIGHT_B_SQUARED_TIMES1000;
+static final int KR =PERCEPTUAL_WEIGHT_R_SQUARED_TIMES1000;
+static final int KG =PERCEPTUAL_WEIGHT_G_SQUARED_TIMES1000;
+static final int KB =PERCEPTUAL_WEIGHT_B_SQUARED_TIMES1000;
 
 //Table for fast implementation of squaring for numbers in the interval [-255, 255] multiplied by the perceptual weight for red.
-int[] square_table_percep_red  = new int[]{
+static final int[] square_table_percep_red  = new int[]{
                         65025*KR, 64516*KR, 64009*KR, 63504*KR, 63001*KR, 62500*KR, 62001*KR, 61504*KR, 61009*KR, 60516*KR, 60025*KR, 59536*KR, 59049*KR, 58564*KR, 58081*KR, 57600*KR, 
 						 57121*KR, 56644*KR, 56169*KR, 55696*KR, 55225*KR, 54756*KR, 54289*KR, 53824*KR, 53361*KR, 52900*KR, 52441*KR, 51984*KR, 51529*KR, 51076*KR, 50625*KR, 50176*KR, 
 						 49729*KR, 49284*KR, 48841*KR, 48400*KR, 47961*KR, 47524*KR, 47089*KR, 46656*KR, 46225*KR, 45796*KR, 45369*KR, 44944*KR, 44521*KR, 44100*KR, 43681*KR, 43264*KR, 
@@ -1558,7 +1567,7 @@ int[] square_table_percep_red  = new int[]{
 						 57600*KR, 58081*KR, 58564*KR, 59049*KR, 59536*KR, 60025*KR, 60516*KR, 61009*KR, 61504*KR, 62001*KR, 62500*KR, 63001*KR, 63504*KR, 64009*KR, 64516*KR, 65025*KR}; 
 
 //Table for fast implementation of squaring for numbers in the interval [-255, 255] multiplied by the perceptual weight for green.
-int[] square_table_percep_green=new int[] {
+static final int[] square_table_percep_green=new int[] {
                         65025*KG, 64516*KG, 64009*KG, 63504*KG, 63001*KG, 62500*KG, 62001*KG, 61504*KG, 61009*KG, 60516*KG, 60025*KG, 59536*KG, 59049*KG, 58564*KG, 58081*KG, 57600*KG, 
 						 57121*KG, 56644*KG, 56169*KG, 55696*KG, 55225*KG, 54756*KG, 54289*KG, 53824*KG, 53361*KG, 52900*KG, 52441*KG, 51984*KG, 51529*KG, 51076*KG, 50625*KG, 50176*KG, 
 						 49729*KG, 49284*KG, 48841*KG, 48400*KG, 47961*KG, 47524*KG, 47089*KG, 46656*KG, 46225*KG, 45796*KG, 45369*KG, 44944*KG, 44521*KG, 44100*KG, 43681*KG, 43264*KG, 
@@ -1593,7 +1602,7 @@ int[] square_table_percep_green=new int[] {
 						 57600*KG, 58081*KG, 58564*KG, 59049*KG, 59536*KG, 60025*KG, 60516*KG, 61009*KG, 61504*KG, 62001*KG, 62500*KG, 63001*KG, 63504*KG, 64009*KG, 64516*KG, 65025*KG}; 
 
 //Table for fast implementation of squaring for numbers in the interval [-255, 255] multiplied by the perceptual weight for blue.
-int[] square_table_percep_blue=new int[] {
+static final int[] square_table_percep_blue=new int[] {
                         65025*KB, 64516*KB, 64009*KB, 63504*KB, 63001*KB, 62500*KB, 62001*KB, 61504*KB, 61009*KB, 60516*KB, 60025*KB, 59536*KB, 59049*KB, 58564*KB, 58081*KB, 57600*KB, 
 						 57121*KB, 56644*KB, 56169*KB, 55696*KB, 55225*KB, 54756*KB, 54289*KB, 53824*KB, 53361*KB, 52900*KB, 52441*KB, 51984*KB, 51529*KB, 51076*KB, 50625*KB, 50176*KB, 
 						 49729*KB, 49284*KB, 48841*KB, 48400*KB, 47961*KB, 47524*KB, 47089*KB, 46656*KB, 46225*KB, 45796*KB, 45369*KB, 44944*KB, 44521*KB, 44100*KB, 43681*KB, 43264*KB, 
@@ -1630,7 +1639,7 @@ int[] square_table_percep_blue=new int[] {
 //Find the best table to use for a 2x4 area by testing all.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB)
-int tryalltables_3bittable2x4(byte[] img,int width,int height,int startx,int starty,byte[] avg_color, int[] best_table, int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
+static int tryalltables_3bittable2x4(byte[] img,int width,int height,int startx,int starty,byte[] avg_color, int[] best_table, int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
 {
 	int min_error = 3*255*255*16;
 	int q;
@@ -1657,7 +1666,7 @@ int tryalltables_3bittable2x4(byte[] img,int width,int height,int startx,int sta
 //Uses fixed point implementation where 1000 equals 1.0
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //addressint &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB
-int tryalltables_3bittable2x4percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,  int[] best_table, int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
+static int tryalltables_3bittable2x4percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,  int[] best_table, int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
 {
 	int min_error = MAXERR1000;
 	int q;
@@ -1686,7 +1695,7 @@ int tryalltables_3bittable2x4percep1000(byte[] img,int width,int height,int star
 //Uses perceptual weighting. 
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //addressint &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB
-int tryalltables_3bittable2x4percep(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,  int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
+static int tryalltables_3bittable2x4percep(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,  int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
 {
 	float min_error = 3*255*255*16;
 	int q;
@@ -1712,7 +1721,7 @@ int tryalltables_3bittable2x4percep(byte[] img,int width,int height,int startx,i
 //Find the best table to use for a 4x2 area by testing all.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //addressint &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB
-int tryalltables_3bittable4x2(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,   int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
+static int tryalltables_3bittable4x2(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,   int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
 {
 	int min_error = 3*255*255*16;
 	int q;
@@ -1740,7 +1749,7 @@ int tryalltables_3bittable4x2(byte[] img,int width,int height,int startx,int sta
 //Uses fixed point implementation where 1000 equals 1.0
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //addressint &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB
-int tryalltables_3bittable4x2percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,   int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
+static int tryalltables_3bittable4x2percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,   int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
 {
 	int min_error = MAXERR1000;
 	int q;
@@ -1766,7 +1775,7 @@ int tryalltables_3bittable4x2percep1000(byte[] img,int width,int height,int star
 //Uses perceptual weighting. 
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //addressint &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB
-int tryalltables_3bittable4x2percep(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,    int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
+static int tryalltables_3bittable4x2percep(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,    int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
 {
 	float min_error = 3*255*255*16;
 	int q;
@@ -1797,7 +1806,7 @@ int tryalltables_3bittable4x2percep(byte[] img,int width,int height,int startx,i
 //(See the presentation http://www.jacobstrom.com/publications/PACKMAN.ppt for more info.) 
 //
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-void quantize444ColorCombined(float[] avg_col_in, int[] enc_color, byte[] avg_color)
+static void quantize444ColorCombined(float[] avg_col_in, int[] enc_color, byte[] avg_color)
 {
 	float dr, dg, db;
 	float kr, kg, kb;
@@ -1972,7 +1981,7 @@ void quantize444ColorCombined(float[] avg_col_in, int[] enc_color, byte[] avg_co
 //(See the presentation http://www.jacobstrom.com/publications/PACKMAN.ppt for more info.) 
 //
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-void quantize555ColorCombined(float[] avg_col_in, int[] enc_color, float[] avg_color)
+static void quantize555ColorCombined(float[] avg_col_in, int[] enc_color, float[] avg_color)
 {
 	float dr, dg, db;
 	float kr, kg, kb;
@@ -2127,7 +2136,7 @@ void quantize555ColorCombined(float[] avg_col_in, int[] enc_color, float[] avg_c
 //(See the presentation http://www.jacobstrom.com/publications/PACKMAN.ppt for more info.) 
 //
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-void quantize444ColorCombinedPerceptual(float[] avg_col_in, int[] enc_color, byte[] avg_color)
+static void quantize444ColorCombinedPerceptual(float[] avg_col_in, int[] enc_color, byte[] avg_color)
 {
 	float dr, dg, db;
 	float kr, kg, kb;
@@ -2281,7 +2290,7 @@ void quantize444ColorCombinedPerceptual(float[] avg_col_in, int[] enc_color, byt
 //(See the presentation http://www.jacobstrom.com/publications/PACKMAN.ppt for more info.) 
 //
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-void quantize555ColorCombinedPerceptual(float[] avg_col_in, int[] enc_color, byte[] avg_color)
+static void quantize555ColorCombinedPerceptual(float[] avg_col_in, int[] enc_color, byte[] avg_color)
 {
 	float dr, dg, db;
 	float kr, kg, kb;
@@ -2432,7 +2441,7 @@ void quantize555ColorCombinedPerceptual(float[] avg_col_in, int[] enc_color, byt
 //Uses fixed point arithmetics where 1000 equals 1.0
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &compressed1,  int &compressed2, int &best_flip,  int &best_err_upper,  int &best_err_lower,  int &best_err_left,  int &best_err_right
-int compressBlockOnlyIndividualAveragePerceptual1000(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2, int[] best_enc_color1, int[] best_enc_color2, int[] best_flip,  int[] best_err_upper,  int[] best_err_lower,  int[] best_err_left,  int[] best_err_right, int[] best_color_upper, int[] best_color_lower, int[] best_color_left, int[] best_color_right)
+static int compressBlockOnlyIndividualAveragePerceptual1000(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2, int[] best_enc_color1, int[] best_enc_color2, int[] best_flip,  int[] best_err_upper,  int[] best_err_lower,  int[] best_err_left,  int[] best_err_right, int[] best_color_upper, int[] best_color_lower, int[] best_color_left, int[] best_color_right)
 {
 	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
 	int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
@@ -2631,7 +2640,7 @@ int compressBlockOnlyIndividualAveragePerceptual1000(byte[] img,int width,int he
 //Compresses the block using only the individual mode in ETC1/ETC2 using the average color as the base color.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &compressed1,  int &compressed2, int &best_flip,  int &best_err_upper,  int &best_err_lower,  int &best_err_left,  int &best_err_right
-int compressBlockOnlyIndividualAverage(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2, int[] best_enc_color1, int[] best_enc_color2, int[] best_flip,  int[] best_err_upper,  int[] best_err_lower,  int[] best_err_left,  int[] best_err_right, int[] best_color_upper, int[] best_color_lower, int[] best_color_left, int[] best_color_right)
+static int compressBlockOnlyIndividualAverage(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2, int[] best_enc_color1, int[] best_enc_color2, int[] best_flip,  int[] best_err_upper,  int[] best_err_lower,  int[] best_err_left,  int[] best_err_right, int[] best_color_upper, int[] best_color_lower, int[] best_color_left, int[] best_color_right)
 {
 	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
 	int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
@@ -2833,7 +2842,7 @@ int compressBlockOnlyIndividualAverage(byte[] img,int width,int height,int start
 //Tries both flipped and unflipped.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &compressed1, int &compressed2
-void compressBlockDiffFlipAverage(byte[] img,int width,int height,int startx,int starty, int[] compressed1, int[] compressed2)
+static void compressBlockDiffFlipAverage(byte[] img,int width,int height,int startx,int starty, int[] compressed1, int[] compressed2)
 {
 	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
 	int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
@@ -3152,7 +3161,7 @@ void compressBlockDiffFlipAverage(byte[] img,int width,int height,int startx,int
 //Tries both flipped and unflipped.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &compressed1,  int &compressed2,  int &best_flip
-int compressBlockOnlyDiffFlipAverage(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2, int[] best_enc_color1, int[] best_enc_color2, int[] best_flip)
+static int compressBlockOnlyDiffFlipAverage(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2, int[] best_enc_color1, int[] best_enc_color2, int[] best_flip)
 {
 	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
 	int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
@@ -3388,7 +3397,7 @@ int compressBlockOnlyDiffFlipAverage(byte[] img,int width,int height,int startx,
 //Uses fixed point arithmetics where 1000 represents 1.0.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address  int &compressed1, int &compressed2
-int compressBlockOnlyDiffFlipAveragePerceptual1000(byte[] img,int width,int height,int startx,int starty, int[] compressed1, int[] compressed2)
+static int compressBlockOnlyDiffFlipAveragePerceptual1000(byte[] img,int width,int height,int startx,int starty, int[] compressed1, int[] compressed2)
 {
 	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
 	int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
@@ -3611,7 +3620,7 @@ int compressBlockOnlyDiffFlipAveragePerceptual1000(byte[] img,int width,int heig
 //Tries both flipped and unflipped.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 // address unsigned int &compressed1, unsigned int &compressed2)
-double compressBlockDiffFlipAveragePerceptual(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2)
+static double compressBlockDiffFlipAveragePerceptual(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2)
 {
 	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
 	int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
@@ -3929,7 +3938,7 @@ double compressBlockDiffFlipAveragePerceptual(byte[] img,int width,int height,in
 }
 
 //This is our structure for matrix data
-class dMatrix
+static class dMatrix
 {
 	int width;			// The number of columns in the matrix
 	int height;			// The number of rows in the matrix
@@ -3938,7 +3947,7 @@ class dMatrix
 
 //Multiplies two matrices
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-dMatrix multiplyMatrices( dMatrix Amat, dMatrix Bmat)
+static dMatrix multiplyMatrices( dMatrix Amat, dMatrix Bmat)
 {
 	int xx,yy, q;
 	dMatrix resmatrix;
@@ -3966,7 +3975,7 @@ dMatrix multiplyMatrices( dMatrix Amat, dMatrix Bmat)
 
 //Transposes a matrix
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-void transposeMatrix( dMatrix mat)
+static void transposeMatrix( dMatrix mat)
 {
 	int xx, yy, zz;
 	double[] temp;
@@ -4000,7 +4009,7 @@ void transposeMatrix( dMatrix mat)
 //This can be used to quickly rule out combinations of colors.
 //Here we calculate the minimum error for the block if we know the red component for O and V.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcBBBred(byte[] block, int colorO, int colorV)
+static int calcBBBred(byte[] block, int colorO, int colorV)
 {
 	colorO = (colorO << 2) | (colorO >> 4);
 	colorV = (colorV << 2) | (colorV >> 4);
@@ -4020,7 +4029,7 @@ int calcBBBred(byte[] block, int colorO, int colorV)
 
 //Calculating the minimum error for the block if we know the red component for H and V.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcCCCred(byte[] block, int colorH, int colorV)
+static int calcCCCred(byte[] block, int colorH, int colorV)
 {
    colorH = (colorH << 2) | (colorH >> 4);
    colorV = (colorV << 2) | (colorV >> 4);
@@ -4037,7 +4046,7 @@ int calcCCCred(byte[] block, int colorH, int colorV)
 //Calculating the minimum error for the block if we know the red component for O and H.
 //Uses perceptual error metric.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcLowestPossibleRedOHperceptual(byte[] block, int colorO, int colorH, int best_error_sofar)
+static int calcLowestPossibleRedOHperceptual(byte[] block, int colorO, int colorH, int best_error_sofar)
 {
 	colorO = (colorO << 2) | (colorO >> 4);
 	colorH = (colorH << 2) | (colorH >> 4);
@@ -4057,7 +4066,7 @@ int calcLowestPossibleRedOHperceptual(byte[] block, int colorO, int colorH, int 
 
 //Calculating the minimum error for the block (in planar mode) if we know the red component for O and H.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcLowestPossibleRedOH(byte[] block, int colorO, int colorH, int best_error_sofar)
+static int calcLowestPossibleRedOH(byte[] block, int colorO, int colorH, int best_error_sofar)
 {
 	colorO = (colorO << 2) | (colorO >> 4);
 	colorH = (colorH << 2) | (colorH >> 4);
@@ -4078,7 +4087,7 @@ int calcLowestPossibleRedOH(byte[] block, int colorO, int colorH, int best_error
 //Calculating the minimum error for the block (in planar mode) if we know the red component for O and H and V.
 //Uses perceptual error metric. 
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcErrorPlanarOnlyRedPerceptual(byte[] block, int colorO, int colorH, int colorV, int lowest_possible_error, int BBBvalue, int CCCvalue, int best_error_sofar)
+static int calcErrorPlanarOnlyRedPerceptual(byte[] block, int colorO, int colorH, int colorV, int lowest_possible_error, int BBBvalue, int CCCvalue, int best_error_sofar)
 {
 	colorO = (colorO << 2) | (colorO >> 4);
 	colorH = (colorH << 2) | (colorH >> 4);
@@ -4120,7 +4129,7 @@ int calcErrorPlanarOnlyRedPerceptual(byte[] block, int colorO, int colorH, int c
 
 //Calculating the minimum error for the block (in planar mode) if we know the red component for O and H and V.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcErrorPlanarOnlyRed(byte[] block, int colorO, int colorH, int colorV, int lowest_possible_error, int BBBvalue, int CCCvalue, int best_error_sofar)
+static int calcErrorPlanarOnlyRed(byte[] block, int colorO, int colorH, int colorV, int lowest_possible_error, int BBBvalue, int CCCvalue, int best_error_sofar)
 {
 	colorO = (colorO << 2) | (colorO >> 4);
 	colorH = (colorH << 2) | (colorH >> 4);
@@ -4163,7 +4172,7 @@ int calcErrorPlanarOnlyRed(byte[] block, int colorO, int colorH, int colorV, int
 //Calculating the minimum error for the block (in planar mode) if we know the red component for O and H.
 //Uses perceptual error metrics.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcLowestPossibleGreenOHperceptual(byte[] block, int colorO, int colorH, int best_error_sofar)
+static int calcLowestPossibleGreenOHperceptual(byte[] block, int colorO, int colorH, int best_error_sofar)
 {
 	colorO = (colorO << 1) | (colorO >> 6);
 	colorH = (colorH << 1) | (colorH >> 6);
@@ -4182,7 +4191,7 @@ int calcLowestPossibleGreenOHperceptual(byte[] block, int colorO, int colorH, in
 
 //Calculating the minimum error for the block (in planar mode) if we know the red component for O and H.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcLowestPossibleGreenOH(byte[] block, int colorO, int colorH, int best_error_sofar)
+static int calcLowestPossibleGreenOH(byte[] block, int colorO, int colorH, int best_error_sofar)
 {
 	colorO = (colorO << 1) | (colorO >> 6);
 	colorH = (colorH << 1) | (colorH >> 6);
@@ -4201,7 +4210,7 @@ int calcLowestPossibleGreenOH(byte[] block, int colorO, int colorH, int best_err
 
 //Calculating the minimum error for the block (in planar mode) if we know the green component for O and V.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcBBBgreen(byte[] block, int colorO, int colorV)
+static int calcBBBgreen(byte[] block, int colorO, int colorV)
 {
 	colorO = (colorO << 1) | (colorO >> 6);
 	colorV = (colorV << 1) | (colorV >> 6);
@@ -4222,7 +4231,7 @@ int calcBBBgreen(byte[] block, int colorO, int colorV)
 
 //Calculating the minimum error for the block (in planar mode) if we know the green component for H and V.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcCCCgreen(byte[] block, int colorH, int colorV)
+static int calcCCCgreen(byte[] block, int colorH, int colorV)
 {
 	colorH = (colorH << 1) | (colorH >> 6);
 	colorV = (colorV << 1) | (colorV >> 6);
@@ -4239,7 +4248,7 @@ int calcCCCgreen(byte[] block, int colorH, int colorV)
 //Calculating the minimum error for the block (in planar mode) if we know the green component for H V and O.
 //Uses perceptual error metric.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcErrorPlanarOnlyGreenPerceptual(byte[] block, int colorO, int colorH, int colorV, int lowest_possible_error, int BBBvalue, int CCCvalue, int best_error_sofar)
+static int calcErrorPlanarOnlyGreenPerceptual(byte[] block, int colorO, int colorH, int colorV, int lowest_possible_error, int BBBvalue, int CCCvalue, int best_error_sofar)
 {
 	colorO = (colorO << 1) | (colorO >> 6);
 	colorH = (colorH << 1) | (colorH >> 6);
@@ -4282,7 +4291,7 @@ int calcErrorPlanarOnlyGreenPerceptual(byte[] block, int colorO, int colorH, int
 
 //Calculating the minimum error for the block (in planar mode) if we know the green component for H V and O.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcErrorPlanarOnlyGreen(byte[] block, int colorO, int colorH, int colorV, int lowest_possible_error, int BBBvalue, int CCCvalue, int best_error_sofar)
+static int calcErrorPlanarOnlyGreen(byte[] block, int colorO, int colorH, int colorV, int lowest_possible_error, int BBBvalue, int CCCvalue, int best_error_sofar)
 {
 	colorO = (colorO << 1) | (colorO >> 6);
 	colorH = (colorH << 1) | (colorH >> 6);
@@ -4325,7 +4334,7 @@ int calcErrorPlanarOnlyGreen(byte[] block, int colorO, int colorH, int colorV, i
 //Calculating the minimum error for the block (in planar mode) if we know the blue component for O and V.
 //Uses perceptual error metric.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcBBBbluePerceptual(byte[] block, int colorO, int colorV)
+static int calcBBBbluePerceptual(byte[] block, int colorO, int colorV)
 {
 	colorO = (colorO << 2) | (colorO >> 4);
 	colorV = (colorV << 2) | (colorV >> 4);
@@ -4345,7 +4354,7 @@ int calcBBBbluePerceptual(byte[] block, int colorO, int colorV)
 
 //Calculating the minimum error for the block (in planar mode) if we know the blue component for O and V.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcBBBblue(byte[] block, int colorO, int colorV)
+static int calcBBBblue(byte[] block, int colorO, int colorV)
 {
 	colorO = (colorO << 2) | (colorO >> 4);
 	colorV = (colorV << 2) | (colorV >> 4);
@@ -4366,7 +4375,7 @@ int calcBBBblue(byte[] block, int colorO, int colorV)
 //Calculating the minimum error for the block (in planar mode) if we know the blue component for H and V.
 //Uses perceptual error metric.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcCCCbluePerceptual(byte[] block, int colorH, int colorV)
+static int calcCCCbluePerceptual(byte[] block, int colorH, int colorV)
 {
 	colorH = (colorH << 2) | (colorH >> 4);
 	colorV = (colorV << 2) | (colorV >> 4);
@@ -4382,7 +4391,7 @@ int calcCCCbluePerceptual(byte[] block, int colorH, int colorV)
 
 //Calculating the minimum error for the block (in planar mode) if we know the blue component for O and V.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcCCCblue(byte[] block, int colorH, int colorV)
+static int calcCCCblue(byte[] block, int colorH, int colorV)
 {
 	colorH = (colorH << 2) | (colorH >> 4);
 	colorV = (colorV << 2) | (colorV >> 4);
@@ -4399,7 +4408,7 @@ int calcCCCblue(byte[] block, int colorH, int colorV)
 //Calculating the minimum error for the block (in planar mode) if we know the blue component for O and H.
 //Uses perceptual error metric.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcLowestPossibleBlueOHperceptual(byte[] block, int colorO, int colorH, int best_error_sofar)
+static int calcLowestPossibleBlueOHperceptual(byte[] block, int colorO, int colorH, int best_error_sofar)
 {
 	colorO = (colorO << 2) | (colorO >> 4);
 	colorH = (colorH << 2) | (colorH >> 4);
@@ -4419,7 +4428,7 @@ int calcLowestPossibleBlueOHperceptual(byte[] block, int colorO, int colorH, int
 
 //Calculating the minimum error for the block (in planar mode) if we know the blue component for O and H.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcLowestPossibleBlueOH(byte[] block, int colorO, int colorH, int best_error_sofar)
+static int calcLowestPossibleBlueOH(byte[] block, int colorO, int colorH, int best_error_sofar)
 {
 	colorO = (colorO << 2) | (colorO >> 4);
 	colorH = (colorH << 2) | (colorH >> 4);
@@ -4440,7 +4449,7 @@ int calcLowestPossibleBlueOH(byte[] block, int colorO, int colorH, int best_erro
 //Calculating the minimum error for the block (in planar mode) if we know the blue component for O, V and H.
 //Uses perceptual error metric.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcErrorPlanarOnlyBluePerceptual(byte[] block, int colorO, int colorH, int colorV, int lowest_possible_error, int BBBvalue, int CCCvalue, int best_error_sofar)
+static int calcErrorPlanarOnlyBluePerceptual(byte[] block, int colorO, int colorH, int colorV, int lowest_possible_error, int BBBvalue, int CCCvalue, int best_error_sofar)
 {
 	colorO = (colorO << 2) | (colorO >> 4);
 	colorH = (colorH << 2) | (colorH >> 4);
@@ -4483,7 +4492,7 @@ int calcErrorPlanarOnlyBluePerceptual(byte[] block, int colorO, int colorH, int 
 
 //Calculating the minimum error for the block (in planar mode) if we know the blue component for O, V and H.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int calcErrorPlanarOnlyBlue(byte[] block, int colorO, int colorH, int colorV, int lowest_possible_error, int BBBvalue, int CCCvalue, int best_error_sofar)
+static int calcErrorPlanarOnlyBlue(byte[] block, int colorO, int colorH, int colorV, int lowest_possible_error, int BBBvalue, int CCCvalue, int best_error_sofar)
 {
 	colorO = (colorO << 2) | (colorO >> 4);
 	colorH = (colorH << 2) | (colorH >> 4);
@@ -4524,14 +4533,31 @@ int calcErrorPlanarOnlyBlue(byte[] block, int colorO, int colorH, int colorV, in
 	return error;
 }
 
+static final double[] coeffsA= new double[] { 1.00, 0.00, 0.00, 
+    0.75, 0.25, 0.00,
+	0.50, 0.50, 0.00, 
+	0.25, 0.75, 0.00, 
+    0.75, 0.00, 0.25, 
+    0.50, 0.25, 0.25,
+	0.25, 0.50, 0.25, 
+	0.00, 0.75, 0.25,
+	0.50, 0.00, 0.50, 
+    0.25, 0.25, 0.50,
+	0.00, 0.50, 0.50, 
+	-0.25, 0.75, 0.50, 
+	0.25, 0.00, 0.75, 
+    0.00, 0.25, 0.75,
+	-0.25, 0.50, 0.75, 
+	-0.50, 0.75, 0.75};
 
+static final double[] coeffsC= new double[]  {0.2875, -0.0125, -0.0125, -0.0125, 0.4875, -0.3125, -0.0125, -0.3125, 0.4875};
 
 //This function uses least squares in order to determine the best values of the plane. 
-//This is close to optimal, but not quite, due to nonlinearities in the expantion from 6 and 7 bits to 8, and
+//This is close to optimal, but not quite, due to nonlinearities in the expansion from 6 and 7 bits to 8, and
 //in the clamping to a number between 0 and the maximum. 
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &compressed57_1,  int &compressed57_2
-void compressBlockPlanar57(byte[] img, int width,int height,int startx,int starty,  int[] compressed57_1,  int[] compressed57_2)
+static void compressBlockPlanar57(byte[] img, int width,int height,int startx,int starty,  int[] compressed57_1,  int[] compressed57_2)
 {
 	// Use least squares to find the solution with the smallest error.
 	// That is, find the vector x so that |Ax-b|^2 is minimized, where
@@ -4546,24 +4572,7 @@ void compressBlockPlanar57(byte[] img, int width,int height,int startx,int start
 	// C is always the same, so we have calculated it off-line here.
 	//                          = C * D
 	int xx,yy, cc;
-	double[] coeffsA= new double[] { 1.00, 0.00, 0.00, 
-		                  0.75, 0.25, 0.00,
-						  0.50, 0.50, 0.00, 
-						  0.25, 0.75, 0.00, 
-		                  0.75, 0.00, 0.25, 
-		                  0.50, 0.25, 0.25,
-						  0.25, 0.50, 0.25, 
-						  0.00, 0.75, 0.25,
-						  0.50, 0.00, 0.50, 
-		                  0.25, 0.25, 0.50,
-						  0.00, 0.50, 0.50, 
-						 -0.25, 0.75, 0.50, 
-						  0.25, 0.00, 0.75, 
-		                  0.00, 0.25, 0.75,
-						 -0.25, 0.50, 0.75, 
-						 -0.50, 0.75, 0.75};
 
-	double[] coeffsC= new double[]  {0.2875, -0.0125, -0.0125, -0.0125, 0.4875, -0.3125, -0.0125, -0.3125, 0.4875};
 	double[] colorO= new double[3], colorH= new double[3], colorV= new double[3];
 	byte[] colorO8= new byte[3], colorH8= new byte[3], colorV8= new byte[3];
 	
@@ -4673,7 +4682,7 @@ void compressBlockPlanar57(byte[] img, int width,int height,int startx,int start
 //file format. Hence, after search, it is converted to this format.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address  int &planar_word1,  int &planar_word2
-void stuff57bits(int planar57_word1, int planar57_word2,  int[] planar_word1,  int[] planar_word2)
+static void stuff57bits(int planar57_word1, int planar57_word2,  int[] planar_word1,  int[] planar_word2)
 {
 	// Put bits in twotimer configuration for 57 bits (red and green dont overflow, blue does)
 	// 
@@ -4767,7 +4776,7 @@ void stuff57bits(int planar57_word1, int planar57_word2,  int[] planar_word1,  i
 //file format. Hence, after search, it is converted to this format.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address unsigned int &thumbH_word1, unsigned int &thumbH_word2
-void stuff58bits(int thumbH58_word1, int thumbH58_word2, int[] thumbH_word1, int[] thumbH_word2)
+static void stuff58bits(int thumbH58_word1, int thumbH58_word2, int[] thumbH_word1, int[] thumbH_word2)
 {
 	// Put bits in twotimer configuration for 58 (red doesn't overflow, green does)
 	// 
@@ -4849,7 +4858,7 @@ void stuff58bits(int thumbH58_word1, int thumbH58_word2, int[] thumbH_word1, int
 //copy of above, but diffbit is 0
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address unsigned int &thumbH_word1, unsigned int &thumbH_word2
-void stuff58bitsDiffFalse(int thumbH58_word1, int thumbH58_word2, int[] thumbH_word1, int[] thumbH_word2)
+static void stuff58bitsDiffFalse(int thumbH58_word1, int thumbH58_word2, int[] thumbH_word1, int[] thumbH_word2)
 {
 	int part0, part1, part2, part3;
 	byte bit, a, b, c, d, bits;
@@ -4891,7 +4900,7 @@ void stuff58bitsDiffFalse(int thumbH58_word1, int thumbH58_word2, int[] thumbH_w
 //file format. Hence, after search, it is converted to this format.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address unsigned int &thumbT_word1, unsigned int &thumbT_word2
-void stuff59bits(int thumbT59_word1, int thumbT59_word2, int[] thumbT_word1, int[] thumbT_word2)
+static void stuff59bits(int thumbT59_word1, int thumbT59_word2, int[] thumbT_word1, int[] thumbT_word2)
 {
 	// Put bits in twotimer configuration for 59 (red overflows)
 	// 
@@ -4953,7 +4962,7 @@ void stuff59bits(int thumbT59_word1, int thumbT59_word2, int[] thumbT_word1, int
 //Decompress the planar mode and calculate the error per component compared to original image.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &error_red, int &error_green, int &error_blue
-void decompressBlockPlanar57errorPerComponent(int compressed57_1, int compressed57_2, byte[] img,int width,int height,int startx,int starty, byte[] srcimg,  int[] error_red, int[] error_green, int[] error_blue)
+static void decompressBlockPlanar57errorPerComponent(int compressed57_1, int compressed57_2, byte[] img,int width,int height,int startx,int starty, byte[] srcimg,  int[] error_red, int[] error_green, int[] error_blue)
 {
 	byte[] colorO =new byte[3], colorH =new byte[3], colorV =new byte[3];
 
@@ -5010,7 +5019,7 @@ void decompressBlockPlanar57errorPerComponent(int compressed57_1, int compressed
 //quantization. Both flip modes are tried. 
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &compressed1, int &compressed2
-void compressBlockDiffFlipCombined(byte[] img,int width,int height,int startx,int starty, int[] compressed1, int[] compressed2)
+static void compressBlockDiffFlipCombined(byte[] img,int width,int height,int startx,int starty, int[] compressed1, int[] compressed2)
 {
 	int[] compressed1_norm=new int[1], compressed2_norm=new int[1];
 	int[] compressed1_flip=new int[1], compressed2_flip=new int[1];
@@ -6265,7 +6274,7 @@ void computeColorLBGfast(byte[] img,int width,int startx,int starty, byte[][] LB
 //Each color component is compressed to fit in its specified number of bits
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(current_color)[2][3], byte(quantized_color)[2][3])
-void compressColor(int R_B, int G_B, int B_B, byte[][] current_color, byte[][] quantized_color) 
+static void compressColor(int R_B, int G_B, int B_B, byte[][] current_color, byte[][] quantized_color) 
 {
 	//
 	//	The color is calculated as:
@@ -6289,7 +6298,7 @@ void compressColor(int R_B, int G_B, int B_B, byte[][] current_color, byte[][] q
 //Swapping two RGB-colors
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(current_color)[2][3], byte(quantized_color)[2][3])
-void swapColors(byte[][] colors) 
+static void swapColors(byte[][] colors) 
 {
 	byte temp = colors[0][R];
 	colors[0][R] = colors[1][R];
@@ -6319,7 +6328,7 @@ void swapColors(byte[][] colors)
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //address  byte &distance, int &pixel_indices
-int calculateError59Tperceptual1000(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
+static int calculateError59Tperceptual1000(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
 {
 
 	int block_error = 0, 
@@ -6408,7 +6417,7 @@ int calculateError59Tperceptual1000(byte[] srcimg, int width, int startx, int st
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //address byte &distance,  int &pixel_indices
-double calculateError59T(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance,  int[] pixel_indices) 
+static double calculateError59T(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance,  int[] pixel_indices) 
 {
 	double block_error = 0, 
 		     best_block_error = MAXIMUM_ERROR, 
@@ -6494,7 +6503,7 @@ double calculateError59T(byte[] srcimg, int width, int startx, int starty, byte[
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //address  byte &distance, int &pixel_indices
-int calculateError59TnoSwapPerceptual1000(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
+static int calculateError59TnoSwapPerceptual1000(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
 {
 
 	int block_error = 0, 
@@ -6570,7 +6579,7 @@ int calculateError59TnoSwapPerceptual1000(byte[] srcimg, int width, int startx, 
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //byte &distance, int &pixel_indices
-double calculateError59TnoSwap(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
+static double calculateError59TnoSwap(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
 {
 	double block_error = 0, 
 		     best_block_error = MAXIMUM_ERROR, 
@@ -6648,7 +6657,7 @@ double calculateError59TnoSwap(byte[] srcimg, int width, int startx, int starty,
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colors)[2][3]
 //address int &compressed1, int &compressed2
-void packBlock59T(byte[][] colors, byte d, int pixel_indices, int[] compressed1, int[] compressed2) 
+static void packBlock59T(byte[][] colors, byte d, int pixel_indices, int[] compressed1, int[] compressed2) 
 { 
 	
 	compressed1[0] = 0;
@@ -6668,7 +6677,7 @@ void packBlock59T(byte[][] colors, byte d, int pixel_indices, int[] compressed1,
 //Copy colors from source to dest
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(source)[2][3], byte(dest)[2][3]
-void copyColors(byte[][] source, byte[][] dest)
+static void copyColors(byte[][] source, byte[][] dest)
 {
 	int x,y;
 
@@ -6930,7 +6939,7 @@ double compressBlockTHUMB59TFast(byte[] img,int width,int height,int startx,int 
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //address byte &distance, int &pixel_indices)
-int calculateErrorAndCompress58Hperceptual1000(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
+static int calculateErrorAndCompress58Hperceptual1000(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
 {
 	int block_error = 0, 
 		           best_block_error = MAXERR1000, 
@@ -6996,7 +7005,7 @@ int calculateErrorAndCompress58Hperceptual1000(byte[] srcimg, int width, int sta
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //address  byte &distance,  int &pixel_indices) 
-double calculateErrorAndCompress58HAlpha(byte[] srcimg, byte[] alphaimg,int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance,  int[] pixel_indices) 
+static double calculateErrorAndCompress58HAlpha(byte[] srcimg, byte[] alphaimg,int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance,  int[] pixel_indices) 
 {
 	double block_error = 0, 
 		   best_block_error = MAXIMUM_ERROR, 
@@ -7093,7 +7102,7 @@ double calculateErrorAndCompress58HAlpha(byte[] srcimg, byte[] alphaimg,int widt
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //address byte &distance, int &pixel_indices) 
-double calculateErrorAndCompress58H(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
+static double calculateErrorAndCompress58H(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
 {
 	double block_error = 0, 
 	       best_block_error = MAXIMUM_ERROR, 
@@ -7160,7 +7169,7 @@ double calculateErrorAndCompress58H(byte[] srcimg, int width, int startx, int st
 //Makes sure that col0 < col1;
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
-void sortColorsRGB444(byte[][] colorsRGB444)
+static void sortColorsRGB444(byte[][] colorsRGB444)
 {
 	int col0, col1, tcol;
 
@@ -7538,7 +7547,7 @@ double compressBlockTHUMB58HFast(byte[] img,int width,int height,int startx,int 
 //Both flipped and unflipped tested.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address  int &compressed1,  int &compressed2) 
-void compressBlockDiffFlipCombinedPerceptual(byte[] img,int width,int height,int startx,int starty,    int[] compressed1,  int[] compressed2) 
+static void compressBlockDiffFlipCombinedPerceptual(byte[] img,int width,int height,int startx,int starty,    int[] compressed1,  int[] compressed2) 
 {
 
 	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
@@ -7834,7 +7843,7 @@ void compressBlockDiffFlipCombinedPerceptual(byte[] img,int width,int height,int
 
 //Calculate the error of a block
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-double calcBlockErrorRGB(byte[] img, byte[] imgdec, int width, int height, int startx, int starty)
+static double calcBlockErrorRGB(byte[] img, byte[] imgdec, int width, int height, int startx, int starty)
 {
 	int xx,yy;
 	double err;
@@ -7845,15 +7854,6 @@ double calcBlockErrorRGB(byte[] img, byte[] imgdec, int width, int height, int s
 	{
 		for(yy = starty; yy<starty+4; yy++)
 		{
-			
-			int r1 = (RED(img,width,xx,yy)&0xff);
-			int r2 = (RED(imgdec,width,xx,yy)&0xff);
-			int g1 = (GREEN(img,width,xx,yy)&0xff);
-			int g2 = (GREEN(imgdec,width,xx,yy)&0xff);
-			int b1 = (BLUE(img,width,xx,yy)&0xff);			
-			int b2 = (BLUE(imgdec,width,xx,yy)&0xff);
-			
-			
 			err += SQUARE(1.0*(RED(img,width,xx,yy)&0xff)  - 1.0*(RED(imgdec, width, xx,yy)&0xff));
 			err += SQUARE(1.0*(GREEN(img,width,xx,yy)&0xff)- 1.0*(GREEN(imgdec, width, xx,yy)&0xff));
 			err += SQUARE(1.0*(BLUE(img,width,xx,yy)&0xff) - 1.0*(BLUE(imgdec, width, xx,yy)&0xff));
@@ -7865,7 +7865,7 @@ double calcBlockErrorRGB(byte[] img, byte[] imgdec, int width, int height, int s
 
 //Calculate the perceptually weighted error of a block
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-double calcBlockPerceptualErrorRGB(byte[] img, byte[] imgdec, int width, int height, int startx, int starty)
+static double calcBlockPerceptualErrorRGB(byte[] img, byte[] imgdec, int width, int height, int startx, int starty)
 {
 	int xx,yy;
 	double err;
@@ -7875,10 +7875,7 @@ double calcBlockPerceptualErrorRGB(byte[] img, byte[] imgdec, int width, int hei
 	for(xx = startx; xx< startx+4; xx++)
 	{
 		for(yy = starty; yy<starty+4; yy++)
-		{
-			
-					
-			
+		{			
 			err += PERCEPTUAL_WEIGHT_R_SQUARED*SQUARE(1.0*(RED(img,width,xx,yy)&0xff)  - 1.0*(RED(imgdec, width, xx,yy)&0xff));
 			err += PERCEPTUAL_WEIGHT_G_SQUARED*SQUARE(1.0*(GREEN(img,width,xx,yy)&0xff)- 1.0*(GREEN(imgdec, width, xx,yy)&0xff));
 			err += PERCEPTUAL_WEIGHT_B_SQUARED*SQUARE(1.0*(BLUE(img,width,xx,yy)&0xff) - 1.0*(BLUE(imgdec, width, xx,yy)&0xff));
@@ -7891,7 +7888,7 @@ double calcBlockPerceptualErrorRGB(byte[] img, byte[] imgdec, int width, int hei
 //Compress an ETC1 block (or the individual and differential modes of an ETC2 block)
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address int &compressed1,  int &compressed2)
-double compressBlockDiffFlipFast(byte[] img, byte[] imgdec,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2)
+static double compressBlockDiffFlipFast(byte[] img, byte[] imgdec,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2)
 {
 	int[] average_block1 = new int[1];
 	int[] average_block2 = new int[1];
@@ -7932,7 +7929,7 @@ double compressBlockDiffFlipFast(byte[] img, byte[] imgdec,int width,int height,
 //Uses perceptual error metric.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address  int &compressed1,  int &compressed2)
-void compressBlockDiffFlipFastPerceptual(byte[] img, byte[] imgdec,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2)
+static void compressBlockDiffFlipFastPerceptual(byte[] img, byte[] imgdec,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2)
 {
 	int[] average_block1 = new int[1];
 	int[] average_block2 = new int[1];
@@ -7967,7 +7964,7 @@ void compressBlockDiffFlipFastPerceptual(byte[] img, byte[] imgdec,int width,int
 //Compresses the differential mode of an ETC2 block with punchthrough alpha
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address int &etc1_word1,  int &etc1_word2) 
-int compressBlockDifferentialWithAlpha(boolean isTransparent, byte[] img, byte[] alphaimg, byte[] imgdec, int width, int height, int startx, int starty,  int[] etc1_word1,  int[] etc1_word2) 
+static void compressBlockDifferentialWithAlpha(boolean isTransparent, byte[] img, byte[] alphaimg, byte[] imgdec, int width, int height, int startx, int starty,  int[] etc1_word1,  int[] etc1_word2) 
 {
 	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
 	int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
@@ -8186,20 +8183,18 @@ int compressBlockDifferentialWithAlpha(boolean isTransparent, byte[] img, byte[]
 	{
 		etc1_word1[0] = compressed1_norm[0] | 0;
 		etc1_word2[0] = compressed2_norm[0];
-		return norm_err;
 	}
 	else
 	{
 		etc1_word1[0] = compressed1_flip[0] | 1;
 		etc1_word2[0] = compressed2_flip[0];
-		return flip_err;
 	}
 }
 
 
 //Calculate RGBA error --- only count non-transparent pixels (alpha > 128)
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-double calcBlockErrorRGBA(byte[] img, byte[] imgdec, byte[] alpha, int width, int height, int startx, int starty)
+static double calcBlockErrorRGBA(byte[] img, byte[] imgdec, byte[] alpha, int width, int height, int startx, int starty)
 {
 	int xx,yy;
 	double err;
@@ -8226,7 +8221,7 @@ double calcBlockErrorRGBA(byte[] img, byte[] imgdec, byte[] alpha, int width, in
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 	//address byte &distance,  int &pixel_indices) 
-double calculateError59TAlpha(byte[] srcimg, byte[] alpha,int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance,  int[] pixel_indices) 
+static double calculateError59TAlpha(byte[] srcimg, byte[] alpha,int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance,  int[] pixel_indices) 
 {
 
 	double block_error = 0, 
@@ -8355,7 +8350,7 @@ double compressBlockTHUMB59TAlpha(byte[] img, byte[] alpha, int width,int height
 //Put bits in order for the format.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address int &thumbT_word1,  int &thumbT_word2)
-void stuff59bitsDiffFalse(int thumbT59_word1, int thumbT59_word2,  int[] thumbT_word1,  int[] thumbT_word2)
+static void stuff59bitsDiffFalse(int thumbT59_word1, int thumbT59_word2,  int[] thumbT_word1,  int[] thumbT_word2)
 {
 	// Put bits in twotimer configuration for 59 (red overflows)
 	// 
@@ -8415,7 +8410,7 @@ void stuff59bitsDiffFalse(int thumbT59_word1, int thumbT59_word2,  int[] thumbT_
 
 //Tests if there is at least one pixel in the image which would get alpha = 0 in punchthrough mode.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-boolean hasAlpha(byte[] alphaimg, int ix, int iy, int width) 
+static boolean hasAlpha(byte[] alphaimg, int ix, int iy, int width) 
 {
 	for(int x=ix; x<ix+4; x++) 
 	{
@@ -8430,6 +8425,7 @@ boolean hasAlpha(byte[] alphaimg, int ix, int iy, int width)
 	}
 	return false;
 }
+
 
 //Compress a block with ETC2 RGB
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
@@ -8480,17 +8476,13 @@ void compressBlockETC2Fast(byte[] img, byte[] alphaimg, byte[] imgdec,int width,
 
 		int[] tempword1=new int[1], tempword2=new int[1];
 		double temperror;
-		//try regular differential transparent mode
-
-		int testerr= compressBlockDifferentialWithAlpha(true,img,alphaimg, imgdec,width,height,startx,starty,etc1_word1,etc1_word2);
-
 		byte[] alphadec = new byte[width*height];
+		
+		//try regular differential transparent mode
+		compressBlockDifferentialWithAlpha(true,img,alphaimg, imgdec,width,height,startx,starty,etc1_word1,etc1_word2);		
 		decompressBlockDifferentialWithAlpha(etc1_word1[0], etc1_word2[0], imgdec, alphadec,width, height, startx, starty);
 		error_etc1 = calcBlockErrorRGBA(img, imgdec, alphaimg,width, height, startx, starty);
-		if(error_etc1!=testerr) 
-		{
-			System.out.println("testerr: "+testerr+", etcerr: "+error_etc1+"\n");
-		}
+		
 		//try T-mode with transparencies
 		//for now, skip this...
 		compressBlockTHUMB59TAlpha(img,alphaimg,width,height,startx,starty,tempword1,tempword2);
@@ -8509,7 +8501,7 @@ void compressBlockETC2Fast(byte[] img, byte[] alphaimg, byte[] imgdec,int width,
 			error_etc1=temperror;
 			stuff58bitsDiffFalse(tempword1[0],tempword2[0],etc1_word1,etc1_word2);
 		}
-		//if we have transparency in this pixel, we know that one of these two modes was best..
+		//if we have transparency in these pixels, we know that one of these two modes was best..
 		if(hasAlpha(alphaimg,startx,starty,width)) 
 		{
 			compressed1[0]=etc1_word1[0];
@@ -8646,7 +8638,7 @@ void compressBlockETC2FastPerceptual(byte[] img, byte[] imgdec,int width,int hei
 	double error_thumbH;
 
 	double error_best;
-	//char best_char;
+	char best_char = ' ';
 	//MODE1 best_mode;
 	
 	
@@ -8668,14 +8660,13 @@ void compressBlockETC2FastPerceptual(byte[] img, byte[] imgdec,int width,int hei
 	compressBlockTHUMB58HFastestPerceptual1000(img,width,height,startx, starty, thumbH58_word1, thumbH58_word2);
 	decompressBlockTHUMB58H(thumbH58_word1[0], thumbH58_word2[0], imgdec, width, height, startx, starty);			
 	error_thumbH = 1000*calcBlockPerceptualErrorRGB(img, imgdec, width, height, startx, starty);
-
-	
+		
 	if(error_planar < error_etc1 && error_planar < error_thumbT && error_planar < error_thumbH)
 	{	
 		stuff57bits(planar57_word1[0], planar57_word2[0], planar_word1, planar_word2);
 		compressed1[0] = planar_word1[0];
 		compressed2[0] = planar_word2[0];
-		//best_char = 'p';
+		best_char = 'p';
 		//System.out.print("p");
 		error_best = error_planar;	
 		//best_mode = MODE1.MODE_PLANAR;
@@ -8685,7 +8676,7 @@ void compressBlockETC2FastPerceptual(byte[] img, byte[] imgdec,int width,int hei
 		stuff59bits(thumbT59_word1[0], thumbT59_word2[0], thumbT_word1, thumbT_word2);
 		compressed1[0] = thumbT_word1[0];
 		compressed2[0] = thumbT_word2[0];
-		//best_char = 'T';
+		best_char = 'T';
 		//System.out.print("T");
 		error_best = error_thumbT;
 		//best_mode = MODE1.MODE_THUMB_T;
@@ -8701,12 +8692,12 @@ void compressBlockETC2FastPerceptual(byte[] img, byte[] imgdec,int width,int hei
 			compressed2[0] = thumbT_word2[0];
 		}
 	}
-	if(error_thumbH < error_etc1)
+	else if(error_thumbH < error_etc1)
 	{
 		stuff58bits(thumbH58_word1[0], thumbH58_word2[0], thumbH_word1, thumbH_word2);
 		compressed1[0] = thumbH_word1[0];
 		compressed2[0] = thumbH_word2[0];
-		//best_char = 'H';
+		best_char = 'H';
 		//System.out.print("H");
 		error_best = error_thumbH;
 		//best_mode = MODE1.MODE_THUMB_H;
@@ -8733,13 +8724,19 @@ void compressBlockETC2FastPerceptual(byte[] img, byte[] imgdec,int width,int hei
 		//best_char = '.';
 		//System.out.print(".");
 		//best_mode = MODE1.MODE_ETC1;
-	}		
+	}	
+	// some intersting debugs, note there is no relationship here so far, note also that compressing a decompressed image will find patterns
+	//possibly a planar < 100000 will be better compressed by an H than a T
+	//System.out.print(best_char);
+	//if(error_planar < 100000 && (error_thumbT < error_planar || error_thumbH < error_planar) )
+	//	System.out.println("error_planar " + error_planar + " error_thumbT " +error_thumbT + " error_thumbH "+error_thumbH);
+
 }
 
 
 //Write a word in big endian style
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-void write_big_endian_2byte_word(short blockadr, FileChannel f) throws IOException
+static void write_big_endian_2byte_word(short blockadr, FileChannel f) throws IOException
 {
 	byte[] bytes= new byte[2];
 	short block;
@@ -8753,7 +8750,7 @@ void write_big_endian_2byte_word(short blockadr, FileChannel f) throws IOExcepti
 	//fwrite(&bytes[1],1,1,f);
 	f.write(ByteBuffer.wrap(bytes));
 }
-void write_big_endian_2byte_word(short blockadr, ByteBuffer bb) throws IOException
+static void write_big_endian_2byte_word(short blockadr, ByteBuffer bb) throws IOException
 {
 	byte[] bytes= new byte[2];
 	short block;
@@ -8771,7 +8768,7 @@ void write_big_endian_2byte_word(short blockadr, ByteBuffer bb) throws IOExcepti
 
 //Write a word in big endian style
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-void write_big_endian_4byte_word(int[] blockadr, FileChannel f) throws IOException
+static void write_big_endian_4byte_word(int[] blockadr, FileChannel f) throws IOException
 {
 	byte[] bytes = new byte[4];
 	int block;
@@ -8788,7 +8785,7 @@ void write_big_endian_4byte_word(int[] blockadr, FileChannel f) throws IOExcepti
 	fwrite(bytes[2],1,f);
 	fwrite(bytes[3],1,f);
 }
-void write_big_endian_4byte_word(int[] blockadr, ByteBuffer bb) throws IOException
+static void write_big_endian_4byte_word(int[] blockadr, ByteBuffer bb) throws IOException
 {
 	byte[] bytes = new byte[4];
 	int block;
@@ -8813,14 +8810,31 @@ void write_big_endian_4byte_word(int[] blockadr, ByteBuffer bb) throws IOExcepti
 //Note that valtab is constructed using get16bits11bits, which means
 //that it already is expanded to 16 bits.
 //Note also that it its contents will depend on the value of formatSigned.
-int[] valtab;
+int[] valtab;// pointer to one of the below
+
+static int[] valtabsigned;
+static int[] valtabunsigned;
+
+static boolean valtabTableInitialized = false;
+
 
 void setupAlphaTableAndValtab()
 {
 	setupAlphaTable();
+	
+	//point to which ever is appropriate
+	if(formatSigned!=0)
+		valtab=valtabsigned;
+	else
+		valtab=valtabunsigned;
+	
+	//initialize once
+    if(valtabTableInitialized)
+    	return;
+    valtabTableInitialized = true;
 
-	//fix precomputation table..!
-	valtab = new int[1024*512];
+    valtabsigned = new int[1024*512];
+    valtabunsigned = new int[1024*512];
     short val16;
 	int count=0;
 	for(int base=0; base<256; base++) 
@@ -8831,13 +8845,9 @@ void setupAlphaTableAndValtab()
 			{
 				for(int index=0; index<8; index++) 
 				{
-					if(formatSigned!=0)
-					{
-						val16=get16bits11signed(base,tab,mul,index);
-						valtab[count] = val16 + 256*128;
-					}
-					else
-						valtab[count]=get16bits11bits(base,tab,mul,index);
+					val16=get16bits11signed(base,tab,mul,index);
+					valtabsigned[count] = val16 + 256*128;
+					valtabunsigned[count]=get16bits11bits(base,tab,mul,index);
 					count++;
 				}
 			}
@@ -8867,7 +8877,7 @@ void readAlpha(byte[][] data, byte[] imgalpha, int width, int height, int[] exte
 		System.exit(1);
 	}
 	//fReadPGM("alpha.pgm",width,height,tempdata,wantedBitDepth);
-	//FIXME: this alpha channel comes from the readSrcFile now in void compressFile(String srcfile,String dstfile)
+	//NOTE! that alpha channel comes from the readSrcFile now in void compressFile(String srcfile,String dstfile)
 	extendedwidth[0]=4*((width+3)/4);
 	extendedheight[0]=4*((height+3)/4);
 
@@ -8924,7 +8934,7 @@ void readAlpha(byte[][] data, byte[] imgalpha, int width, int height, int[] exte
 
 //Compresses the alpha part of a GL_COMPRESSED_RGBA8_ETC2_EAC block.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-void compressBlockAlphaFast(byte[] data, int ix, int iy, int width, int height, byte[] returnData) 
+static void compressBlockAlphaFast(byte[] data, int ix, int iy, int width, int height, byte[] returnData) 
 {
 	int alphasum=0;
 	int maxdist=-2;
@@ -9097,7 +9107,7 @@ void compressBlockAlphaFast(byte[] data, int ix, int iy, int width, int height, 
 
 //Helper function for the below function
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int getPremulIndex(int base, int tab, int mul, int index) 
+static int getPremulIndex(int base, int tab, int mul, int index) 
 {
 	return (base<<11)+(tab<<7)+(mul<<3)+index;
 }
@@ -9242,7 +9252,7 @@ void compressBlockAlpha16(byte[] data, int ix, int iy, int width, int height, by
 
 //Exhaustive compression of alpha compression in a GL_COMPRESSED_RGB8_ETC2 block
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-void compressBlockAlphaSlow(byte[] data, int ix, int iy, int width, int height, byte[] returnData) 
+static void compressBlockAlphaSlow(byte[] data, int ix, int iy, int width, int height, byte[] returnData) 
 {
 	//determine the best table and base alpha value for this block using MSE
 	int alphasum=0;
@@ -9389,7 +9399,7 @@ void compressBlockAlphaSlow(byte[] data, int ix, int iy, int width, int height, 
 
 //Calculate weighted PSNR
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-double calculateWeightedPSNR(byte[] lossyimg, byte[] origimg, int width, int height, double w1, double w2, double w3)
+static double calculateWeightedPSNR(byte[] lossyimg, byte[] origimg, int width, int height, double w1, double w2, double w3)
 {
 	// Note: This calculation of PSNR uses the formula
 	//
@@ -9433,7 +9443,7 @@ double calculateWeightedPSNR(byte[] lossyimg, byte[] origimg, int width, int hei
 
 //Calculate unweighted PSNR (weights are (1,1,1))
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-double calculatePSNR(byte[] lossyimg, byte[] origimg, int width, int height)
+static double calculatePSNR(byte[] lossyimg, byte[] origimg, int width, int height)
 {
 	// Note: This calculation of PSNR uses the formula
 	//
@@ -10030,15 +10040,14 @@ void compressImageFile(byte[] img, byte[] alphaimg,int width,int height,String d
 		h=expandedheight/4; h*=4;
 		wi = (short)w;
 		hi = (short)h;
+		
+		int mipMapCount = Math.min(computeLog(expandedwidth), computeLog(expandedheight)) + 1;
+		int halfbytes = 1; 
+		
 		if(ktxFile) 
 		{
 			//.ktx file: KTX header followed by compressed binary data.
-			KTX_header header = new KTX_header();
-			//identifier
-			for(int i=0; i<12; i++) 
-			{
-				header.identifier[i]=KTX_IDENTIFIER_REF[i];
-			}
+			KTX_header header = new KTX_header();			
 			//endianess int.. if this comes out reversed, all of the other ints will too.
 			header.endianness=KTX_ENDIAN_REF;
 			
@@ -10054,12 +10063,11 @@ void compressImageFile(byte[] img, byte[] alphaimg,int width,int height,String d
 			//we only support single non-mipmapped non-cubemap textures..
 			header.numberOfArrayElements=0;
 			header.numberOfFaces=1;
-			header.numberOfMipmapLevels=1;
+			header.numberOfMipmapLevels = generateMipMaps ? mipMapCount : 1;
 
 			//and no metadata..
 			header.bytesOfKeyValueData=0;
 			
-			int halfbytes=1;
 			//header.glInternalFormat=?
 			//header.glBaseInternalFormat=?
 			if(format==FORMAT.ETC2PACKAGE_R) 
@@ -10122,14 +10130,15 @@ void compressImageFile(byte[] img, byte[] alphaimg,int width,int height,String d
 				System.exit(1);
 			}
 			//write header
-			fwrite( header, 1,f);
-			
-			//write size of compressed data.. which depend on the expanded size..
-			int imagesize=(w*h*halfbytes)/2;
-			fwrite(imagesize,1,f);
+			fwrite( header, 1,f);			
 		}
 		else 
 		{
+			if(generateMipMaps)
+				System.out.println("PKM does not support mipmaps");
+			
+			//pkm headers are NOT ok with mipmaps
+			this.generateMipMaps = false;
 			//.pkm file, contains small header..
 
 			// Write magic number
@@ -10203,83 +10212,153 @@ void compressImageFile(byte[] img, byte[] alphaimg,int width,int height,String d
 				}
 			}
 		}
-		for(y=0;y<expandedheight/4;y++)
+		
+		
+		if(generateMipMaps) {
+			for(int m = 0; m < mipMapCount; m++) {
+				int imagesize = (expandedwidth * expandedheight * halfbytes) / 2;// minimum halfbytes*8 bytes (16 or 32)
+				
+				// write this mipmaps image size 
+				fwrite(imagesize, 1, f);
+				// compress and write the mip map
+				compressImageToFile(f, img, alphaimg, expandedwidth, expandedheight);
+				
+				// use a 4 pixel gaussian from the previous mip to make the next
+				
+				int widthDropFactor = expandedwidth/2 < 4 ? 1 : 2;// only drop down if new size would be half current (don't drop below 4x4)
+				int heightDropFactor = expandedheight/2 < 4 ? 1 : 2;
+				
+				expandedwidth = expandedwidth/widthDropFactor;
+				expandedheight = expandedheight/heightDropFactor;
+				
+				byte[] currentImg = img;
+				byte[] currentAlphaimg = alphaimg;
+				
+				int newmipmapdatasize = img.length/(widthDropFactor*heightDropFactor);		
+				
+				img = new byte[newmipmapdatasize];
+				alphaimg = alphaimg == null ? null : new byte[newmipmapdatasize/3];
+				
+				for (int y2 = 0; y2 < expandedheight; y2++) {
+					for (int x2 = 0; x2 < expandedwidth; x2++) {									
+		
+						img[(y2*expandedwidth+x2)*3 +0] = (byte)((
+								 (currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +0]&0xff)
+								+(currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +0]&0xff)
+								+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +0]&0xff)
+								+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +0]&0xff))/4);
+						img[(y2*expandedwidth+x2)*3 +1] = (byte)((
+								 (currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +1]&0xff)
+								+(currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +1]&0xff)
+								+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +1]&0xff)
+								+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +1]&0xff))/4);
+						img[(y2*expandedwidth+x2)*3 +2] = (byte)((
+								 (currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +2]&0xff)
+								+(currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +2]&0xff)
+								+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +2]&0xff)
+								+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +2]&0xff))/4);
+		
+					}
+				}
+				if(alphaimg != null) {
+					for (int y2 = 0; y2 < expandedheight; y2++) {
+						for (int x2 = 0; x2 < expandedwidth; x2++) {
+							if (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA) {
+								alphaimg[y2*(expandedwidth)+x2] = (byte)((
+										 (currentAlphaimg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*1 +0]&0xff)
+										+(currentAlphaimg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*1 +0]&0xff)
+										+(currentAlphaimg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*1 +0]&0xff)
+										+(currentAlphaimg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*1 +0]&0xff))/4);
+							}else if(format == FORMAT.ETC2PACKAGE_RGBA1 || format == FORMAT.ETC2PACKAGE_sRGBA1) {
+								int a = ((
+										 (currentAlphaimg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*1 +0]&0xff)
+										+(currentAlphaimg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*1 +0]&0xff)
+										+(currentAlphaimg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*1 +0]&0xff)
+										+(currentAlphaimg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*1 +0]&0xff))/4);
+								a = a <= 127 ? 0 : 255;
+								alphaimg[y2*(expandedwidth)+x2] = (byte)a;
+							}
+						}
+					}	
+				}
+			}
+		} else {
+			int imagesize = (expandedwidth * expandedheight * halfbytes) / 2;
+			
+			// write this mipmaps image size 
+			fwrite(imagesize, 1, f);
+			// compress and write the mip map
+			compressImageToFile(f, img, alphaimg, expandedwidth, expandedheight);
+		}
+		
+		System.out.println("\n");
+		f.close();
+		System.out.println("Saved file <"+dstfile+">.\n");
+	}
+}
+		
+void compressImageToFile(FileChannel f, byte[] img, byte[] alphaimg, int expandedwidth, int expandedheight)
+		throws IOException {	
+	
+// can only compress a 4x4 block of RGB
+	if(img.length<4*4*3)
+		return;
+	int x, y, w, h;
+	int[] block1 = new int[1], block2 = new int[1];
+	byte[] imgdec;
+	byte[] alphaimg2 = null;
+	imgdec = new byte[expandedwidth * expandedheight * 3];
+
+	int totblocks = expandedheight / 4 * expandedwidth / 4;
+	totblocks = totblocks < 1 ? 1: totblocks;
+	int countblocks = 0;
+	double percentageblocks = -1.0;
+	double oldpercentageblocks;
+	
+	int ymax = expandedheight / 4;
+	ymax = ymax < 1 ? 1 : ymax;
+	int xmax = expandedwidth / 4;
+	xmax = xmax < 1 ? 1 : xmax;
+	
+	for(y=0;y<ymax;y++)
+	{
+		for(x=0;x<xmax;x++)
 		{
-			for(x=0;x<expandedwidth/4;x++)
+			countblocks++;
+			oldpercentageblocks = percentageblocks;
+			percentageblocks = 100.0*countblocks/(1.0*totblocks);
+			//compress color channels
+			if(codec==CODEC.CODEC_ETC) 
 			{
-				countblocks++;
-				oldpercentageblocks = percentageblocks;
-				percentageblocks = 100.0*countblocks/(1.0*totblocks);
-				//compress color channels
-				if(codec==CODEC.CODEC_ETC) 
+				if(metric==METRIC.METRIC_NONPERCEPTUAL) 
 				{
-					if(metric==METRIC.METRIC_NONPERCEPTUAL) 
-					{
-						if(speed==SPEED.SPEED_FAST)
-							compressBlockDiffFlipFast(img, imgdec, expandedwidth, expandedheight, 4*x, 4*y, block1, block2);
-						else
+					if(speed==SPEED.SPEED_FAST)
+						compressBlockDiffFlipFast(img, imgdec, expandedwidth, expandedheight, 4*x, 4*y, block1, block2);
+					else
 //#if EXHAUSTIVE_CODE_ACTIVE
 //							compressBlockETC1Exhaustive(img, imgdec, expandedwidth, expandedheight, 4*x, 4*y, block1, block2);		
 //#else
-							System.out.println("Not implemented in this version\n");
+						System.out.println("Not implemented in this version\n");
 //#endif
-					}
-					else 
-					{
-						if(speed==SPEED.SPEED_FAST)
-							compressBlockDiffFlipFastPerceptual(img, imgdec, expandedwidth, expandedheight, 4*x, 4*y, block1, block2);
-						else
-//#if EXHAUSTIVE_CODE_ACTIVE
-//							compressBlockETC1ExhaustivePerceptual(img, imgdec, expandedwidth, expandedheight, 4*x, 4*y, block1, block2);	
-//#else
-							System.out.println("Not implemented in this version\n");
-//#endif
-					}
 				}
 				else 
 				{
-					if(format==FORMAT.ETC2PACKAGE_R||format==FORMAT.ETC2PACKAGE_RG) 
-					{
-						//don't compress color
-					}
-					else if(format==FORMAT.ETC2PACKAGE_RGBA1||format==FORMAT.ETC2PACKAGE_sRGBA1) 
-					{
-						//this is only available for fast/nonperceptual
-						if(speed == SPEED.SPEED_SLOW && first_time_message)
-						{
-							System.out.println("Slow codec not implemented for RGBA1 --- using fast codec instead.\n");
-							first_time_message = false;
-						}
-						compressBlockETC2Fast(img, alphaimg,imgdec, expandedwidth, expandedheight, 4*x, 4*y, block1, block2);
-					}
-					else if(metric==METRIC.METRIC_NONPERCEPTUAL) 
-					{
-						if(speed==SPEED.SPEED_FAST)
-							compressBlockETC2Fast(img, alphaimg,imgdec, expandedwidth, expandedheight, 4*x, 4*y, block1, block2);
-						else
+					if(speed==SPEED.SPEED_FAST)
+						compressBlockDiffFlipFastPerceptual(img, imgdec, expandedwidth, expandedheight, 4*x, 4*y, block1, block2);
+					else
 //#if EXHAUSTIVE_CODE_ACTIVE
-//							compressBlockETC2Exhaustive(img, imgdec, expandedwidth, expandedheight, 4*x, 4*y, block1, block2);		
+//							compressBlockETC1ExhaustivePerceptual(img, imgdec, expandedwidth, expandedheight, 4*x, 4*y, block1, block2);	
 //#else
-							System.out.println("Not implemented in this version\n");
+						System.out.println("Not implemented in this version\n");
 //#endif
-					}
-					else 
-					{
-						if(speed==SPEED.SPEED_FAST)
-							compressBlockETC2FastPerceptual(img, imgdec, expandedwidth, expandedheight, 4*x, 4*y, block1, block2);
-						else
-//#if EXHAUSTIVE_CODE_ACTIVE
-//							compressBlockETC2ExhaustivePerceptual(img, imgdec, expandedwidth, expandedheight, 4*x, 4*y, block1, block2);	
-//#else
-							System.out.println("Not implemented in this version\n");
-//#endif
-					}
 				}
-				
+			}
+			else 
+			{
+				byte[] alphadata= new byte[8];
 				//compression of alpha channel in case of 4-bit alpha. Uses 8-bit alpha channel as input, and has 8-bit precision.
 				if(format==FORMAT.ETC2PACKAGE_RGBA||format==FORMAT.ETC2PACKAGE_sRGBA) 
-				{
-					byte[] alphadata= new byte[8];
+				{					
 					if(speed==SPEED.SPEED_SLOW)
 						compressBlockAlphaSlow(alphaimg,4*x,4*y,expandedwidth,expandedheight,alphadata);
 					else
@@ -10287,47 +10366,84 @@ void compressImageFile(byte[] img, byte[] alphaimg,int width,int height,String d
 					//write the 8 bytes of alphadata into f.
 					fwrite(alphadata,1,8,f);
 				}
-
-				//store compressed color channels
-				if(format!=FORMAT.ETC2PACKAGE_R&&format!=FORMAT.ETC2PACKAGE_RG) 
-				{
-					write_big_endian_4byte_word(block1, f);
-					write_big_endian_4byte_word(block2, f);
-				}
-
-				//1-channel or 2-channel alpha compression: uses 16-bit data as input, and has 11-bit precision
+				
 				if(format==FORMAT.ETC2PACKAGE_R||format==FORMAT.ETC2PACKAGE_RG) 
-				{ 
-					byte[] alphadata= new byte[8];
-					compressBlockAlpha16(alphaimg,4*x,4*y,expandedwidth,expandedheight,alphadata);
-					fwrite(alphadata,1,8,f);
-				}
-				//compression of second alpha channel in RG-compression
-				if(format==FORMAT.ETC2PACKAGE_RG) 
 				{
-					byte[] alphadata = new byte[8];
-					compressBlockAlpha16(alphaimg2,4*x,4*y,expandedwidth,expandedheight,alphadata);
-					fwrite(alphadata,1,8,f);
+					//don't compress color
 				}
-//#if 1
-				if(verbose)
+				else if(format==FORMAT.ETC2PACKAGE_RGBA1||format==FORMAT.ETC2PACKAGE_sRGBA1) 
 				{
-					if(speed==SPEED.SPEED_FAST) 
+					//this is only available for fast/nonperceptual
+					if(speed == SPEED.SPEED_SLOW && first_time_message)
 					{
-						if( ((int)(percentageblocks) != (int)(oldpercentageblocks) ) || percentageblocks == 100.0)
-							System.out.println("Compressed "+countblocks+" of "+totblocks+" blocks, "+(100.0*countblocks/(1.0*totblocks))+" finished.");
+						System.out.println("Slow codec not implemented for RGBA1 --- using fast codec instead.\n");
+						first_time_message = false;
 					}
-					else
-						System.out.println("Compressed "+countblocks+" of "+totblocks+" blocks, "+(100.0*countblocks/(1.0*totblocks))+" finished." );
+					compressBlockETC2Fast(img, alphaimg,imgdec, expandedwidth, expandedheight, 4*x, 4*y, block1, block2);
 				}
+				else if(metric==METRIC.METRIC_NONPERCEPTUAL) 
+				{
+					if(speed==SPEED.SPEED_FAST ) 
+						compressBlockETC2Fast(img, alphaimg,imgdec, expandedwidth, expandedheight, 4*x, 4*y, block1, block2);
+					else
+//#if EXHAUSTIVE_CODE_ACTIVE
+//							compressBlockETC2Exhaustive(img, imgdec, expandedwidth, expandedheight, 4*x, 4*y, block1, block2);		
+//#else
+						System.out.println("Not implemented in this version\n");
 //#endif
+				}
+				else 
+				{
+					if(speed==SPEED.SPEED_FAST ) 
+						compressBlockETC2FastPerceptual(img, imgdec, expandedwidth, expandedheight, 4*x, 4*y, block1, block2);
+					else
+//#if EXHAUSTIVE_CODE_ACTIVE
+//							compressBlockETC2ExhaustivePerceptual(img, imgdec, expandedwidth, expandedheight, 4*x, 4*y, block1, block2);	
+//#else
+						System.out.println("Not implemented in this version\n");
+//#endif
+				}
 			}
+			
+			
+
+			//store compressed color channels
+			if(format!=FORMAT.ETC2PACKAGE_R&&format!=FORMAT.ETC2PACKAGE_RG) 
+			{
+				write_big_endian_4byte_word(block1, f);
+				write_big_endian_4byte_word(block2, f);
+			}
+
+			//1-channel or 2-channel alpha compression: uses 16-bit data as input, and has 11-bit precision
+			if(format==FORMAT.ETC2PACKAGE_R||format==FORMAT.ETC2PACKAGE_RG) 
+			{ 
+				byte[] alphadata= new byte[8];
+				compressBlockAlpha16(alphaimg,4*x,4*y,expandedwidth,expandedheight,alphadata);
+				fwrite(alphadata,1,8,f);
+			}
+			//compression of second alpha channel in RG-compression
+			if(format==FORMAT.ETC2PACKAGE_RG) 
+			{
+				byte[] alphadata = new byte[8];
+				compressBlockAlpha16(alphaimg2,4*x,4*y,expandedwidth,expandedheight,alphadata);
+				fwrite(alphadata,1,8,f);
+			}
+//#if 1
+			if(verbose)
+			{
+				if(speed==SPEED.SPEED_FAST) 
+				{
+					if( ((int)(percentageblocks) != (int)(oldpercentageblocks) ) || percentageblocks == 100.0)
+						System.out.println("Compressed "+countblocks+" of "+totblocks+" blocks, "+(100.0*countblocks/(1.0*totblocks))+" finished.");
+				}
+				else
+					System.out.println("Compressed "+countblocks+" of "+totblocks+" blocks, "+(100.0*countblocks/(1.0*totblocks))+" finished." );
+			}
+//#endif
 		}
-		System.out.println("\n");
-		f.close();
-		System.out.println("Saved file <"+dstfile+">.\n");
-	}
+	}	
 }
+
 
 
 
@@ -10341,22 +10457,6 @@ void compressFile(String srcfile,String dstfile)
 	//long tstruct;
 	long tstart;
 	long tstop;
-	// 0: compress from .any to .pkm with SPEED_FAST, METRIC_NONPERCEPTUAL, ETC 
-	// 1: compress from .any to .pkm with SPEED_MEDIUM, METRIC_NONPERCEPTUAL, ETC
-	// 2: compress from .any to .pkm with SPEED_SLOW, METRIC_NONPERCEPTUAL, ETC
-	// 3: compress from .any to .pkm with SPEED_FAST, METRIC_PERCEPTUAL, ETC
-	// 4: compress from .any to .pkm with SPEED_MEDIUM, METRIC_PERCEPTUAL, ETC
-	// 5: compress from .any to .pkm with SPEED_SLOW, METRIC_PERCEPTUAL, ETC
-	// 6: decompress from .pkm to .any
-	// 7: calculate PSNR between .any and .any
-	// 8: compress from .any to .pkm with SPEED_FAST, METRIC_NONPERCEPTUAL, ETC2 
-	// 9: compress from .any to .pkm with SPEED_MEDIUM, METRIC_NONPERCEPTUAL, ETC2
-	//10: compress from .any to .pkm with SPEED_SLOW, METRIC_NONPERCEPTUAL, ETC2
-	
-	//11: compress from .any to .pkm with SPEED_FAST, METRIC_PERCEPTUAL, ETC2
-	
-	//12: compress from .any to .pkm with SPEED_MEDIUM, METRIC_PERCEPTUAL, ETC2
-	//13: compress from .any to .pkm with SPEED_SLOW, METRIC_PERCEPTUAL, ETC2
 
 	System.out.print("\n");
 	if(codec==CODEC.CODEC_ETC)
@@ -10364,11 +10464,19 @@ void compressFile(String srcfile,String dstfile)
 	else
 		System.out.print("ETC2 codec, ");
 	if(speed==SPEED.SPEED_FAST)
-		System.out.print("using FAST compression mode and ");
-	else if(speed==SPEED.SPEED_MEDIUM)
-		System.out.print("using MEDIUM compression mode and ");
+		System.out.print("using FAST compression mode, ");
+	else if(speed==SPEED.SPEED_MEDIUM) {
+		System.out.print(" MEDIUM compression not supported using FAST, ");
+		speed=SPEED.SPEED_FAST;
+	}
+	else {
+		System.out.print("SLOW compression not supported using FAST, ");
+		speed=SPEED.SPEED_FAST;
+	}
+	if(generateMipMaps)
+		System.out.print("generating MipMaps, ");
 	else
-		System.out.print("using SLOW compression mode and ");
+		System.out.print("no MipMaps, ");
 	if(metric==METRIC.METRIC_PERCEPTUAL)
 		System.out.print("PERCEPTUAL error metric, ");
 	else
@@ -10426,19 +10534,15 @@ void compressFile(String srcfile,String dstfile)
 			System.out.print("Compressing...\n");
 
 			tstart=System.currentTimeMillis();
-			//_ftime( &tstruct );
-			//tstart=tstart*1000+tstruct.millitm;
 			try {
 				compressImageFile(srcimg[0],alphaimg[0],width[0],height[0],dstfile,extendedwidth[0], extendedheight[0]);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}			
 			tstop=System.currentTimeMillis();
-			//_ftime( &tstruct );
-			//tstop = tstop*1000+tstruct.millitm;
 			System.out.print( "It took "+(tstop - tstart)+" milliseconds to compress:\n" );
 			
-			//FIXME: PJ do I ned to call this one?
+			// do I ned to call this one, looks like it's just handing out the final quality
 			//calculatePSNRfile(dstfile,srcimg[0],alphaimg);
 		}
 	}
@@ -10460,7 +10564,7 @@ void compressFile(String srcfile,String dstfile)
  * @param mipmaps true to create mip maps
  * @return a ByteBuffer that looks exactly like a loaded ktx file with a KTX header and formatted data as requested, along with mip maps if requested
  */
-public ByteBuffer compressImageBytes(byte[] srcimg, byte[] srcimgalpha, int width, int height, FORMAT format, boolean mipmaps)
+public ByteBuffer compressImageToByteBuffer(byte[] srcimg, byte[] srcimgalpha, int width, int height, FORMAT format, boolean mipmaps)
 {
 	return compressImageBytes(srcimg, srcimgalpha,  width,  height, 
 			CODEC.CODEC_ETC2, SPEED.SPEED_FAST, METRIC.METRIC_PERCEPTUAL, format, true, false, mipmaps);
@@ -10483,7 +10587,7 @@ public ByteBuffer compressImageBytes(byte[] srcimg, byte[] srcimgalpha, int widt
 public ByteBuffer compressImageBytes(byte[] srcimg, byte[] srcimgalpha, int width, int height, 
                                            CODEC codec, SPEED speed, METRIC metric, FORMAT format, boolean ktxFile, boolean verbose, boolean mipmaps)
 {
-	this.ktxFile = ktxFile;// not sure if I ever care about pkm
+	this.ktxFile = ktxFile;
 	this.verbose = verbose;
 	this.generateMipMaps = mipmaps;
 	this.codec = codec;
@@ -10519,7 +10623,7 @@ public ByteBuffer compressImageBytes(byte[] srcimg, byte[] srcimgalpha, int widt
 	}
 
 	try {
-		return compressImageFile(srcimg, alphaimg [0], width, height, extendedwidth [0], extendedheight [0]);
+		return compressImageBytes(srcimg, alphaimg [0], width, height, extendedwidth [0], extendedheight [0]);
 	} catch (IOException e) {
 		e.printStackTrace();
 	}
@@ -10539,7 +10643,7 @@ protected static int computeLog(int value) {
 		i++;
 	}
 }
-ByteBuffer compressImageFile(byte[] img, byte[] alphaimg, int width, int height, int expandedwidth,	int expandedheight)
+ByteBuffer compressImageBytes(byte[] img, byte[] alphaimg, int width, int height, int expandedwidth,	int expandedheight)
 		throws IOException {
 	ByteBuffer dstBB;
 	long tstart = System.currentTimeMillis();
@@ -10564,16 +10668,13 @@ ByteBuffer compressImageFile(byte[] img, byte[] alphaimg, int width, int height,
 	wi = (short)w;
 	hi = (short)h;
 	
-	int mipMapCount = Math.max(computeLog(expandedwidth), computeLog(expandedheight)) + 1;
+	int mipMapCount = Math.min(computeLog(expandedwidth), computeLog(expandedheight)) + 1;
 	int halfbytes = 1; 
 
 	if (ktxFile) {
 		//.ktx file: KTX header followed by compressed binary data.
 		KTX_header header = new KTX_header();
-		//identifier
-		for (int i = 0; i < 12; i++) {
-			header.identifier [i] = KTX_IDENTIFIER_REF [i];
-		}
+		
 		//endianess int.. if this comes out reversed, all of the other ints will too.
 		header.endianness = KTX_ENDIAN_REF;
 
@@ -10643,12 +10744,11 @@ ByteBuffer compressImageFile(byte[] img, byte[] alphaimg, int width, int height,
 			int mw = w;
 			int mh = h;
 			for(int m = 1;m < mipMapCount; m++) {			
-				int widthDropFactor = mw/2 < 4 ? 1 : 2;// only drop down if new size would be half current (don't drop below 4x4)
+				int widthDropFactor = mw/2 < 4 ? 1 : 2;//half size but don't drop below 4x4
 				int heightDropFactor = mh/2 < 4 ? 1 : 2;
 				mw=mw/widthDropFactor;
-				mh=mh/widthDropFactor;
-				int mipsize = (mw * mh * halfbytes) / 2;		
-				mipsize = mipsize < halfbytes*8 ? halfbytes*8 : mipsize;// minimum halfbytes*8 bytes (8 or 16)
+				mh=mh/heightDropFactor;
+				int mipsize = (mw * mh * halfbytes) / 2;	// minimum halfbytes*16 bytes (16 or 32)	
 				allimagesize += 4 + mipsize;
 			}	
 		}
@@ -10663,6 +10763,11 @@ ByteBuffer compressImageFile(byte[] img, byte[] alphaimg, int width, int height,
 		fwrite(header, 1, dstBB);		
 
 	} else {
+		if(generateMipMaps)
+			System.out.println("PKM does not support mipmaps");
+		//.pkm doesn't support mipmaps
+		this.generateMipMaps = false;
+		
 		//.pkm file, contains small header..
 		char[] magic = new char[4];
 		magic [0] = 'P';
@@ -10720,17 +10825,16 @@ ByteBuffer compressImageFile(byte[] img, byte[] alphaimg, int width, int height,
 	
 	if(generateMipMaps) {
 		for(int m = 0; m < mipMapCount; m++) {
-			int imagesize = (expandedwidth * expandedheight * halfbytes) / 2;
-			imagesize = imagesize < halfbytes * 8 ? halfbytes * 8 : imagesize;// minimum halfbytes*8 bytes (8 or 16)
+			int imagesize = (expandedwidth * expandedheight * halfbytes) / 2;// minimum halfbytes*8 bytes (16 or 32)
 			
 			// write this mipmaps image size 
 			fwrite(imagesize, 1, dstBB);
 			// compress and write the mip map
-			compressImageFileMipMap(dstBB, img, alphaimg, expandedwidth, expandedheight);
+			compressImageToBB(dstBB, img, alphaimg, expandedwidth, expandedheight);
 			
 			// use a 4 pixel gaussian from the previous mip to make the next
 			
-			int widthDropFactor = expandedwidth/2 < 4 ? 1 : 2;// only drop down if new size would be half current (don't drop below 4x4)
+			int widthDropFactor = expandedwidth/2 < 4 ? 1 : 2;// half size but don't drop below 4x4
 			int heightDropFactor = expandedheight/2 < 4 ? 1 : 2;
 			
 			expandedwidth = expandedwidth/widthDropFactor;
@@ -10794,7 +10898,7 @@ ByteBuffer compressImageFile(byte[] img, byte[] alphaimg, int width, int height,
 		// write this mipmaps image size 
 		fwrite(imagesize, 1, dstBB);
 		// compress and write the mip map
-		compressImageFileMipMap(dstBB, img, alphaimg, expandedwidth, expandedheight);
+		compressImageToBB(dstBB, img, alphaimg, expandedwidth, expandedheight);
 	}
 	
 
@@ -10804,7 +10908,7 @@ ByteBuffer compressImageFile(byte[] img, byte[] alphaimg, int width, int height,
 	return dstBB;
 }
 
-void compressImageFileMipMap(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int expandedwidth, int expandedheight)
+void compressImageToBB(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int expandedwidth, int expandedheight)
 		throws IOException {
 	
 	// can only compress a 4x4 block of RGB
@@ -10844,10 +10948,10 @@ void compressImageFileMipMap(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int 
 
 	int ymax = expandedheight / 4;
 	ymax = ymax < 1 ? 1 : ymax;
-	int xmax = expandedheight / 4;
+	int xmax = expandedwidth / 4;
 	xmax = xmax < 1 ? 1 : xmax;
-	for (y = 0; y < expandedheight / 4; y++) {
-		for (x = 0; x < expandedwidth / 4; x++) {
+	for (y = 0; y < ymax; y++) {
+		for (x = 0; x < xmax; x++) {
 			countblocks++;
 			oldpercentageblocks = percentageblocks;
 			percentageblocks = 100.0 * countblocks / (1.0 * totblocks);
@@ -10867,6 +10971,19 @@ void compressImageFileMipMap(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int 
 						System.out.println("Not implemented in this version\n");
 				}
 			} else {
+				
+				byte[] alphadata = new byte[8];
+				//compression of alpha channel in case of 4-bit alpha. Uses 8-bit alpha channel as input, and has 8-bit precision.
+				if (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA) {
+					
+					if (speed == SPEED.SPEED_SLOW)
+						compressBlockAlphaSlow(alphaimg, 4 * x, 4 * y, expandedwidth, expandedheight, alphadata);
+					else
+						compressBlockAlphaFast(alphaimg, 4 * x, 4 * y, expandedwidth, expandedheight, alphadata);
+					//write the 8 bytes of alphadata into dstBB.
+					fwrite(alphadata, 1, 8, dstBB);
+				}				
+				
 				if (format == FORMAT.ETC2PACKAGE_R || format == FORMAT.ETC2PACKAGE_RG) {
 					//don't compress color
 				} else if (format == FORMAT.ETC2PACKAGE_RGBA1
@@ -10879,30 +10996,19 @@ void compressImageFileMipMap(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int 
 					compressBlockETC2Fast(img, alphaimg, imgdec, expandedwidth, expandedheight, 4 * x, 4 * y, block1,
 							block2);
 				} else if (metric == METRIC.METRIC_NONPERCEPTUAL) {
-					if (speed == SPEED.SPEED_FAST)
-						compressBlockETC2Fast(img, alphaimg, imgdec, expandedwidth, expandedheight, 4 * x, 4 * y,
-								block1, block2);
-					else
+					if (speed == SPEED.SPEED_FAST) {
+							compressBlockETC2Fast(img, alphaimg, imgdec, expandedwidth, expandedheight, 4 * x, 4 * y, block1, block2);
+					} else
 						System.out.println("Not implemented in this version\n");
 				} else {
-					if (speed == SPEED.SPEED_FAST)
-						compressBlockETC2FastPerceptual(img, imgdec, expandedwidth, expandedheight, 4 * x, 4 * y,
-								block1, block2);
-					else
+					if(speed==SPEED.SPEED_FAST ) {
+							compressBlockETC2FastPerceptual(img, imgdec, expandedwidth, expandedheight, 4*x, 4*y, block1, block2);
+					} else
 						System.out.println("Not implemented in this version\n");
 				}
 			}
 
-			//compression of alpha channel in case of 4-bit alpha. Uses 8-bit alpha channel as input, and has 8-bit precision.
-			if (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA) {
-				byte[] alphadata = new byte[8];
-				if (speed == SPEED.SPEED_SLOW)
-					compressBlockAlphaSlow(alphaimg, 4 * x, 4 * y, expandedwidth, expandedheight, alphadata);
-				else
-					compressBlockAlphaFast(alphaimg, 4 * x, 4 * y, expandedwidth, expandedheight, alphadata);
-				//write the 8 bytes of alphadata into dstBB.
-				fwrite(alphadata, 1, 8, dstBB);
-			}
+			
 
 			//store compressed color channels
 			if (format != FORMAT.ETC2PACKAGE_R && format != FORMAT.ETC2PACKAGE_RG) {
@@ -10938,7 +11044,7 @@ void compressImageFileMipMap(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int 
 
 //Calculates the PSNR between two files.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-public double calculatePSNRTwoFiles(String srcfile1,String srcfile2)
+public static double calculatePSNRTwoFiles(String srcfile1,String srcfile2)
 {
 	byte[][] srcimg1 = new byte[1][];;
 	byte[][] srcimg2 = new byte[1][];
@@ -10982,11 +11088,14 @@ public static void main(String args[])
 	if(args.length == 0 ) {
 		
 	//args = new String[] {"D:\\game_media\\Morrowind\\Icons_tga\\gold.tga", "D:\\game_media\\Morrowind\\Icons_tga\\gold2.ktx", "-f", "RGBA"};
-		new ETCPack( new String[] {"D:\\game_media\\Morrowind\\Icons_tga\\handtohand.tga", 
-			"D:\\game_media\\Morrowind\\Icons_tga\\handtohand2.ktx", "-f", "RGB"});
+	//	new ETCPack( new String[] {"D:\\game_media\\Morrowind\\Icons_tga\\handtohand.tga", 
+	//		"D:\\game_media\\Morrowind\\Icons_tga\\handtohand2.ktx", "-f", "RGB"});
 	
-	new ETCPack(new String[] {"D:\\game_media\\Morrowind\\Textures_tga\\menu_morrowind.tga", 
-		"D:\\game_media\\Morrowind\\Textures_tga\\menu_morrowind.ktx", "-f", "RGB"});
+	//new ETCPack(new String[] {"D:\\game_media\\Morrowind\\Morrowind - Textures_tga\\textures\\tx_dwrv_trim06.tga", 
+	//	"D:\\temp\\Textures\\tx_dwrv_trim06.ktx", "-f", "RGB", "-mipmap"});
+	
+	new ETCPack(new String[] {"D:\\temp\\neoclassicalmaintile03.tga", 
+		"D:\\temp\\neoclassicalmaintile03.ktx", "-f", "RGB", "-mipmap"});
 	
 	/*new ETCPack(new String[] {"D:\\game_media\\FalloutNV\\Fallout - Textures2_tga\\textures\\pimpboy3billion\\pimpboy3billion.tga", 
 		"D:\\game_media\\FalloutNV\\Fallout - Textures2_tga\\textures\\pimpboy3billion\\pimpboy3billion.ktx", 
@@ -11004,7 +11113,7 @@ public static void main(String args[])
 	new ETCPack(new String[] {"D:\\game_media\\Fallout4\\texture_archives\\Fallout4_Textures5_ba2_out_tga\\Textures\\Actors\\Dogmeat\\DogmeatBody_n2k.tga", 
 		"D:\\game_media\\Fallout4\\texture_archives\\Fallout4_Textures5_ba2_out_tga\\Textures\\Actors\\Dogmeat\\DogmeatBody_n2k.ktx",  
 		"-f", "RGBA"});*/
-	new ETCPack(new String[] {"D:\\game_media\\Fallout4\\texture_archives\\Fallout4_Textures5_ba2_out_tga\\Textures\\Actors\\Dogmeat\\DogmeatBody_s2k.tga", 
+/*	new ETCPack(new String[] {"D:\\game_media\\Fallout4\\texture_archives\\Fallout4_Textures5_ba2_out_tga\\Textures\\Actors\\Dogmeat\\DogmeatBody_s2k.tga", 
 		"D:\\game_media\\Fallout4\\texture_archives\\Fallout4_Textures5_ba2_out_tga\\Textures\\Actors\\Dogmeat\\DogmeatBody_s2k.ktx", 
 		"-f", "RGBA"});
 	
@@ -11012,11 +11121,8 @@ public static void main(String args[])
 	new ETCPack(new String[] {"D:\\game_media\\Fallout3\\Fallout - Textures_tga\\textures\\architecture\\urban\\concretedamage01.tga", 
 		"D:\\game_media\\Fallout3\\Fallout - Textures_tga\\textures\\architecture\\urban\\concretedamage01.ktx",  
 		"-f", "RGBA1"});
+	*/
 	
-	
-
-		// why doesn't my code accept these? cos that's 4.0.1!
-		//"-mipmaps", "-ktx"};
 	} else {
 		new ETCPack(args);
 	}
@@ -11029,13 +11135,12 @@ public ETCPack() {
 
 }
 public ETCPack(String args[]) {
-	if(args.length==3 || args.length==4 || args.length == 5 || args.length == 7 || args.length == 9 || args.length == 11 || args.length == 13)
-	{
-		// The source file is always the second last one. 
-		String[] srcfile= new String[1];
-		String[] dstfile= new String[1];
-		readArguments(args,srcfile,dstfile);
-		
+	
+	// The source file is always the second last one. 
+	String[] srcfile= new String[1];
+	String[] dstfile= new String[1];
+	if(readArguments(args,srcfile,dstfile))
+	{		
 		int q = find_pos_of_extension(srcfile[0]);
 		int q2 = find_pos_of_extension(dstfile[0]);
 		
@@ -11077,8 +11182,8 @@ public ETCPack(String args[]) {
 		System.out.println("                                         etc2 (highest quality)\n");
 		System.out.println("                                         (default: etc2)\n");
 		System.out.println("      -f {R|R_signed|RG|RG_signed|       Format: one, two, three or four \n");
-		System.out.println("          RGB|RGBA1|RGBA8|               channels, and 1 or 8 bits for alpha\n");
-        System.out.println("          sRGB|sRGBA1|sRGBA8|}           RGB or sRGB.\n");
+		System.out.println("          RGB|RGBA1|RGBA8|RGBA|               channels, and 1 or 8 bits(default) for alpha\n");
+        System.out.println("          sRGB|sRGBA1|sRGBA8|sRGBA}           RGB or sRGB.\n");
 		System.out.println("                                         (1 equals punchthrough)\n");
 		System.out.println("                                         (default: RGB)\n");
 		System.out.println("      -v {on|off}                        Detailed progress info. (default on)\n");
@@ -11103,8 +11208,8 @@ public ETCPack(String args[]) {
 
 
 
-
-
+//speed ideas
+//https://medium.com/@duhroach/building-a-blazing-fast-etc2-compressor-307f3e9aad99
 
 
 //mali compression tool suggests:

@@ -265,9 +265,9 @@ static int formatSigned = 0;
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 static void setupAlphaTable() 
 {
-  if(alphaTableInitialized)
-    return;
-  alphaTableInitialized = true;
+    if(alphaTableInitialized)
+    	return;
+    alphaTableInitialized = true;
 
 	//read table used for alpha compression
 	int buf;
