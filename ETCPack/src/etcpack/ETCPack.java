@@ -82,17 +82,17 @@ public class ETCPack {
 //	{  Image.fReadPGM(string, w, h, tempdata, wantedBitDepth); }
 	private static void fwrite(int intval, int i, FileChannel f) throws IOException {
 		// i tends to be 1	
-		ByteBuffer bb = ByteBuffer.allocate(4);
+		ByteBuffer bb = ByteBuffer.allocateDirect(4);
 		bb.putInt(intval);
 		f.write((ByteBuffer)bb.flip());		
 	}
 	private static void fwrite(char c, int i, FileChannel f) throws IOException {
-		ByteBuffer bb = ByteBuffer.allocate(1);
+		ByteBuffer bb = ByteBuffer.allocateDirect(1);
 		bb.put((byte)c);
 		f.write((ByteBuffer)bb.flip());
 	}
 	private static void fwrite(byte b, int i, FileChannel f) throws IOException {
-		ByteBuffer bb = ByteBuffer.allocate(1);
+		ByteBuffer bb = ByteBuffer.allocateDirect(1);
 		bb.put(b);
 		f.write((ByteBuffer)bb.flip());
 	}
@@ -101,7 +101,7 @@ public class ETCPack {
 		f.write(bb);// no flip as straight wrap
 	}
 	private static void fwrite(ETCPack.KTX_header header, int i, FileChannel f) throws IOException {
-		ByteBuffer bb = ByteBuffer.allocate(12 + 13*4);
+		ByteBuffer bb = ByteBuffer.allocateDirect(12 + 13*4);
 		bb.put(header.KTX_IDENTIFIER_REF);//12
 		// now 13*4 bytes => 12+(13*4) = 64bytes
 		bb.putInt(header.endianness);
@@ -418,7 +418,7 @@ public static final int  GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC              =0x927
 //int[] ktx_identifier; 
 
 
-//converts indices from  |a0|a1|e0|e1|i0|i1|m0|m1|b0|b1|f0|f1|j0|j1|n0|n1|c0|c1|g0|g1|k0|k1|o0|o1|d0|d1|h0|h1|l0|l1|p0|p1| previously used by T- and H-modes 
+//converts indices from        |a0|a1|e0|e1|i0|i1|m0|m1|b0|b1|f0|f1|j0|j1|n0|n1|c0|c1|g0|g1|k0|k1|o0|o1|d0|d1|h0|h1|l0|l1|p0|p1| previously used by T- and H-modes 
 //				         into  |p0|o0|n0|m0|l0|k0|j0|i0|h0|g0|f0|e0|d0|c0|b0|a0|p1|o1|n1|m1|l1|k1|j1|i1|h1|g1|f1|e1|d1|c1|b1|a1| which should be used for all modes.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 static int indexConversion(int pixelIndices) 
@@ -5326,6 +5326,8 @@ static void compressBlockDiffFlipCombined(byte[] img,int width,int height,int st
 //The following method scales down the intensity, since this can be compensated for anyway by both the H and T mode.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(LBG_colors)[2][3]
+
+
 void computeColorLBGHalfIntensityFast(byte[] img,int width,int startx,int starty, byte[][] LBG_colors) 
 {
 	byte[][] block_mask = new byte[4][4];
@@ -5393,9 +5395,10 @@ void computeColorLBGHalfIntensityFast(byte[] img,int width,int startx,int starty
 
 	D = 512*512*3*16.0; 
 	bestD = 512*512*3*16.0; 
+	
+	//I note this appears to be either 1 loop through seeds or max number, nothing in between
 
 	continue_seeding = true;
-
 	// loop seeds
 	for (seeding = 0; (seeding < maximum_number_of_seedings) && continue_seeding; seeding++)
 	{
@@ -5410,7 +5413,7 @@ void computeColorLBGHalfIntensityFast(byte[] img,int width,int startx,int starty
 				current_colors[s][c] = (double)(((double)(rand.nextDouble()))*(max_v[c]-min_v[c])) + min_v[c];
 			}
 		}
-		
+
 		// divide into two quantization sets and calculate distortion
 
 		continue_iterate = true;
@@ -11095,7 +11098,7 @@ public static void main(String args[])
 	//	"D:\\temp\\Textures\\tx_dwrv_trim06.ktx", "-f", "RGB", "-mipmap"});
 	
 	new ETCPack(new String[] {"D:\\temp\\neoclassicalmaintile03.tga", 
-		"D:\\temp\\neoclassicalmaintile03.ktx", "-f", "RGB", "-mipmap"});
+		"D:\\temp\\neoclassicalmaintile03.ktx", "-f", "RGBA", "-mipmap"});
 	
 	/*new ETCPack(new String[] {"D:\\game_media\\FalloutNV\\Fallout - Textures2_tga\\textures\\pimpboy3billion\\pimpboy3billion.tga", 
 		"D:\\game_media\\FalloutNV\\Fallout - Textures2_tga\\textures\\pimpboy3billion\\pimpboy3billion.ktx", 
@@ -11211,6 +11214,8 @@ public ETCPack(String args[]) {
 //speed ideas
 //https://medium.com/@duhroach/building-a-blazing-fast-etc2-compressor-307f3e9aad99
 
+//see if these help
+//https://stackoverflow.com/questions/18638743/is-it-better-to-use-system-arraycopy-than-a-for-loop-for-copying-arrays
 
 //mali compression tool suggests:
 //https://github.com/google/etc2comp
