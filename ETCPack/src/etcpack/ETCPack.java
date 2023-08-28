@@ -102,7 +102,7 @@ public class ETCPack {
 	}
 	private static void fwrite(ETCPack.KTX_header header, int i, FileChannel f) throws IOException {
 		ByteBuffer bb = ByteBuffer.allocateDirect(12 + 13*4);
-		bb.put(header.KTX_IDENTIFIER_REF);//12
+		bb.put(KTX_header.KTX_IDENTIFIER_REF);//12
 		// now 13*4 bytes => 12+(13*4) = 64bytes
 		bb.putInt(header.endianness);
 		bb.putInt(header.glType);
@@ -133,7 +133,7 @@ public class ETCPack {
 		bb.put(data); 
 	}
 	private static void fwrite(ETCPack.KTX_header header, int i, ByteBuffer bb) throws IOException {
-		bb.put(header.KTX_IDENTIFIER_REF);//12
+		bb.put(KTX_header.KTX_IDENTIFIER_REF);//12
 		// now 13*4 bytes => 12+(13*4) = 64bytes
 		bb.putInt(header.endianness);
 		bb.putInt(header.glType);
@@ -675,7 +675,7 @@ boolean readSrcFile(String filename,byte[][] img,byte[][] imgalpha, int[] width,
 		{
 			System.out.println(" Width = "+width[0]+" is not divisible by four... ");
 			System.out.println(" expanding image in x-dir... ");
-			if(expandToWidthDivByFour(img, width[0], height[0], expandedwidth, expandedheight,bitrate))
+			if(expandToWidthDivByFour(img, width[0], height[0], expandedwidth, expandedheight, bitrate))
 			{
 				System.out.println("OK.\n");
 			}
@@ -689,7 +689,7 @@ boolean readSrcFile(String filename,byte[][] img,byte[][] imgalpha, int[] width,
 		{
 			System.out.println(" Height = "+height[0]+" is not divisible by four... ");
 			System.out.println(" expanding image in y-dir...");
-			if(expandToHeightDivByFour(img, expandedwidth[0], height[0], expandedwidth, expandedheight,bitrate))
+			if(expandToHeightDivByFour(img, expandedwidth[0], height[0], expandedwidth, expandedheight, bitrate))
 			{
 				System.out.println("OK.\n");
 			}
@@ -10600,33 +10600,60 @@ public ByteBuffer compressImageBytes(byte[] srcimg, byte[] srcimgalpha, int widt
 
 	int[] extendedwidth = new int[1], extendedheight = new int[1];
 
+	int[] width2=new int[] {width};
+	int[] height2=new int[] {height};
+	byte[][] img = new byte[][] {srcimg};
+ 
+	
 	//make sure width and height are div 4 able
-	extendedwidth [0] = width;
-	extendedheight [0] = height;
-	int wdiv4 = width / 4;
-	int hdiv4 = height / 4;
-
-	if (!(wdiv4 * 4 == width)) {
-		System.out.println(" Width = " + width + " is not divisible by four... ");
-		return null;
+	extendedwidth [0] = width2[0];
+	extendedheight [0] = height2[0];
+	int wdiv4 = width2[0] / 4;
+	int hdiv4 = height2[0] / 4;
+ 
+	int bitrate=8;
+	if(format==FORMAT.ETC2PACKAGE_RG)
+		bitrate=16;
+	
+	if (!(wdiv4 * 4 == width2[0])) {
+		System.out.println(" Width = " + width2[0] + " is not divisible by four... ");
+		System.out.println(" expanding image in x-dir... ");
+		if(expandToWidthDivByFour(img, width2[0], height2[0], extendedwidth, extendedheight, bitrate))
+		{
+			System.out.println("OK.\n");
+		}
+		else
+		{
+			System.out.println("\n Error: could not expand image\n");
+			return null;
+		}
 	}
-	if (!(hdiv4 * 4 == height)) {
-		System.out.println(" Height = " + height + " is not divisible by four... ");
-		return null;
+	if (!(hdiv4 * 4 == height2[0])) {
+		System.out.println(" Height = " + height2[0] + " is not divisible by four... ");
+		System.out.println(" expanding image in y-dir...");
+		if(expandToHeightDivByFour(img, extendedwidth[0], height2[0], extendedwidth, extendedheight, bitrate))
+		{
+			System.out.println("OK.\n");
+		}
+		else
+		{
+			System.out.println("\n Error: could not expand image\n");
+			return null;
+		}
 	}
 
 	//make sure that alphasrcimg contains the alpha channel or is null here, and pass it to compressimagefile
 	byte[][] alphaimg = new byte[1][];
 	if (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_RGBA1
 		|| format == FORMAT.ETC2PACKAGE_sRGBA || format == FORMAT.ETC2PACKAGE_sRGBA1) {
-		readAlpha(alphaimg, srcimgalpha, width, height, extendedwidth, extendedheight);
+		readAlpha(alphaimg, srcimgalpha, width2[0], height2[0], extendedwidth, extendedheight);
 		setupAlphaTableAndValtab();
 	} else if (format == FORMAT.ETC2PACKAGE_R) {
 		throw new UnsupportedOperationException();
 	}
 
 	try {
-		return compressImageBytes(srcimg, alphaimg [0], width, height, extendedwidth [0], extendedheight [0]);
+		return compressImageBytes(srcimg, alphaimg [0], width2[0], height2[0], extendedwidth [0], extendedheight [0]);
 	} catch (IOException e) {
 		e.printStackTrace();
 	}
