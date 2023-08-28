@@ -10653,7 +10653,7 @@ public ByteBuffer compressImageBytes(byte[] srcimg, byte[] srcimgalpha, int widt
 	}
 
 	try {
-		return compressImageBytes(srcimg, alphaimg [0], width2[0], height2[0], extendedwidth [0], extendedheight [0]);
+		return compressImageBytes(img[0], alphaimg [0], width2[0], height2[0], extendedwidth [0], extendedheight [0]);
 	} catch (IOException e) {
 		e.printStackTrace();
 	}
