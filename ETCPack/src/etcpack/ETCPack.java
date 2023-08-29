@@ -10450,7 +10450,7 @@ void compressImageToFile(FileChannel f, byte[] img, byte[] alphaimg, int expande
 
 //Compress an file.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-void compressFile(String srcfile,String dstfile)
+void compressFile(String srcfile, String dstfile)
 {
 	byte[][] srcimg=new byte[1][];
 	int[] width= new int[1],height= new int[1];
@@ -10541,7 +10541,7 @@ void compressFile(String srcfile,String dstfile)
 				e.printStackTrace();
 			}			
 			tstop=System.currentTimeMillis();
-			System.out.println( "It took "+(tstop - tstart)+" milliseconds to compress:" );
+			System.out.println( "It took "+(tstop - tstart)+" milliseconds to compress" );
 			
 			// do I ned to call this one, looks like it's just handing out the final quality
 			//calculatePSNRfile(dstfile,srcimg[0],alphaimg);
@@ -10614,25 +10614,23 @@ public ByteBuffer compressImageBytes(byte[] srcimg, byte[] srcimgalpha, int widt
 		bitrate=16;
 	
 	if (!(wdiv4 * 4 == width2[0])) {
-		System.out.print(" Width = " + width2[0] + " is not divisible by four expanding image in x-dir... ");
-		if(expandToWidthDivByFour(img, width2[0], height2[0], extendedwidth, extendedheight, bitrate))
-		{
-			System.out.println("OK.");
-		}
-		else
-		{
+		if (verbose) 
+			System.out.print(" Width = " + width2[0] + " is not divisible by four expanding image in x-dir... ");
+		if(expandToWidthDivByFour(img, width2[0], height2[0], extendedwidth, extendedheight, bitrate)) {
+			if (verbose) 
+				System.out.println("OK.");
+		} else {
 			System.out.println("Error: could not expand image");
 			return null;
 		}
 	}
 	if (!(hdiv4 * 4 == height2[0])) {
-		System.out.print(" Height = " + height2[0] + " is not divisible by four expanding image in y-dir... ");
-		if(expandToHeightDivByFour(img, extendedwidth[0], height2[0], extendedwidth, extendedheight, bitrate))
-		{
-			System.out.println("OK.");
-		}
-		else
-		{
+		if (verbose) 
+			System.out.print(" Height = " + height2[0] + " is not divisible by four expanding image in y-dir... ");
+		if(expandToHeightDivByFour(img, extendedwidth[0], height2[0], extendedwidth, extendedheight, bitrate)) {
+			if (verbose) 
+				System.out.println("OK.");
+		} else {
 			System.out.println("Error: could not expand image");
 			return null;
 		}
@@ -10946,7 +10944,7 @@ ByteBuffer compressImageBytes(byte[] img, byte[] alphaimg, int width, int height
 	}
 	
 
-	System.out.println("It took " + (System.currentTimeMillis() - tstart) + " milliseconds to compress:");
+	System.out.println("It took " + (System.currentTimeMillis() - tstart) + " milliseconds to compress");
 	//dstBB is all loaded up, now set it up for reading
 	dstBB.rewind();
 	return dstBB;
