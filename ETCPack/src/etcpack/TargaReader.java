@@ -9,15 +9,15 @@ import java.awt.image.BufferedImage;
 //http://paulbourke.net/dataformats/tga/
 //little endian multi-byte integers: "low-order byte,high-order byte"
 //       00,04 -> 04,00 -> 1024
-class TargaReader {
+public class TargaReader {
 	
-	static class ImgData{
+	public static class ImgData{
 		public enum TYPE {ARGB,RGB};
-		int width;
-		int height;
-		TYPE type;
-		byte[] img;
-		byte[] imgalpha;
+		public int width;
+		public int height;
+		public TYPE type;
+		public byte[] img;
+		public byte[] imgalpha;
 	}
 	
 	

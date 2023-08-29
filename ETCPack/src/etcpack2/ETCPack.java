@@ -1,4 +1,4 @@
-package etcpack;
+package etcpack2;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,6 +8,7 @@ import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.util.Random;
 
+import etcpack.TargaReader;
 import etcpack.TargaReader.ImgData;
 
 // from here
@@ -10953,7 +10954,6 @@ ByteBuffer compressImageBytes(byte[] img, byte[] alphaimg, int width, int height
 int compressImageToBB(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int expandedwidth, int expandedheight)
 		throws IOException {
 	
-	// keep track of how much we've written to the buffer
 	int posAtStart = dstBB.position();
 	// can only compress a 4x4 block of RGB
 	if(img.length<4*4*3)
@@ -11050,7 +11050,9 @@ int compressImageToBB(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int expande
 					} else
 						System.out.println("Not implemented in this version");
 				}
-			}			
+			}
+
+			
 
 			//store compressed color channels
 			if (format != FORMAT.ETC2PACKAGE_R && format != FORMAT.ETC2PACKAGE_RG) {
@@ -11108,7 +11110,7 @@ public static double calculatePSNRTwoFiles(String srcfile1,String srcfile2)
 			}
 			else
 			{
-				System.out.println("Width and height do no not match for image: width, height = ("+width1+", "+height1+") and ("+width2+", "+height2+")");
+				System.out.println(" Width and height do no not match for image: width, height = ("+width1+", "+height1+") and ("+width2+", "+height2+")");
 			}
 		}
 		else
@@ -11128,7 +11130,47 @@ public static double calculatePSNRTwoFiles(String srcfile1,String srcfile2)
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 public static void main(String args[])
 {
-	new ETCPack(args);
+	if(args.length == 0 ) {
+		
+	//args = new String[] {"D:\\game_media\\Morrowind\\Icons_tga\\gold.tga", "D:\\game_media\\Morrowind\\Icons_tga\\gold2.ktx", "-f", "RGBA"};
+	//	new ETCPack( new String[] {"D:\\game_media\\Morrowind\\Icons_tga\\handtohand.tga", 
+	//		"D:\\game_media\\Morrowind\\Icons_tga\\handtohand2.ktx", "-f", "RGB"});
+	
+	//new ETCPack(new String[] {"D:\\game_media\\Morrowind\\Morrowind - Textures_tga\\textures\\tx_dwrv_trim06.tga", 
+	//	"D:\\temp\\Textures\\tx_dwrv_trim06.ktx", "-f", "RGB", "-mipmap"});
+	
+	new ETCPack(new String[] {"D:\\temp\\neoclassicalmaintile03.tga", 
+		"D:\\temp\\neoclassicalmaintile03.ktx", "-f", "RGBA", "-mipmap"});
+	
+	/*new ETCPack(new String[] {"D:\\game_media\\FalloutNV\\Fallout - Textures2_tga\\textures\\pimpboy3billion\\pimpboy3billion.tga", 
+		"D:\\game_media\\FalloutNV\\Fallout - Textures2_tga\\textures\\pimpboy3billion\\pimpboy3billion.ktx", 
+		"-f", "RGBA"});
+	new ETCPack(new String[] {"D:\\game_media\\FalloutNV\\Fallout - Textures2_tga\\textures\\pimpboy3billion\\pimpboy3billion_m.tga", 
+		"D:\\game_media\\FalloutNV\\Fallout - Textures2_tga\\textures\\pimpboy3billion\\pimpboy3billion_m.ktx", 
+		"-f", "RGBA"});
+	new ETCPack(new String[] {"D:\\game_media\\FalloutNV\\Fallout - Textures2_tga\\textures\\pimpboy3billion\\pimpboy3billion_n.tga", 
+		"D:\\game_media\\FalloutNV\\Fallout - Textures2_tga\\textures\\pimpboy3billion\\pimpboy3billion_n.ktx",
+		"-f", "RGBA"});*/
+	
+	/*new ETCPack(new String[] {"D:\\game_media\\Fallout4\\texture_archives\\Fallout4_Textures5_ba2_out_tga\\Textures\\Actors\\Dogmeat\\DogmeatBody_d2k.tga", 
+		"D:\\game_media\\Fallout4\\texture_archives\\Fallout4_Textures5_ba2_out_tga\\Textures\\Actors\\Dogmeat\\DogmeatBody_d2k.ktx", 
+		"-f", "RGBA"});
+	new ETCPack(new String[] {"D:\\game_media\\Fallout4\\texture_archives\\Fallout4_Textures5_ba2_out_tga\\Textures\\Actors\\Dogmeat\\DogmeatBody_n2k.tga", 
+		"D:\\game_media\\Fallout4\\texture_archives\\Fallout4_Textures5_ba2_out_tga\\Textures\\Actors\\Dogmeat\\DogmeatBody_n2k.ktx",  
+		"-f", "RGBA"});*/
+/*	new ETCPack(new String[] {"D:\\game_media\\Fallout4\\texture_archives\\Fallout4_Textures5_ba2_out_tga\\Textures\\Actors\\Dogmeat\\DogmeatBody_s2k.tga", 
+		"D:\\game_media\\Fallout4\\texture_archives\\Fallout4_Textures5_ba2_out_tga\\Textures\\Actors\\Dogmeat\\DogmeatBody_s2k.ktx", 
+		"-f", "RGBA"});
+	
+	
+	new ETCPack(new String[] {"D:\\game_media\\Fallout3\\Fallout - Textures_tga\\textures\\architecture\\urban\\concretedamage01.tga", 
+		"D:\\game_media\\Fallout3\\Fallout - Textures_tga\\textures\\architecture\\urban\\concretedamage01.ktx",  
+		"-f", "RGBA1"});
+	*/
+	
+	} else {
+		new ETCPack(args);
+	}
 }
 /**
  * Constructor to allow buffer based interactions, presumably the next call is 
