@@ -3396,17 +3396,21 @@ static int compressBlockOnlyDiffFlipAverage(byte[] img,int width,int height,int 
 //Uses fixed point arithmetics where 1000 represents 1.0.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address  int &compressed1, int &compressed2
-static int compressBlockOnlyDiffFlipAveragePerceptual1000(byte[] img,int width,int height,int startx,int starty, int[] compressed1, int[] compressed2)
-{
-	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
-	int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
-	byte[] avg_color_quant1 = new byte[3], avg_color_quant2 = new byte[3];
+/*
+int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
+int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
+byte[] avg_color_quant1 = new byte[3], avg_color_quant2 = new byte[3];
 
-	float[] avg_color_float1 = new float[3],avg_color_float2 = new float[3];
-	int[] enc_color1 = new int[3],enc_color2 = new int[3],diff = new int[3];
+float[] avg_color_float1 = new float[3],avg_color_float2 = new float[3];
+int[] enc_color1 = new int[3],enc_color2 = new int[3],diff = new int[3];
+int[] best_table1=new int[1], best_table2=new int[1];*/
+
+int compressBlockOnlyDiffFlipAveragePerceptual1000(byte[] img,int width,int height,int startx,int starty, int[] compressed1, int[] compressed2)
+{
+
 	int min_error=MAXERR1000;
 	int best_table_indices1=0, best_table_indices2=0;
-	int[] best_table1=new int[1], best_table2=new int[1];
+
 	int diffbit;
 
 	int norm_err=0;
@@ -3619,17 +3623,23 @@ static int compressBlockOnlyDiffFlipAveragePerceptual1000(byte[] img,int width,i
 //Tries both flipped and unflipped.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 // address unsigned int &compressed1, unsigned int &compressed2)
-static double compressBlockDiffFlipAveragePerceptual(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2)
-{
-	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
-	int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
-	byte[] avg_color_quant1 = new byte[3], avg_color_quant2 = new byte[3];
 
-	float[] avg_color_float1 = new float[3],avg_color_float2 = new float[3];
-	int[] enc_color1 = new int[3], enc_color2 = new int[3], diff = new int[3];
+/*
+int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
+int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
+byte[] avg_color_quant1 = new byte[3], avg_color_quant2 = new byte[3];
+
+float[] avg_color_float1 = new float[3],avg_color_float2 = new float[3];
+int[] enc_color1 = new int[3], enc_color2 = new int[3], diff = new int[3];
+*/
+int[] best_table1=new int[1], best_table2=new int[1];
+
+
+double compressBlockDiffFlipAveragePerceptual(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2)
+{
 	int min_error=255*255*8*3;
 	int best_table_indices1=0, best_table_indices2=0;
-	int[] best_table1=new int[1], best_table2=new int[1];
+
 	int diffbit;
 
 	int norm_err=0;
@@ -3974,23 +3984,26 @@ static dMatrix multiplyMatrices( dMatrix Amat, dMatrix Bmat)
 
 //Transposes a matrix
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static void transposeMatrix( dMatrix mat)
+double[] tempM = new double[4*4]; 
+void transposeMatrix( dMatrix mat)
 {
 	int xx, yy, zz;
-	double[] temp;
+	
 	int newwidth, newheight;
 
-	temp = new double[(mat.width)*(mat.height)];
+	// make it big enough
+	if(tempM.length< (mat.width)*(mat.height))
+		tempM = new double[(mat.width)*(mat.height)];
 
 	for(zz = 0; zz<((mat.width)*(mat.height)); zz++)
-		temp[zz] = mat.data[zz];
+		tempM[zz] = mat.data[zz];
 
 	newwidth = mat.height;
 	newheight= mat.width;
 
 	for(yy = 0; yy<newheight; yy++)
 		for(xx = 0; xx<newwidth; xx++)
-			mat.data[yy*newwidth+xx] = temp[xx*(mat.width)+yy];
+			mat.data[yy*newwidth+xx] = tempM[xx*(mat.width)+yy];
 
 	mat.height = newheight;
 	mat.width = newwidth;
@@ -4556,7 +4569,17 @@ static final double[] coeffsC= new double[]  {0.2875, -0.0125, -0.0125, -0.0125,
 //in the clamping to a number between 0 and the maximum. 
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &compressed57_1,  int &compressed57_2
-static void compressBlockPlanar57(byte[] img, int width,int height,int startx,int starty,  int[] compressed57_1,  int[] compressed57_2)
+
+
+double[] colorO= new double[3], colorH= new double[3], colorV= new double[3];
+byte[] colorO8= new byte[3], colorH8= new byte[3], colorV8= new byte[3];
+dMatrix D_matrix = new dMatrix();
+dMatrix x_vector = new dMatrix();
+dMatrix A_matrix = new dMatrix(); 
+dMatrix C_matrix = new dMatrix(); 
+dMatrix b_vector = new dMatrix(); 
+
+void compressBlockPlanar57(byte[] img, int width,int height,int startx,int starty,  int[] compressed57_1,  int[] compressed57_2)
 {
 	// Use least squares to find the solution with the smallest error.
 	// That is, find the vector x so that |Ax-b|^2 is minimized, where
@@ -4572,17 +4595,12 @@ static void compressBlockPlanar57(byte[] img, int width,int height,int startx,in
 	//                          = C * D
 	int xx,yy, cc;
 
-	double[] colorO= new double[3], colorH= new double[3], colorV= new double[3];
-	byte[] colorO8= new byte[3], colorH8= new byte[3], colorV8= new byte[3];
-	
-	dMatrix D_matrix = new dMatrix();
-	dMatrix x_vector = new dMatrix();
 
-	dMatrix A_matrix = new dMatrix(); A_matrix.width = 3; A_matrix.height = 16; 
+	A_matrix.width = 3; A_matrix.height = 16; 
 	A_matrix.data = coeffsA;
-	dMatrix C_matrix = new dMatrix(); C_matrix.width = 3; C_matrix.height = 3; 
+	C_matrix.width = 3; C_matrix.height = 3; 
 	C_matrix.data = coeffsC;
-	dMatrix b_vector = new dMatrix(); b_vector.width = 1; b_vector.height = 16; 
+	b_vector.width = 1; b_vector.height = 16; 
     b_vector.data = new double[b_vector.width*b_vector.height];
 	transposeMatrix(A_matrix);
 
@@ -4961,7 +4979,7 @@ static void stuff59bits(int thumbT59_word1, int thumbT59_word2, int[] thumbT_wor
 //Decompress the planar mode and calculate the error per component compared to original image.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &error_red, int &error_green, int &error_blue
-static void decompressBlockPlanar57errorPerComponent(int compressed57_1, int compressed57_2, byte[] img,int width,int height,int startx,int starty, byte[] srcimg,  int[] error_red, int[] error_green, int[] error_blue)
+void decompressBlockPlanar57errorPerComponent(int compressed57_1, int compressed57_2, byte[] img,int width,int height,int startx,int starty, byte[] srcimg,  int[] error_red, int[] error_green, int[] error_blue)
 {
 	byte[] colorO =new byte[3], colorH =new byte[3], colorV =new byte[3];
 
@@ -5018,7 +5036,7 @@ static void decompressBlockPlanar57errorPerComponent(int compressed57_1, int com
 //quantization. Both flip modes are tried. 
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &compressed1, int &compressed2
-static void compressBlockDiffFlipCombined(byte[] img,int width,int height,int startx,int starty, int[] compressed1, int[] compressed2)
+void compressBlockDiffFlipCombined(byte[] img,int width,int height,int startx,int starty, int[] compressed1, int[] compressed2)
 {
 	int[] compressed1_norm=new int[1], compressed2_norm=new int[1];
 	int[] compressed1_flip=new int[1], compressed2_flip=new int[1];
@@ -5327,10 +5345,21 @@ static void compressBlockDiffFlipCombined(byte[] img,int width,int height,int st
 //byte(LBG_colors)[2][3]
 
 
+
+// hillarious single thread deburning
+byte[][] block_mask = new byte[4][4];
+
+double[][] t_color= new double[2][3];
+double[][][] original_colors= new double[4][4][3];
+double[][] current_colors= new double[2][3];
+double[][] best_colors= new double[2][3];
+double[] max_v= new double[3];
+double[] min_v= new double[3];
+ 
+
 void computeColorLBGHalfIntensityFast(byte[] img,int width,int startx,int starty, byte[][] LBG_colors) 
 {
-	byte[][] block_mask = new byte[4][4];
-
+	
 	// reset rand so that we get predictable output per block
 	//srand(10000);
 	rand.setSeed(10000);
@@ -5338,12 +5367,7 @@ void computeColorLBGHalfIntensityFast(byte[] img,int width,int startx,int starty
 	double D = 0, oldD, bestD = MAXIMUM_ERROR, eps = 0.0000000001;
 	double error_a, error_b;
 	int number_of_iterations = 10;
-	double[][] t_color= new double[2][3];
-	double[][][] original_colors= new double[4][4][3];
-	double[][] current_colors= new double[2][3];
-	double[][] best_colors= new double[2][3];
-	double[] max_v= new double[3];
-	double[] min_v= new double[3];
+	
 	int x,y,i;
 	double red, green, blue;
 	boolean continue_seeding;
@@ -5353,9 +5377,7 @@ void computeColorLBGHalfIntensityFast(byte[] img,int width,int startx,int starty
 
 	max_v[R] = -512.0;   max_v[G] = -512.0;   max_v[B] = -512.0; 
 	min_v[R] =  512.0;   min_v[G] =  512.0;   min_v[B] =  512.0;
-	
-
-	
+		
 	// resolve trainingdata
 	for (y = 0; y < BLOCKHEIGHT; ++y) 
 	{
@@ -5373,8 +5395,6 @@ void computeColorLBGHalfIntensityFast(byte[] img,int width,int startx,int starty
 			//
 			// The LGB algorithm will only act on the r and s variables and not on q.
 			// 
-			
-
 			
 			
 			original_colors[x][y][R] = sqrtW13*red + sqrtW13*green + sqrtW13*blue;
@@ -5525,6 +5545,17 @@ void computeColorLBGHalfIntensityFast(byte[] img,int width,int startx,int starty
 			LBG_colors[x][y] = (byte)JAS_ROUND(current_colors[x][y]);
 }
 
+
+/*
+byte[][] block_mask= new byte[4][4];
+
+double[][] t_color= new double[2][3];
+double[][][] original_colors= new double[4][4][3];
+double[][] current_colors= new double[2][3];
+double[][] best_colors= new double[2][3];
+double[] max_v= new double[3];
+double[] min_v= new double[3];*/
+
 //Calculation of the two block colors using the LBG-algorithm
 //The following method scales down the intensity, since this can be compensated for anyway by both the H and T mode.
 //Faster version
@@ -5532,7 +5563,7 @@ void computeColorLBGHalfIntensityFast(byte[] img,int width,int startx,int starty
 // byte(LBG_colors)[2][3]
 void computeColorLBGNotIntensityFast(byte[] img,int width,int startx,int starty, byte[][] LBG_colors) 
 {
-	byte[][] block_mask= new byte[4][4];
+
 
 	// reset rand so that we get predictable output per block
 	//srand(10000);
@@ -5541,12 +5572,7 @@ void computeColorLBGNotIntensityFast(byte[] img,int width,int startx,int starty,
 	double D = 0, oldD, bestD = MAXIMUM_ERROR, eps = 0.0000000001;
 	double error_a, error_b;
 	int number_of_iterations = 10;
-	double[][] t_color= new double[2][3];
-	double[][][] original_colors= new double[4][4][3];
-	double[][] current_colors= new double[2][3];
-	double[][] best_colors= new double[2][3];
-	double[] max_v= new double[3];
-	double[] min_v= new double[3];
+
 	int x,y,i;
 	double red, green, blue;
 	boolean continue_seeding;
@@ -5723,24 +5749,30 @@ void computeColorLBGNotIntensityFast(byte[] img,int width,int startx,int starty,
 //Calculation of the two block colors using the LBG-algorithm
 //The following method completely ignores the intensity, since this can be compensated for anyway by both the H and T mode.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
+/*
+byte[][] block_mask= new byte[4][4];
+float[][] t_color= new float[2][3];
+float[][][] original_colors= new float[4][4][3];
+float[][] current_colors= new float[2][3];
+float[][] best_colors= new float[2][3];
+float[] max_v= new float[3];
+float[] min_v= new float[3];
+
+*/
+
 //byte(LBG_colors)[2][3]
 void computeColorLBGNotIntensity(byte[] img,int width,int startx,int starty, byte[][] LBG_colors) 
 {
-	byte[][] block_mask= new byte[4][4];
+
 
 	// reset rand so that we get predictable output per block
 	//srand(10000);
 	rand.setSeed(10000);
 	//LBG-algorithm
 	float D = 0, oldD, bestD = MAXIMUM_ERROR, eps = 0.0000000001f;
-	float error_a, error_b;
+	double error_a, error_b;
 	int number_of_iterations = 10;
-	float[][] t_color= new float[2][3];
-	float[][][] original_colors= new float[4][4][3];
-	float[][] current_colors= new float[2][3];
-	float[][] best_colors= new float[2][3];
-	float[] max_v= new float[3];
-	float[] min_v= new float[3];
+	
 	int x,y,i;
 	float red, green, blue;
 	boolean continue_seeding;
@@ -5748,8 +5780,10 @@ void computeColorLBGNotIntensity(byte[] img,int width,int startx,int starty, byt
 	int seeding;
 	boolean continue_iterate;
 
+
 	max_v[R] = -512.0f;   max_v[G] = -512.0f;   max_v[B] = -512.0f; 
 	min_v[R] =  512.0f;   min_v[G] =  512.0f;   min_v[B] =  512.0f;
+
 
 	// resolve trainingdata
 	for (y = 0; y < BLOCKHEIGHT; ++y) 
@@ -5815,10 +5849,10 @@ void computeColorLBGNotIntensity(byte[] img,int width,int startx,int starty, byt
 			{
 				for (x = 0; x < BLOCKWIDTH; ++x) 
 				{
-					error_a = (float)0.0*SQUARE(original_colors[x][y][R] - current_colors[0][R]) + 
+					error_a = 0.0*SQUARE(original_colors[x][y][R] - current_colors[0][R]) + 
 							  SQUARE(original_colors[x][y][G] - current_colors[0][G]) +
 							  SQUARE(original_colors[x][y][B] - current_colors[0][B]);
-					error_b = (float)0.0*SQUARE(original_colors[x][y][R] - current_colors[1][R]) + 
+					error_b = 0.0*SQUARE(original_colors[x][y][R] - current_colors[1][R]) + 
 							  SQUARE(original_colors[x][y][G] - current_colors[1][G]) +
 							  SQUARE(original_colors[x][y][B] - current_colors[1][B]);
 					if (error_a < error_b) 
@@ -5915,12 +5949,22 @@ void computeColorLBGNotIntensity(byte[] img,int width,int startx,int starty, byt
 			LBG_colors[x][y] = (byte)JAS_ROUND(current_colors[x][y]);
 }
 
+/*
+byte[][] block_mask= new byte[4][4];
+
+double[][] t_color= new double[2][3];
+double[][][] original_colors= new double[4][4][3];
+double[][] current_colors= new double[2][3];
+double[][] best_colors= new double[2][3];
+double[] max_v= new double[3];
+double[] min_v= new double[3];*/
+
 //Calculation of the two block colors using the LBG-algorithm
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(LBG_colors)[2][3]
 void computeColorLBG(byte[] img,int width,int startx,int starty, byte[][] LBG_colors) 
 {
-	byte[][] block_mask= new byte[4][4];
+
 
 	// reset rand so that we get predictable output per block
 	//srand(10000);
@@ -5929,12 +5973,7 @@ void computeColorLBG(byte[] img,int width,int startx,int starty, byte[][] LBG_co
 	double D = 0, oldD, bestD = MAXIMUM_ERROR, eps = 0.0000000001;
 	double error_a, error_b;
 	int number_of_iterations = 10;
-	double[][] t_color= new double[2][3];
-	double[][][] original_colors= new double[4][4][3];
-	double[][] current_colors= new double[2][3];
-	double[][] best_colors= new double[2][3];
-	double[] max_v= new double[3];
-	double[] min_v= new double[3];
+
 	int x,y,i;
 	double red, green, blue;
 	boolean continue_seeding;
@@ -6097,10 +6136,13 @@ void computeColorLBG(byte[] img,int width,int startx,int starty, byte[][] LBG_co
 			LBG_colors[x][y] = (byte)JAS_ROUND(current_colors[x][y]);
 }
 
+
+//REPEAT OF TEH non fast with float instead of doubles!!! aaahhh stupid c++ stupid, stupid!
+
 //Calculation of the two block colors using the LBG-algorithm
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(LBG_colors)[2][3]
-void computeColorLBGfast(byte[] img,int width,int startx,int starty, byte[][] LBG_colors) 
+/*void computeColorLBGfast(byte[] img,int width,int startx,int starty, byte[][] LBG_colors) 
 {
 	byte[][] block_mask= new byte[4][4];
 
@@ -6271,7 +6313,7 @@ void computeColorLBGfast(byte[] img,int width,int startx,int starty, byte[][] LB
 	for(x=0;x<2;x++)
 		for(y=0;y<3;y++)
 			LBG_colors[x][y] = (byte)JAS_ROUND(current_colors[x][y]);
-}
+}*/
 
 //Each color component is compressed to fit in its specified number of bits
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
@@ -6328,20 +6370,25 @@ static void swapColors(byte[][] colors)
 //In the 59T bit mode, we only have pattern T.
 //
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
+
+//int[] diff= new int[3];
+byte[][] colors= new byte[2][3];
+byte[][] possible_colors= new byte[4][3];
+
+
 //byte(colorsRGB444)[2][3]
 //address  byte &distance, int &pixel_indices
-static int calculateError59Tperceptual1000(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
+int calculateError59Tperceptual1000(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
 {
 
 	int block_error = 0, 
 		   best_block_error = MAXERR1000,
 		   pixel_error, 
 		   best_pixel_error;
-	int[] diff= new int[3];
+
 	byte best_sw =0;
 	int pixel_colors;
-	byte[][] colors= new byte[2][3];
-	byte[][] possible_colors= new byte[4][3];
+
 
 	// First use the colors as they are, then swap them
 	for (byte sw = 0; sw <2; ++sw) 
@@ -6419,17 +6466,20 @@ static int calculateError59Tperceptual1000(byte[] srcimg, int width, int startx,
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //address byte &distance,  int &pixel_indices
-static double calculateError59T(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance,  int[] pixel_indices) 
+/*
+int[] diff = new int[3];
+byte[][] colors = new byte[2][3];
+byte[][] possible_colors= new byte[4][3];*/
+double calculateError59T(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance,  int[] pixel_indices) 
 {
 	double block_error = 0, 
 		     best_block_error = MAXIMUM_ERROR, 
 				 pixel_error, 
 				 best_pixel_error;
-	int[] diff = new int[3];
+
 	byte best_sw = 0;
 	int pixel_colors;
-	byte[][] colors = new byte[2][3];
-	byte[][] possible_colors= new byte[4][3];
+
 
 	// First use the colors as they are, then swap them
 	for (byte sw = 0; sw <2; ++sw) 
@@ -6505,17 +6555,20 @@ static double calculateError59T(byte[] srcimg, int width, int startx, int starty
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //address  byte &distance, int &pixel_indices
-static int calculateError59TnoSwapPerceptual1000(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
+//int[] diff = new int[3];
+
+//byte[][] colors= new byte[2][3];
+//byte[][] possible_colors= new byte[4][3];
+int calculateError59TnoSwapPerceptual1000(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
 {
 
 	int block_error = 0, 
 		   best_block_error = MAXERR1000,
 		   pixel_error, 
 		   best_pixel_error;
-	int[] diff = new int[3];
+
 	int pixel_colors;
-	byte[][] colors= new byte[2][3];
-	byte[][] possible_colors= new byte[4][3];
+
 	int thebestintheworld;
 
 	// First use the colors as they are, then swap them
@@ -6581,16 +6634,18 @@ static int calculateError59TnoSwapPerceptual1000(byte[] srcimg, int width, int s
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //byte &distance, int &pixel_indices
-static double calculateError59TnoSwap(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
+//int[] diff= new int[3];
+
+//byte[][] colors= new byte[2][3];
+//byte[][] possible_colors= new byte[4][3];
+double calculateError59TnoSwap(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
 {
 	double block_error = 0, 
 		     best_block_error = MAXIMUM_ERROR, 
 				 pixel_error, 
 				 best_pixel_error;
-	int[] diff= new int[3];
 	int pixel_colors;
-	byte[][] colors= new byte[2][3];
-	byte[][] possible_colors= new byte[4][3];
+
 	int thebestintheworld;
 
 	// First use the colors as they are, then swap them
@@ -6659,7 +6714,7 @@ static double calculateError59TnoSwap(byte[] srcimg, int width, int startx, int 
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colors)[2][3]
 //address int &compressed1, int &compressed2
-static void packBlock59T(byte[][] colors, byte d, int pixel_indices, int[] compressed1, int[] compressed2) 
+void packBlock59T(byte[][] colors, byte d, int pixel_indices, int[] compressed1, int[] compressed2) 
 { 
 	
 	compressed1[0] = 0;
@@ -6698,6 +6753,12 @@ static void copyColors(byte[][] source, byte[][] dest)
 //
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //int (best_colorsRGB444_packed)[2]
+/*
+byte[][] colorsRGB444_no_i= new byte[2][3];
+int[] pixel_indices_no_i= new int[1];
+byte[] distance_no_i= new byte[1];
+
+byte[][] colors= new byte[2][3];*/
 int compressBlockTHUMB59TFastestOnlyColorPerceptual1000(byte[] img,int width,int height,int startx,int starty, int[] best_colorsRGB444_packed)
 {
 	int best_error = MAXERR1000;
@@ -6705,11 +6766,7 @@ int compressBlockTHUMB59TFastestOnlyColorPerceptual1000(byte[] img,int width,int
 	byte best_distance;
 
 	int error_no_i;
-	byte[][] colorsRGB444_no_i= new byte[2][3];
-	int[] pixel_indices_no_i= new int[1];
-	byte[] distance_no_i= new byte[1];
 
-	byte[][] colors= new byte[2][3];
 
 	// Calculate average color using the LBG-algorithm
 	computeColorLBGHalfIntensityFast(img,width,startx,starty, colors);
@@ -6740,6 +6797,12 @@ int compressBlockTHUMB59TFastestOnlyColorPerceptual1000(byte[] img,int width,int
 //
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //int (best_colorsRGB444_packed)[2]
+/*
+byte[][] colorsRGB444_no_i= new byte[2][3];
+int[] pixel_indices_no_i= new int[1];
+byte[] distance_no_i= new byte[1];
+
+byte[][] colors= new byte[2][3];*/
 double compressBlockTHUMB59TFastestOnlyColor(byte[] img,int width,int height,int startx,int starty, int[] best_colorsRGB444_packed)
 {
 	double best_error = MAXIMUM_ERROR;
@@ -6747,11 +6810,7 @@ double compressBlockTHUMB59TFastestOnlyColor(byte[] img,int width,int height,int
 	byte best_distance;
 
 	double error_no_i;
-	byte[][] colorsRGB444_no_i= new byte[2][3];
-	int[] pixel_indices_no_i= new int[1];
-	byte[] distance_no_i= new byte[1];
 
-	byte[][] colors= new byte[2][3];
 
 	// Calculate average color using the LBG-algorithm
 	computeColorLBGHalfIntensityFast(img,width,startx,starty, colors);
@@ -6781,19 +6840,22 @@ double compressBlockTHUMB59TFastestOnlyColor(byte[] img,int width,int height,int
 //
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &compressed1, int &compressed2
+
+/*byte[][] best_colorsRGB444= new byte[2][3];
+
+byte[][] colorsRGB444_no_i = new byte[2][3];
+int[] pixel_indices_no_i= new int[1];
+byte[] distance_no_i= new byte[1];
+
+byte[][] colors = new byte[2][3];*/
 double compressBlockTHUMB59TFastestPerceptual1000(byte[] img,int width,int height,int startx,int starty, int[] compressed1, int[] compressed2) 
 {
 	double best_error = MAXIMUM_ERROR;
-	byte[][] best_colorsRGB444= new byte[2][3];
 	int best_pixel_indices;
 	byte best_distance;
 
 	double error_no_i;
-	byte[][] colorsRGB444_no_i = new byte[2][3];
-	int[] pixel_indices_no_i= new int[1];
-	byte[] distance_no_i= new byte[1];
 
-	byte[][] colors = new byte[2][3];
 
 	// Calculate average color using the LBG-algorithm
 	computeColorLBGHalfIntensityFast(img,width,startx,starty, colors);
@@ -6824,19 +6886,22 @@ double compressBlockTHUMB59TFastestPerceptual1000(byte[] img,int width,int heigh
 //
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &compressed1, int &compressed2)
+/*byte[][] best_colorsRGB444 = new byte[2][3];
+
+byte[][] colorsRGB444_no_i= new byte[2][3];
+int[] pixel_indices_no_i= new int[1];
+byte[] distance_no_i= new byte[1];
+
+byte[][] colors= new byte[2][3];*/
 double compressBlockTHUMB59TFastest(byte[] img,int width,int height,int startx,int starty, int[] compressed1, int[] compressed2) 
 {
 	double best_error = MAXIMUM_ERROR;
-	byte[][] best_colorsRGB444 = new byte[2][3];
+
 	int best_pixel_indices;
 	byte best_distance;
 
 	double error_no_i;
-	byte[][] colorsRGB444_no_i= new byte[2][3];
-	int[] pixel_indices_no_i= new int[1];
-	byte[] distance_no_i= new byte[1];
 
-	byte[][] colors= new byte[2][3];
 
 	// Calculate average color using the LBG-algorithm
 	computeColorLBGHalfIntensityFast(img,width,startx,starty, colors);
@@ -6866,29 +6931,39 @@ double compressBlockTHUMB59TFastest(byte[] img,int width,int height,int startx,i
 //|----------------------------------------index bits---------------------------------------------|
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &compressed1, int &compressed2) 
+
+
+/*byte[][] best_colorsRGB444= new byte[2][3];
+ 
+byte[][] colorsRGB444_no_i= new byte[2][3];
+int[] pixel_indices_no_i= new int[1];
+byte[] distance_no_i= new byte[1];*/
+
+ 
+byte[][] colorsRGB444_half_i= new byte[2][3];
+int[] pixel_indices_half_i= new int[1];
+byte[] distance_half_i= new byte[1];
+
+ 
+byte[][] colorsRGB444 = new byte[2][3];
+int[] pixel_indices= new int[1];
+byte[] distance= new byte[1];
+
+//byte[][] colors = new byte[2][3];
+
 double compressBlockTHUMB59TFast(byte[] img,int width,int height,int startx,int starty, int[] compressed1, int[] compressed2) 
 {
 	double best_error = MAXIMUM_ERROR;
-	byte[][] best_colorsRGB444= new byte[2][3];
+ 
 	int best_pixel_indices;
 	byte best_distance;
 
 	double error_no_i;
-	byte[][] colorsRGB444_no_i= new byte[2][3];
-	int[] pixel_indices_no_i= new int[1];
-	byte[] distance_no_i= new byte[1];
-
-	double error_half_i;
-	byte[][] colorsRGB444_half_i= new byte[2][3];
-	int[] pixel_indices_half_i= new int[1];
-	byte[] distance_half_i= new byte[1];
+ 
+	double error_half_i; 
 	
 	double error;
-	byte[][] colorsRGB444 = new byte[2][3];
-	int[] pixel_indices= new int[1];
-	byte[] distance= new byte[1];
-
-	byte[][] colors = new byte[2][3];
+ 
 
 	// Calculate average color using the LBG-algorithm
 	computeColorLBGNotIntensityFast(img,width,startx,starty, colors);
@@ -6903,7 +6978,7 @@ double compressBlockTHUMB59TFast(byte[] img,int width,int height,int startx,int 
 	error_half_i = calculateError59T(img, width, startx, starty, colorsRGB444_half_i, distance_half_i, pixel_indices_half_i);			
 
 	// Calculate average color using the LBG-algorithm
-	computeColorLBGfast(img,width,startx,starty, colors);
+	computeColorLBG(img,width,startx,starty, colors);
 	compressColor(R_BITS59T, G_BITS59T, B_BITS59T, colors, colorsRGB444);
 	// Determine the parameters for the lowest error
 	error = calculateError59T(img, width, startx, starty, colorsRGB444, distance, pixel_indices);			
@@ -6941,16 +7016,19 @@ double compressBlockTHUMB59TFast(byte[] img,int width,int height,int startx,int 
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //address byte &distance, int &pixel_indices)
-static int calculateErrorAndCompress58Hperceptual1000(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
+/*int[] diff= new int[3];
+
+byte[][] possible_colors= new byte[4][3];
+byte[][] colors= new byte[2][3];*/
+
+int calculateErrorAndCompress58Hperceptual1000(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
 {
 	int block_error = 0, 
 		           best_block_error = MAXERR1000, 
 							 pixel_error, 
 							 best_pixel_error;
-	int[] diff= new int[3];
+
 	int pixel_colors;
-	byte[][] possible_colors= new byte[4][3];
-	byte[][] colors= new byte[2][3];
 
 	decompressColor(R_BITS58H, G_BITS58H, B_BITS58H, colorsRGB444, colors);
 
@@ -7007,18 +7085,24 @@ static int calculateErrorAndCompress58Hperceptual1000(byte[] srcimg, int width, 
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //address  byte &distance,  int &pixel_indices) 
-static double calculateErrorAndCompress58HAlpha(byte[] srcimg, byte[] alphaimg,int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance,  int[] pixel_indices) 
+/*int[] diff= new int[3];
+
+byte[][] possible_colors= new byte[4][3];
+byte[][] colors= new byte[2][3];*/
+
+int[] colorsRGB444_packed= new int[2];
+
+double calculateErrorAndCompress58HAlpha(byte[] srcimg, byte[] alphaimg,int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance,  int[] pixel_indices) 
 {
 	double block_error = 0, 
 		   best_block_error = MAXIMUM_ERROR, 
 		   pixel_error, 
 		   best_pixel_error;
-	int[] diff= new int[3];
+ 
 	int pixel_colors;
-	byte[][] possible_colors= new byte[4][3];
-	byte[][] colors= new byte[2][3];
+ 
 	int alphaindex;
-	int[] colorsRGB444_packed= new int[2];
+ 
 	colorsRGB444_packed[0] = (colorsRGB444[0][R] << 8) + (colorsRGB444[0][G] << 4) + (colorsRGB444[0][B]&0xff);
 	colorsRGB444_packed[1] = (colorsRGB444[1][R] << 8) + (colorsRGB444[1][G] << 4) + (colorsRGB444[1][B]&0xff);
 	
@@ -7104,16 +7188,20 @@ static double calculateErrorAndCompress58HAlpha(byte[] srcimg, byte[] alphaimg,i
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //address byte &distance, int &pixel_indices) 
-static double calculateErrorAndCompress58H(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
+
+/*int[] diff= new int[3];
+
+byte[][] possible_colors = new byte[4][3];
+byte[][] colors= new byte[2][3];*/
+
+double calculateErrorAndCompress58H(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
 {
 	double block_error = 0, 
 	       best_block_error = MAXIMUM_ERROR, 
 				 pixel_error, 
 				 best_pixel_error;
-	int[] diff= new int[3];
+
 	int pixel_colors;
-	byte[][] possible_colors = new byte[4][3];
-	byte[][] colors= new byte[2][3];
 
 	
 	decompressColor(R_BITS58H, G_BITS58H, B_BITS58H, colorsRGB444, colors);
@@ -7222,18 +7310,23 @@ static void sortColorsRGB444(byte[][] colorsRGB444)
 //
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &compressed1,  int &compressed2) 
+/*
+byte[][] best_colorsRGB444= new byte[2][3];
+
+byte[][] colorsRGB444_no_i= new byte[2][3];
+int[] pixel_indices_no_i= new int[1];
+byte[] distance_no_i= new byte[1];
+byte[][] colors= new byte[2][3];*/
+
+int[] best_colorsRGB444_packed= new int[2];
 int compressBlockTHUMB58HFastestPerceptual1000(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2) 
 {
 	int best_error = MAXERR1000;
-	byte[][] best_colorsRGB444= new byte[2][3];
+
 	int best_pixel_indices;
 	byte best_distance;
 
 	int error_no_i;
-	byte[][] colorsRGB444_no_i= new byte[2][3];
-	int[] pixel_indices_no_i= new int[1];
-	byte[] distance_no_i= new byte[1];
-	byte[][] colors= new byte[2][3];
 	
 	// Calculate average color using the LBG-algorithm but discarding the intensity in the error function
 	computeColorLBGHalfIntensityFast(img, width, startx, starty, colors);
@@ -7255,7 +7348,7 @@ int compressBlockTHUMB58HFastestPerceptual1000(byte[] img,int width,int height,i
 	//
 	// This can be done with an xor test.
 
-	int[] best_colorsRGB444_packed= new int[2];
+
 	best_colorsRGB444_packed[0] = (best_colorsRGB444[0][R] << 8) + (best_colorsRGB444[0][G] << 4) + (best_colorsRGB444[0][B]&0xff);
 	best_colorsRGB444_packed[1] = (best_colorsRGB444[1][R] << 8) + (best_colorsRGB444[1][G] << 4) + (best_colorsRGB444[1][B]&0xff);
 	if( (best_colorsRGB444_packed[0] >= best_colorsRGB444_packed[1]) ^ ((best_distance & 1)==1) )
@@ -7301,18 +7394,22 @@ int compressBlockTHUMB58HFastestPerceptual1000(byte[] img,int width,int height,i
 //
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &compressed1,  int &compressed2)
+/*
+byte[][] best_colorsRGB444= new byte[2][3];
+
+byte[][] colorsRGB444_no_i= new byte[2][3];
+int[] pixel_indices_no_i= new int[1];
+byte[] distance_no_i= new byte[1];
+byte[][] colors= new byte[2][3];*/
+//int[] best_colorsRGB444_packed=new int[2];
 double compressBlockTHUMB58HFastest(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2) 
 {
 	double best_error = MAXIMUM_ERROR;
-	byte[][] best_colorsRGB444= new byte[2][3];
+
 	int best_pixel_indices;
 	byte best_distance;
 
 	double error_no_i;
-	byte[][] colorsRGB444_no_i= new byte[2][3];
-	int[] pixel_indices_no_i= new int[1];
-	byte[] distance_no_i= new byte[1];
-	byte[][] colors= new byte[2][3];
 	
 	// Calculate average color using the LBG-algorithm but discarding the intensity in the error function
 	computeColorLBGHalfIntensityFast(img, width, startx, starty, colors);
@@ -7334,7 +7431,7 @@ double compressBlockTHUMB58HFastest(byte[] img,int width,int height,int startx,i
 	//
 	// This can be done with an xor test.
 
-	int[] best_colorsRGB444_packed=new int[2];
+
 	best_colorsRGB444_packed[0] = (best_colorsRGB444[0][R] << 8) + (best_colorsRGB444[0][G] << 4) + (best_colorsRGB444[0][B]&0xff);
 	best_colorsRGB444_packed[1] = (best_colorsRGB444[1][R] << 8) + (best_colorsRGB444[1][G] << 4) + (best_colorsRGB444[1][B]&0xff);
 	if( (best_colorsRGB444_packed[0] >= best_colorsRGB444_packed[1]) ^ ((best_distance & 1)==1) )
@@ -7366,18 +7463,22 @@ double compressBlockTHUMB58HFastest(byte[] img,int width,int height,int startx,i
 //same as above, but with 1-bit alpha
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address  int &compressed1,  int &compressed2) 
+/*byte[][] best_colorsRGB444= new byte[2][3];
+
+byte[][] colorsRGB444_no_i= new byte[2][3];
+int[] pixel_indices_no_i= new int[1];
+byte[] distance_no_i= new byte[1];
+byte[][] colors= new byte[2][3];*/
+//int[] best_colorsRGB444_packed=new int[2];
 double compressBlockTHUMB58HAlpha(byte[] img, byte[] alphaimg, int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2) 
 {
 	double best_error = MAXIMUM_ERROR;
-	byte[][] best_colorsRGB444= new byte[2][3];
+
 	int best_pixel_indices;
 	byte best_distance;
 
 	double error_no_i;
-	byte[][] colorsRGB444_no_i= new byte[2][3];
-	int[] pixel_indices_no_i= new int[1];
-	byte[] distance_no_i= new byte[1];
-	byte[][] colors= new byte[2][3];
+
 	
 	// Calculate average color using the LBG-algorithm but discarding the intensity in the error function
 	computeColorLBGHalfIntensityFast(img, width, startx, starty, colors);
@@ -7399,7 +7500,7 @@ double compressBlockTHUMB58HAlpha(byte[] img, byte[] alphaimg, int width,int hei
 	//
 	// This can be done with an xor test.
 
-	int[] best_colorsRGB444_packed=new int[2];
+
 	best_colorsRGB444_packed[0] = (best_colorsRGB444[0][R] << 8) + (best_colorsRGB444[0][G] << 4) + (best_colorsRGB444[0][B]&0xff);
 	best_colorsRGB444_packed[1] = (best_colorsRGB444[1][R] << 8) + (best_colorsRGB444[1][G] << 4) + (best_colorsRGB444[1][B]&0xff);
 	if( (best_colorsRGB444_packed[0] >= best_colorsRGB444_packed[1]) ^ ((best_distance & 1)==1) )
@@ -7444,29 +7545,40 @@ double compressBlockTHUMB58HAlpha(byte[] img, byte[] alphaimg, int width,int hei
 //
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address  int &compressed1,  int &compressed2) 
+
+/*
+byte[][] best_colorsRGB444= new byte[2][3];
+
+byte[][] colorsRGB444_no_i= new byte[2][3];
+int[] pixel_indices_no_i= new int[1];
+byte[] distance_no_i= new byte[1];
+
+
+byte[][] colorsRGB444_half_i= new byte[2][3];
+int[] pixel_indices_half_i= new int[1];
+byte[] distance_half_i= new byte[1];
+
+
+byte[][] colorsRGB444= new byte[2][3];
+int[] pixel_indices= new int[1];
+byte[] distance= new byte[1];
+
+byte[][] colors= new byte[2][3];*/
+//int[] best_colorsRGB444_packed= new int[2];
+
 double compressBlockTHUMB58HFast(byte[] img,int width,int height,int startx,int starty,   int[] compressed1,  int[] compressed2) 
 {
 	double best_error = MAXIMUM_ERROR;
-	byte[][] best_colorsRGB444= new byte[2][3];
+
 	int best_pixel_indices;
 	byte best_distance;
 
 	double error_no_i;
-	byte[][] colorsRGB444_no_i= new byte[2][3];
-	int[] pixel_indices_no_i= new int[1];
-	byte[] distance_no_i= new byte[1];
 
 	double error_half_i;
-	byte[][] colorsRGB444_half_i= new byte[2][3];
-	int[] pixel_indices_half_i= new int[1];
-	byte[] distance_half_i= new byte[1];
 
 	double error;
-	byte[][] colorsRGB444= new byte[2][3];
-	int[] pixel_indices= new int[1];
-	byte[] distance= new byte[1];
 
-	byte[][] colors= new byte[2][3];
 	
 	// Calculate average color using the LBG-algorithm but discarding the intensity in the error function
 	computeColorLBGNotIntensity(img, width, startx, starty, colors);
@@ -7515,7 +7627,7 @@ double compressBlockTHUMB58HFast(byte[] img,int width,int height,int startx,int 
 	//
 	// This can be done with an xor test.
 
-	int[] best_colorsRGB444_packed= new int[2];
+
 	best_colorsRGB444_packed[0] = (best_colorsRGB444[0][R] << 8) + (best_colorsRGB444[0][G] << 4) + (best_colorsRGB444[0][B]&0xff);
 	best_colorsRGB444_packed[1] = (best_colorsRGB444[1][R] << 8) + (best_colorsRGB444[1][G] << 4) + (best_colorsRGB444[1][B]&0xff);
 	if( (best_colorsRGB444_packed[0] >= best_colorsRGB444_packed[1]) ^ ((best_distance & 1)==1) )
@@ -7549,18 +7661,24 @@ double compressBlockTHUMB58HFast(byte[] img,int width,int height,int startx,int 
 //Both flipped and unflipped tested.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address  int &compressed1,  int &compressed2) 
-static void compressBlockDiffFlipCombinedPerceptual(byte[] img,int width,int height,int startx,int starty,    int[] compressed1,  int[] compressed2) 
+
+/*
+int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
+int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
+byte[] avg_color_quant1= new byte[3], avg_color_quant2= new byte[3];
+
+float[] avg_color_float1= new float[3],avg_color_float2= new float[3];
+int[] enc_color1= new int[3], enc_color2= new int[3], diff= new int[3];
+
+int[] best_table1=new int[1], best_table2=new int[1];
+*/
+byte[] dummy3B= new byte[3];
+void compressBlockDiffFlipCombinedPerceptual(byte[] img,int width,int height,int startx,int starty,    int[] compressed1,  int[] compressed2) 
 {
 
-	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
-	int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
-	byte[] avg_color_quant1= new byte[3], avg_color_quant2= new byte[3];
-
-	float[] avg_color_float1= new float[3],avg_color_float2= new float[3];
-	int[] enc_color1= new int[3], enc_color2= new int[3], diff= new int[3];
 	int min_error=255*255*8*3;
 	int best_table_indices1=0, best_table_indices2=0;
-	int[] best_table1=new int[1], best_table2=new int[1];
+
 	int diffbit;
 
 	int norm_err=0;
@@ -7576,10 +7694,10 @@ static void compressBlockDiffFlipCombinedPerceptual(byte[] img,int width,int hei
 
 	float eps;
 
-	byte[] dummy= new byte[3];
 
-	quantize555ColorCombinedPerceptual(avg_color_float1, enc_color1, dummy);
-	quantize555ColorCombinedPerceptual(avg_color_float2, enc_color2, dummy);
+
+	quantize555ColorCombinedPerceptual(avg_color_float1, enc_color1, dummy3B);
+	quantize555ColorCombinedPerceptual(avg_color_float2, enc_color2, dummy3B);
 
 	diff[0] = enc_color2[0]-enc_color1[0];	
 	diff[1] = enc_color2[1]-enc_color1[1];	
@@ -7670,8 +7788,8 @@ static void compressBlockDiffFlipCombinedPerceptual(byte[] img,int width,int hei
 
 		eps = (float) 0.0001;
 
-		quantize444ColorCombinedPerceptual(avg_color_float1, enc_color1, dummy);
-		quantize444ColorCombinedPerceptual(avg_color_float2, enc_color2, dummy);
+		quantize444ColorCombinedPerceptual(avg_color_float1, enc_color1, dummy3B);
+		quantize444ColorCombinedPerceptual(avg_color_float2, enc_color2, dummy3B);
 
 		avg_color_quant1[0] = (byte)(enc_color1[0] << 4 | enc_color1[0]); 
 		avg_color_quant1[1] = (byte)(enc_color1[1] << 4 | enc_color1[1]); 
@@ -7725,8 +7843,8 @@ static void compressBlockDiffFlipCombinedPerceptual(byte[] img,int width,int hei
 
 	// First test if avg_color1 is similar enough to avg_color2 so that
 	// we can use differential coding of colors. 
-	quantize555ColorCombinedPerceptual(avg_color_float1, enc_color1, dummy);
-	quantize555ColorCombinedPerceptual(avg_color_float2, enc_color2, dummy);
+	quantize555ColorCombinedPerceptual(avg_color_float1, enc_color1, dummy3B);
+	quantize555ColorCombinedPerceptual(avg_color_float2, enc_color2, dummy3B);
 
 	diff[0] = enc_color2[0]-enc_color1[0];	
 	diff[1] = enc_color2[1]-enc_color1[1];	
@@ -7784,8 +7902,8 @@ static void compressBlockDiffFlipCombinedPerceptual(byte[] img,int width,int hei
 		// to deal with 444 444.
 		eps = (float) 0.0001;
 
-		quantize444ColorCombinedPerceptual(avg_color_float1, enc_color1, dummy);
-		quantize444ColorCombinedPerceptual(avg_color_float2, enc_color2, dummy);
+		quantize444ColorCombinedPerceptual(avg_color_float1, enc_color1, dummy3B);
+		quantize444ColorCombinedPerceptual(avg_color_float2, enc_color2, dummy3B);
 
 		avg_color_quant1[0] = (byte)(enc_color1[0] << 4 | enc_color1[0]); 
 		avg_color_quant1[1] = (byte)(enc_color1[1] << 4 | enc_color1[1]); 
@@ -7890,7 +8008,7 @@ static double calcBlockPerceptualErrorRGB(byte[] img, byte[] imgdec, int width, 
 //Compress an ETC1 block (or the individual and differential modes of an ETC2 block)
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address int &compressed1,  int &compressed2)
-static double compressBlockDiffFlipFast(byte[] img, byte[] imgdec,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2)
+double compressBlockDiffFlipFast(byte[] img, byte[] imgdec,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2)
 {
 	int[] average_block1 = new int[1];
 	int[] average_block2 = new int[1];
@@ -7931,7 +8049,7 @@ static double compressBlockDiffFlipFast(byte[] img, byte[] imgdec,int width,int 
 //Uses perceptual error metric.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address  int &compressed1,  int &compressed2)
-static void compressBlockDiffFlipFastPerceptual(byte[] img, byte[] imgdec,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2)
+void compressBlockDiffFlipFastPerceptual(byte[] img, byte[] imgdec,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2)
 {
 	int[] average_block1 = new int[1];
 	int[] average_block2 = new int[1];
@@ -7966,15 +8084,31 @@ static void compressBlockDiffFlipFastPerceptual(byte[] img, byte[] imgdec,int wi
 //Compresses the differential mode of an ETC2 block with punchthrough alpha
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address int &etc1_word1,  int &etc1_word2) 
-static void compressBlockDifferentialWithAlpha(boolean isTransparent, byte[] img, byte[] alphaimg, byte[] imgdec, int width, int height, int startx, int starty,  int[] etc1_word1,  int[] etc1_word2) 
-{
-	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
-	int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
-	int[] compressed1_temp= new int[1], compressed2_temp= new int[1];
-	byte[] avg_color_quant1= new byte[3], avg_color_quant2= new byte[3];
 
-	float[] avg_color_float1= new float[3],avg_color_float2= new float[3];
-	int[] enc_color1= new int[3], enc_color2= new int[3], diff= new int[3];
+int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
+int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
+int[] compressed1_temp= new int[1], compressed2_temp= new int[1];
+byte[] avg_color_quant1= new byte[3], avg_color_quant2= new byte[3];
+
+float[] avg_color_float1= new float[3],avg_color_float2= new float[3];
+int[] enc_color1= new int[3], enc_color2= new int[3], diff= new int[3];
+float[] dummy3F= new float[3];
+
+
+int[] besterror= new int[2];
+ 
+int[] besttable= new int[2];
+int[] best_indices_LSB= new int[16];
+int[] best_indices_MSB= new int[16];
+
+int[] taberror= new int[2];//count will be sort of an index of each pixel within a half, determining where the index will be placed in the bitstream.
+
+int[] pixel_indices_LSB= new int[16],pixel_indices_MSB= new int[16];
+byte[] basecol= new byte[3];
+
+void compressBlockDifferentialWithAlpha(boolean isTransparent, byte[] img, byte[] alphaimg, byte[] imgdec, int width, int height, int startx, int starty,  int[] etc1_word1,  int[] etc1_word2) 
+{
+	
 	int min_error=255*255*8*3;
 	
 	int norm_err=0;
@@ -8015,9 +8149,9 @@ static void compressBlockDifferentialWithAlpha(boolean isTransparent, byte[] img
 			avg_color_float1[c]/=sum1;
 			avg_color_float2[c]/=sum2;
 		}
-		float[] dummy= new float[3];
-		quantize555ColorCombined(avg_color_float1, enc_color1, dummy);
-		quantize555ColorCombined(avg_color_float2, enc_color2, dummy);
+		
+		quantize555ColorCombined(avg_color_float1, enc_color1, dummy3F);
+		quantize555ColorCombined(avg_color_float2, enc_color2, dummy3F);
 
 		diff[0] = enc_color2[0]-enc_color1[0];	
 		diff[1] = enc_color2[1]-enc_color1[1];	
@@ -8054,19 +8188,14 @@ static void compressBlockDifferentialWithAlpha(boolean isTransparent, byte[] img
 
 		temp_err = 0;
 		
-		int[] besterror= new int[2];
+		 
 		besterror[0]=255*255*3*16;
 		besterror[1]=255*255*3*16;
-		int[] besttable= new int[2];
-		int[] best_indices_LSB= new int[16];
-		int[] best_indices_MSB= new int[16];
+ 
 		//for each table, we're going to compute the indices required to get minimum error in each half.
 		//then we'll check if this was the best table for either half, and set besterror/besttable accordingly.
 		for(int table=0; table<8; table++) 
 		{
-			int[] taberror= new int[2];//count will be sort of an index of each pixel within a half, determining where the index will be placed in the bitstream.
-			
-			int[] pixel_indices_LSB= new int[16],pixel_indices_MSB= new int[16];
 			
 			for(int i=0; i<2; i++) 
 			{
@@ -8077,7 +8206,7 @@ static void compressBlockDifferentialWithAlpha(boolean isTransparent, byte[] img
 				for(int y=0; y<4; y++) 
 				{
 					int index = x+startx+(y+starty)*width;
-					byte[] basecol= new byte[3];
+
 					boolean transparentPixel=(alphaimg[index]&0xff)<128;
 					//determine which half of the block this pixel is in, based on the flipbit.
 					int half=0;
@@ -8223,18 +8352,23 @@ static double calcBlockErrorRGBA(byte[] img, byte[] imgdec, byte[] alpha, int wi
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 	//address byte &distance,  int &pixel_indices) 
-static double calculateError59TAlpha(byte[] srcimg, byte[] alpha,int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance,  int[] pixel_indices) 
+
+/*
+int[] diff= new int[3];
+byte[][] colors= new byte[2][3];
+byte[][] possible_colors= new byte[4][3];*/
+
+double calculateError59TAlpha(byte[] srcimg, byte[] alpha,int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance,  int[] pixel_indices) 
 {
 
 	double block_error = 0, 
 		   best_block_error = MAXIMUM_ERROR, 
 		   pixel_error, 
 		   best_pixel_error;
-	int[] diff= new int[3];
+
 	byte best_sw=0;
 	int pixel_colors;
-	byte[][] colors= new byte[2][3];
-	byte[][] possible_colors= new byte[4][3];
+
 
 	// First use the colors as they are, then swap them
 	for (byte sw = 0; sw <2; ++sw) 
@@ -8317,19 +8451,24 @@ static double calculateError59TAlpha(byte[] srcimg, byte[] alpha,int width, int 
 //the only difference is that calculateError has been swapped out to one that considers alpha.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address int &compressed1,  int &compressed2) 
+
+byte[][] best_colorsRGB444= new byte[2][3];
+
+byte[][] colorsRGB444_no_i= new byte[2][3];
+int[] pixel_indices_no_i= new int[1];
+byte[] distance_no_i= new byte[1];
+
+//byte[][] colors= new byte[2][3];
+
 double compressBlockTHUMB59TAlpha(byte[] img, byte[] alpha, int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2) 
 {
 	double best_error = MAXIMUM_ERROR;
-	byte[][] best_colorsRGB444= new byte[2][3];
+
 	int best_pixel_indices;
 	byte best_distance;
 
 	double error_no_i;
-	byte[][] colorsRGB444_no_i= new byte[2][3];
-	int[] pixel_indices_no_i= new int[1];
-	byte[] distance_no_i= new byte[1];
 
-	byte[][] colors= new byte[2][3];
 
 	// Calculate average color using the LBG-algorithm
 	computeColorLBGHalfIntensityFast(img,width,startx,starty, colors);
@@ -8432,6 +8571,9 @@ static boolean hasAlpha(byte[] alphaimg, int ix, int iy, int width)
 //Compress a block with ETC2 RGB
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address  int &compressed1,  int &compressed2
+
+byte[] alphadec = new byte[4*4];
+
 void compressBlockETC2Fast(byte[] img, byte[] alphaimg, byte[] imgdec,int width,int height,int startx,int starty,   int[] compressed1,  int[] compressed2)
 {
 	int[] etc1_word1= new int[1];
@@ -8478,7 +8620,8 @@ void compressBlockETC2Fast(byte[] img, byte[] alphaimg, byte[] imgdec,int width,
 
 		int[] tempword1=new int[1], tempword2=new int[1];
 		double temperror;
-		byte[] alphadec = new byte[width*height];
+		if(alphadec.length < width*height)
+			alphadec = new byte[width*height];
 		
 		//try regular differential transparent mode
 		compressBlockDifferentialWithAlpha(true,img,alphaimg, imgdec,width,height,startx,starty,etc1_word1,etc1_word2);		
@@ -8738,71 +8881,75 @@ void compressBlockETC2FastPerceptual(byte[] img, byte[] imgdec,int width,int hei
 
 //Write a word in big endian style
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static void write_big_endian_2byte_word(short blockadr, FileChannel f) throws IOException
+byte[] bytes2= new byte[2];
+void write_big_endian_2byte_word(short blockadr, FileChannel f) throws IOException
 {
-	byte[] bytes= new byte[2];
+
 	short block;
 
 	block = blockadr;
 
-	bytes[0] = (byte)((block >> 8) & 0xff);
-	bytes[1] = (byte)((block >> 0) & 0xff);
+	bytes2[0] = (byte)((block >> 8) & 0xff);
+	bytes2[1] = (byte)((block >> 0) & 0xff);
 
 	//fwrite(&bytes[0],1,1,f);
 	//fwrite(&bytes[1],1,1,f);
-	f.write(ByteBuffer.wrap(bytes));
+	f.write(ByteBuffer.wrap(bytes2));
 }
-static void write_big_endian_2byte_word(short blockadr, ByteBuffer bb) throws IOException
+//byte[] bytes= new byte[2];
+void write_big_endian_2byte_word(short blockadr, ByteBuffer bb) throws IOException
 {
-	byte[] bytes= new byte[2];
+
 	short block;
 
 	block = blockadr;
 
-	bytes[0] = (byte)((block >> 8) & 0xff);
-	bytes[1] = (byte)((block >> 0) & 0xff);
+	bytes2[0] = (byte)((block >> 8) & 0xff);
+	bytes2[1] = (byte)((block >> 0) & 0xff);
 
 	//fwrite(&bytes[0],1,1,f);
 	//fwrite(&bytes[1],1,1,f);
-	bb.put(bytes);
+	bb.put(bytes2);
 }
 
 
 //Write a word in big endian style
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static void write_big_endian_4byte_word(int[] blockadr, FileChannel f) throws IOException
+byte[] bytes4 = new byte[4];
+void write_big_endian_4byte_word(int[] blockadr, FileChannel f) throws IOException
 {
-	byte[] bytes = new byte[4];
+	
 	int block;
 
 	block = blockadr[0];
 
-	bytes[0] = (byte)((block >> 24) & 0xff);
-	bytes[1] = (byte)((block >> 16) & 0xff);
-	bytes[2] = (byte)((block >> 8) & 0xff);
-	bytes[3] = (byte)((block >> 0) & 0xff);
+	bytes4[0] = (byte)((block >> 24) & 0xff);
+	bytes4[1] = (byte)((block >> 16) & 0xff);
+	bytes4[2] = (byte)((block >> 8) & 0xff);
+	bytes4[3] = (byte)((block >> 0) & 0xff);
 
-	fwrite(bytes[0],1,f);
-	fwrite(bytes[1],1,f);
-	fwrite(bytes[2],1,f);
-	fwrite(bytes[3],1,f);
+	fwrite(bytes4[0],1,f);
+	fwrite(bytes4[1],1,f);
+	fwrite(bytes4[2],1,f);
+	fwrite(bytes4[3],1,f);
 }
-static void write_big_endian_4byte_word(int[] blockadr, ByteBuffer bb) throws IOException
+//	byte[] bytes4 = new byte[4];
+void write_big_endian_4byte_word(int[] blockadr, ByteBuffer bb) throws IOException
 {
-	byte[] bytes = new byte[4];
+
 	int block;
 
 	block = blockadr[0];
 
-	bytes[0] = (byte)((block >> 24) & 0xff);
-	bytes[1] = (byte)((block >> 16) & 0xff);
-	bytes[2] = (byte)((block >> 8) & 0xff);
-	bytes[3] = (byte)((block >> 0) & 0xff);
+	bytes4[0] = (byte)((block >> 24) & 0xff);
+	bytes4[1] = (byte)((block >> 16) & 0xff);
+	bytes4[2] = (byte)((block >> 8) & 0xff);
+	bytes4[3] = (byte)((block >> 0) & 0xff);
 
-	fwrite(bytes[0],1,bb);
-	fwrite(bytes[1],1,bb);
-	fwrite(bytes[2],1,bb);
-	fwrite(bytes[3],1,bb);
+	fwrite(bytes4[0],1,bb);
+	fwrite(bytes4[1],1,bb);
+	fwrite(bytes4[2],1,bb);
+	fwrite(bytes4[3],1,bb);
 }
 
 //int[][] alphaTable = new int[256][8];

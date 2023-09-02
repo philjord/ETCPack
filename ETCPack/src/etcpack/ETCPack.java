@@ -10707,8 +10707,9 @@ ByteBuffer compressImageBytes(byte[] img, byte[] alphaimg, int width, int height
 		header.glTypeSize = 1;
 		header.glFormat = 0;
 		
-		header.pixelWidth = width;
-		header.pixelHeight = height;
+		// GPU like div4 sizes only, so expanded size
+		header.pixelWidth = expandedwidth;//width;
+		header.pixelHeight = expandedheight;//height;
 		header.pixelDepth = 0;
 
 		//we only support single non-mipmapped non-cubemap textures..
