@@ -4531,24 +4531,6 @@ static int calcErrorPlanarOnlyBlue(byte[] block, int colorO, int colorH, int col
 	return error;
 }
 
-static final double[] coeffsA= new double[] { 1.00, 0.00, 0.00, 
-    0.75, 0.25, 0.00,
-	0.50, 0.50, 0.00, 
-	0.25, 0.75, 0.00, 
-    0.75, 0.00, 0.25, 
-    0.50, 0.25, 0.25,
-	0.25, 0.50, 0.25, 
-	0.00, 0.75, 0.25,
-	0.50, 0.00, 0.50, 
-    0.25, 0.25, 0.50,
-	0.00, 0.50, 0.50, 
-	-0.25, 0.75, 0.50, 
-	0.25, 0.00, 0.75, 
-    0.00, 0.25, 0.75,
-	-0.25, 0.50, 0.75, 
-	-0.50, 0.75, 0.75};
-
-static final double[] coeffsC= new double[]  {0.2875, -0.0125, -0.0125, -0.0125, 0.4875, -0.3125, -0.0125, -0.3125, 0.4875};
 
 //This function uses least squares in order to determine the best values of the plane. 
 //This is close to optimal, but not quite, due to nonlinearities in the expansion from 6 and 7 bits to 8, and
@@ -4561,7 +4543,7 @@ static void compressBlockPlanar57(byte[] img, int width,int height,int startx,in
 	// That is, find the vector x so that |Ax-b|^2 is minimized, where
 	// x = [Ro Rr Rv]';
 	// A = [1 3/4 2/4 1/4 3/4 2/4 1/4  0  2/4 1/4  0  -1/4  1/4  0  -1/4 -2/4 ; 
-   //      0 1/4 2/4 3/4  0  1/4 2/4 3/4  0  1/4 2/4  3/4   0  1/4  2/4  3/4 ;
+    //      0 1/4 2/4 3/4  0  1/4 2/4 3/4  0  1/4 2/4  3/4   0  1/4  2/4  3/4 ;
 	//      0  0   0   0  1/4 1/4 1/4 1/4 2/4 2/4 2/4  2/4; 3/4 3/4  3/4  3/4]';
 	// b = [r11 r12 r13 r14 r21 r22 r23 r24 r31 r32 r33 r34 r41 r42 r43 r44];
 	//
@@ -4570,6 +4552,24 @@ static void compressBlockPlanar57(byte[] img, int width,int height,int startx,in
 	// C is always the same, so we have calculated it off-line here.
 	//                          = C * D
 	int xx,yy, cc;
+	double[] coeffsA= new double[] { 	1.00, 0.00, 0.00, 
+									    0.75, 0.25, 0.00,
+										0.50, 0.50, 0.00, 
+										0.25, 0.75, 0.00, 
+									    0.75, 0.00, 0.25, 
+									    0.50, 0.25, 0.25,
+										0.25, 0.50, 0.25, 
+										0.00, 0.75, 0.25,
+										0.50, 0.00, 0.50, 
+									    0.25, 0.25, 0.50,
+										0.00, 0.50, 0.50, 
+									   -0.25, 0.75, 0.50, 
+										0.25, 0.00, 0.75, 
+									    0.00, 0.25, 0.75,
+									   -0.25, 0.50, 0.75, 
+									   -0.50, 0.75, 0.75};
+
+	double[] coeffsC= new double[]  {0.2875, -0.0125, -0.0125, -0.0125, 0.4875, -0.3125, -0.0125, -0.3125, 0.4875};
 
 	double[] colorO= new double[3], colorH= new double[3], colorV= new double[3];
 	byte[] colorO8= new byte[3], colorH8= new byte[3], colorV8= new byte[3];
