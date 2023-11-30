@@ -278,13 +278,13 @@ static final int GETBITSHIGH(int source, int size, int startpos){return   (( (so
 
 
 //Thumb macros and definitions
-static final int	R_BITS59T =4;
+static final int R_BITS59T =4;
 static final int G_BITS59T =4;
-static final int	B_BITS59T =4;
-static final int	R_BITS58H =4;
+static final int B_BITS59T =4;
+static final int R_BITS58H =4;
 static final int G_BITS58H =4;
-static final int	B_BITS58H =4;
-static final int	MAXIMUM_ERROR =(255*255*16*1000);
+static final int B_BITS58H =4;
+static final int MAXIMUM_ERROR =(255*255*16*1000);
 static final int R =0;
 static final int G =1;
 static final int B =2;
@@ -356,7 +356,7 @@ private MODE2 mode = MODE2.MODE_COMPRESS;
 private SPEED speed = SPEED.SPEED_FAST;
 private METRIC metric = METRIC.METRIC_PERCEPTUAL;
 private CODEC codec = CODEC.CODEC_ETC2;
-private FORMAT format = FORMAT.ETC2PACKAGE_RGB;
+protected FORMAT format = FORMAT.ETC2PACKAGE_RGB;
 private boolean verbose = true;
 private boolean generateMipMaps = false;
 //extern 
@@ -1152,8 +1152,8 @@ static int compressBlockWithTable2x4(byte[] img,int width,int height,int startx,
 		}
 	}
 
-	pixel_indices_MSBp = pixel_indices_MSB;//note pointer assignment
-	pixel_indices_LSBp = pixel_indices_LSB;
+	pixel_indices_MSBp[0] = pixel_indices_MSB[0];
+	pixel_indices_LSBp[0] = pixel_indices_LSB[0];
 	return sum_error;
 }
 
@@ -1166,9 +1166,8 @@ static final int MAXERR1000 = 1000*255*255*16;
 static int compressBlockWithTable2x4percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table, int[] pixel_indices_MSBp,  int[] pixel_indices_LSBp)
 {
 	int[] orig = new int[3], approx=new int[3];
-	//unsigned 
-	int pixel_indices_MSB=0, pixel_indices_LSB=0, pixel_indices = 0;
-	//unsigned 
+	int[] pixel_indices_MSB=new int[] {0}, pixel_indices_LSB=new int[] {0};
+	int pixel_indices = 0;
 	int sum_error=0;
 	int q, i;
 
@@ -1205,8 +1204,8 @@ static int compressBlockWithTable2x4percep1000(byte[] img,int width,int height,i
 
 			pixel_indices = scramble[best];
 
-			PUTBITS( pixel_indices_MSBp, (pixel_indices >> 1), 1, i);
-			PUTBITS( pixel_indices_LSBp, (pixel_indices & 1) , 1, i);
+			PUTBITS( pixel_indices_MSB, (pixel_indices >> 1), 1, i);
+			PUTBITS( pixel_indices_LSB, (pixel_indices & 1) , 1, i);
 
 			i++;
 
@@ -1220,8 +1219,8 @@ static int compressBlockWithTable2x4percep1000(byte[] img,int width,int height,i
 
 	}
 
-	pixel_indices_MSBp[0] = pixel_indices_MSB;
-	pixel_indices_LSBp[0] = pixel_indices_LSB;
+	pixel_indices_MSBp[0] = pixel_indices_MSB[0];
+	pixel_indices_LSBp[0] = pixel_indices_LSB[0];
 
 	return sum_error;
 }
@@ -1285,8 +1284,8 @@ static float compressBlockWithTable2x4percep(byte[] img,int width,int height,int
 		}
 	}
 
-	pixel_indices_MSBp = pixel_indices_MSB;//note pointer assignment
-	pixel_indices_LSBp = pixel_indices_LSB;
+	pixel_indices_MSBp[0] = pixel_indices_MSB[0]; 
+	pixel_indices_LSBp[0] = pixel_indices_LSB[0];
 
 	return sum_error;
 }
@@ -1345,8 +1344,8 @@ static int compressBlockWithTable4x2(byte[] img,int width,int height,int startx,
 		i+=2;
 	}
 
-	pixel_indices_MSBp = pixel_indices_MSB;//note pointer assignment
-	pixel_indices_LSBp = pixel_indices_LSB;
+	pixel_indices_MSBp[0] = pixel_indices_MSB[0];
+	pixel_indices_LSBp[0] = pixel_indices_LSB[0];
 
 	return sum_error;
 }
@@ -1409,8 +1408,8 @@ static int compressBlockWithTable4x2percep1000(byte[] img,int width,int height,i
 
 	}
 
-	pixel_indices_MSBp = pixel_indices_MSB;//note pointer assignment
-	pixel_indices_LSBp = pixel_indices_LSB;
+	pixel_indices_MSBp[0] = pixel_indices_MSB[0];
+	pixel_indices_LSBp[0] = pixel_indices_LSB[0];
 
 	return sum_error;
 }
@@ -1472,8 +1471,8 @@ static float compressBlockWithTable4x2percep(byte[] img,int width,int height,int
 		i+=2;
 	}
 
-	pixel_indices_MSBp = pixel_indices_MSB;//note pointer assignment
-	pixel_indices_LSBp = pixel_indices_LSB;
+	pixel_indices_MSBp[0] = pixel_indices_MSB[0];
+	pixel_indices_LSBp[0] = pixel_indices_LSB[0];
 
 	return sum_error;
 }
@@ -3659,6 +3658,7 @@ static double compressBlockDiffFlipAveragePerceptual(byte[] img,int width,int he
 	{
 		diffbit = 1;
 
+		//TODO: odd repeat of the above?
 		// The difference to be coded:
 		diff[0] = enc_color2[0]-enc_color1[0];	
 		diff[1] = enc_color2[1]-enc_color1[1];	
@@ -3739,12 +3739,12 @@ static double compressBlockDiffFlipAveragePerceptual(byte[] img,int width,int he
 
 		eps = (float) 0.0001;
 
-		enc_color1[0] = (int)( ((float) avg_color_float1[0] / (17.0)) +0.5 + eps);
-		enc_color1[1] = (int)( ((float) avg_color_float1[1] / (17.0)) +0.5 + eps);
-		enc_color1[2] = (int)( ((float) avg_color_float1[2] / (17.0)) +0.5 + eps);
-		enc_color2[0] = (int)( ((float) avg_color_float2[0] / (17.0)) +0.5 + eps);
-		enc_color2[1] = (int)( ((float) avg_color_float2[1] / (17.0)) +0.5 + eps);
-		enc_color2[2] = (int)( ((float) avg_color_float2[2] / (17.0)) +0.5 + eps);
+		enc_color1[0] = (int)( ((float) avg_color_float1[0] / (17.0)) +0.5f + eps);
+		enc_color1[1] = (int)( ((float) avg_color_float1[1] / (17.0)) +0.5f + eps);
+		enc_color1[2] = (int)( ((float) avg_color_float1[2] / (17.0)) +0.5f + eps);
+		enc_color2[0] = (int)( ((float) avg_color_float2[0] / (17.0)) +0.5f + eps);
+		enc_color2[1] = (int)( ((float) avg_color_float2[1] / (17.0)) +0.5f + eps);
+		enc_color2[2] = (int)( ((float) avg_color_float2[2] / (17.0)) +0.5f + eps);
 		
 		avg_color_quant1[0] = (byte)(enc_color1[0] << 4 | enc_color1[0]); 
 		avg_color_quant1[1] = (byte)(enc_color1[1] << 4 | enc_color1[1]); 
@@ -3816,7 +3816,7 @@ static double compressBlockDiffFlipAveragePerceptual(byte[] img,int width,int he
 		diffbit = 1;
 
 		// The difference to be coded:
-
+//TODO: appears to be a repeat of above?
 		diff[0] = enc_color2[0]-enc_color1[0];	
 		diff[1] = enc_color2[1]-enc_color1[1];	
 		diff[2] = enc_color2[2]-enc_color1[2];
@@ -3865,12 +3865,12 @@ static double compressBlockDiffFlipAveragePerceptual(byte[] img,int width,int he
 		// to deal with 444 444.
 		eps = (float) 0.0001;
 
-		enc_color1[0] = (int)( ((float) avg_color_float1[0] / (17.0)) +0.5 + eps);
-		enc_color1[1] = (int)( ((float) avg_color_float1[1] / (17.0)) +0.5 + eps);
-		enc_color1[2] = (int)( ((float) avg_color_float1[2] / (17.0)) +0.5 + eps);
-		enc_color2[0] = (int)( ((float) avg_color_float2[0] / (17.0)) +0.5 + eps);
-		enc_color2[1] = (int)( ((float) avg_color_float2[1] / (17.0)) +0.5 + eps);
-		enc_color2[2] = (int)( ((float) avg_color_float2[2] / (17.0)) +0.5 + eps);
+		enc_color1[0] = (int)( ((float) avg_color_float1[0] / (17.0)) +0.5f + eps);
+		enc_color1[1] = (int)( ((float) avg_color_float1[1] / (17.0)) +0.5f + eps);
+		enc_color1[2] = (int)( ((float) avg_color_float1[2] / (17.0)) +0.5f + eps);
+		enc_color2[0] = (int)( ((float) avg_color_float2[0] / (17.0)) +0.5f + eps);
+		enc_color2[1] = (int)( ((float) avg_color_float2[1] / (17.0)) +0.5f + eps);
+		enc_color2[2] = (int)( ((float) avg_color_float2[2] / (17.0)) +0.5f + eps);
 
 		avg_color_quant1[0] = (byte)(enc_color1[0] << 4 | enc_color1[0]); 
 		avg_color_quant1[1] = (byte)(enc_color1[1] << 4 | enc_color1[1]); 
@@ -7944,12 +7944,12 @@ static void compressBlockDiffFlipFastPerceptual(byte[] img, byte[] imgdec,int wi
 	compressBlockDiffFlipAveragePerceptual(img, width, height, startx, starty, average_block1, average_block2);
 	decompressBlockDiffFlip(average_block1[0], average_block2[0], imgdec, width, height, startx, starty);
 	error_average = calcBlockPerceptualErrorRGB(img, imgdec, width, height, startx, starty);
-
+	
 	// Then quantize the average color taking into consideration that intensity can change 
 	compressBlockDiffFlipCombinedPerceptual(img, width, height, startx, starty, combined_block1, combined_block2);
 	decompressBlockDiffFlip(combined_block1[0], combined_block2[0], imgdec, width, height, startx, starty);
 	error_combined = calcBlockPerceptualErrorRGB(img, imgdec, width, height, startx, starty);
-
+	
 	if(error_combined < error_average)
 	{
 		compressed1[0] = combined_block1[0];
@@ -8639,21 +8639,17 @@ void compressBlockETC2FastPerceptual(byte[] img, byte[] imgdec,int width,int hei
 	double error_thumbH;
 
 	double error_best;
-	char best_char = ' ';
+	//char best_char = ' ';
 	//MODE1 best_mode;
 	
-	
-	//This ETC1 style compression uses 35% of the cpu and NEVER results in a better error value! 
-	//compressBlockDiffFlipFastPerceptual(img, imgdec, width, height, startx, starty, etc1_word1, etc1_word2);
-	//decompressBlockDiffFlip(etc1_word1[0], etc1_word2[0], imgdec, width, height, startx, starty);
-	//error_etc1 = 1000*calcBlockPerceptualErrorRGB(img, imgdec, width, height, startx, starty);
-	// set it really high and use it as a last ditch effort
-	error_etc1 = 1000*10000*10000;
+	compressBlockDiffFlipFastPerceptual(img, imgdec, width, height, startx, starty, etc1_word1, etc1_word2);
+	decompressBlockDiffFlip(etc1_word1[0], etc1_word2[0], imgdec, width, height, startx, starty);
+	error_etc1 = 1000*calcBlockPerceptualErrorRGB(img, imgdec, width, height, startx, starty);
 
 	compressBlockPlanar57(img, width, height, startx, starty, planar57_word1, planar57_word2);
 	decompressBlockPlanar57(planar57_word1[0], planar57_word2[0], imgdec, width, height, startx, starty);
 	error_planar = 1000*calcBlockPerceptualErrorRGB(img, imgdec, width, height, startx, starty);
-
+	
 	compressBlockTHUMB59TFastestPerceptual1000(img,width, height, startx, starty, thumbT59_word1, thumbT59_word2);
 	decompressBlockTHUMB59T(thumbT59_word1[0], thumbT59_word2[0], imgdec, width, height, startx, starty);			
 	error_thumbT = 1000*calcBlockPerceptualErrorRGB(img, imgdec, width, height, startx, starty);
@@ -8667,9 +8663,9 @@ void compressBlockETC2FastPerceptual(byte[] img, byte[] imgdec,int width,int hei
 		stuff57bits(planar57_word1[0], planar57_word2[0], planar_word1, planar_word2);
 		compressed1[0] = planar_word1[0];
 		compressed2[0] = planar_word2[0];
-		best_char = 'p';
+		//best_char = 'p';
 		//System.out.print("p");
-		error_best = error_planar;	
+		//error_best = error_planar;	
 		//best_mode = MODE1.MODE_PLANAR;
 	}
 	else if(error_thumbT < error_etc1 && error_thumbT < error_thumbH)
@@ -8677,8 +8673,7 @@ void compressBlockETC2FastPerceptual(byte[] img, byte[] imgdec,int width,int hei
 		stuff59bits(thumbT59_word1[0], thumbT59_word2[0], thumbT_word1, thumbT_word2);
 		compressed1[0] = thumbT_word1[0];
 		compressed2[0] = thumbT_word2[0];
-		best_char = 'T';
-		//System.out.print("T");
+		//best_char = 'T';
 		error_best = error_thumbT;
 		//best_mode = MODE1.MODE_THUMB_T;
 		
@@ -8698,8 +8693,7 @@ void compressBlockETC2FastPerceptual(byte[] img, byte[] imgdec,int width,int hei
 		stuff58bits(thumbH58_word1[0], thumbH58_word2[0], thumbH_word1, thumbH_word2);
 		compressed1[0] = thumbH_word1[0];
 		compressed2[0] = thumbH_word2[0];
-		best_char = 'H';
-		//System.out.print("H");
+		//best_char = 'H';
 		error_best = error_thumbH;
 		//best_mode = MODE1.MODE_THUMB_H;
 		
@@ -8716,22 +8710,12 @@ void compressBlockETC2FastPerceptual(byte[] img, byte[] imgdec,int width,int hei
 	} 
 	else
 	{	
-		// Not calculated above, a last ditch effort
-		compressBlockDiffFlipFastPerceptual(img, imgdec, width, height, startx, starty, etc1_word1, etc1_word2);
-		decompressBlockDiffFlip(etc1_word1[0], etc1_word2[0], imgdec, width, height, startx, starty);
-		
 		compressed1[0] = etc1_word1[0];
 		compressed2[0] = etc1_word2[0];
 		//best_char = '.';
 		//System.out.print(".");
 		//best_mode = MODE1.MODE_ETC1;
 	}	
-	// some intersting debugs, note there is no relationship here so far, note also that compressing a decompressed image will find patterns
-	//possibly a planar < 100000 will be better compressed by an H than a T
-	//System.out.print(best_char);
-	//if(error_planar < 100000 && (error_thumbT < error_planar || error_thumbH < error_planar) )
-	//	System.out.println("error_planar " + error_planar + " error_thumbT " +error_thumbT + " error_thumbH "+error_thumbH);
-
 }
 
 

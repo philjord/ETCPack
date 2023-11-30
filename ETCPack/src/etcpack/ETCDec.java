@@ -788,8 +788,8 @@ static void decompressBlockDiffFlipC(int block_part1, int block_part2, byte[] im
 
 	diffbit = (GETBITSHIGH(block_part1, 1, 33));
 	flipbit = (GETBITSHIGH(block_part1, 1, 32));
-
-	if( diffbit != 0)
+	
+	if( diffbit == 0)
 	{
 		// We have diffbit = 0.
 
@@ -1051,6 +1051,7 @@ static void decompressBlockDiffFlipC(int block_part1, int block_part2, byte[] im
 			}
 		}
 	}
+		
 }
 static void decompressBlockDiffFlip(int block_part1, int block_part2, byte[] img, int width, int height, int startx, int starty)
 {
