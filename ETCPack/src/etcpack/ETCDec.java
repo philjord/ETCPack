@@ -576,6 +576,8 @@ static void calculatePaintColors59T(byte d, PATTERN p, byte[][] colors, byte[][]
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 static void decompressBlockTHUMB59Tc(int block_part1, int block_part2, byte[] img,int width,int height,int startx,int starty, int channels)
 {
+	boolean singleBlockDest = img.length == 4 * 4 * 3; // special indicator for a small decompression target
+	
 	byte[][] colorsRGB444 = new byte[2][3];
 	byte[][] colors = new byte[2][3];
 	byte[][] paint_colors = new byte[4][3];
@@ -605,11 +607,13 @@ static void decompressBlockTHUMB59Tc(int block_part1, int block_part2, byte[] im
 			//block_mask[x][y] = GETBITS(block_part2,2,31-(y*4+x)*2);
 			block_mask[x][y] = (byte)(GETBITS(block_part2,1,(y+x*4)+16)<<1);
 			block_mask[x][y] = (byte)(block_mask[x][y] | GETBITS(block_part2,1,(y+x*4)));
-			img[channels*((starty+y)*width+startx+x)+R] =
+			
+			int idx = singleBlockDest ? channels*((y)*BLOCKWIDTH+x): channels*((starty+y)*width+startx+x);			
+			img[idx+R] =
 				CLAMP(0,paint_colors[block_mask[x][y]][R],255); // RED
-			img[channels*((starty+y)*width+startx+x)+G] =
+			img[idx+G] =
 				CLAMP(0,paint_colors[block_mask[x][y]][G],255); // GREEN
-			img[channels*((starty+y)*width+startx+x)+B] =
+			img[idx+B] =
 				CLAMP(0,paint_colors[block_mask[x][y]][B],255); // BLUE
 		}
 	}
@@ -670,6 +674,8 @@ static void calculatePaintColors58H(byte d, PATTERN p, byte[][] colors, byte[][]
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 static void decompressBlockTHUMB58Hc(int block_part1, int block_part2, byte[] img, int width, int height, int startx, int starty, int channels)
 {
+	boolean singleBlockDest = img.length == 4 * 4 * 3; // special indicator for a small decompression target
+	
 	int col0, col1;
 	byte[][] colors = new byte[2][3];
 	byte[][] colorsRGB444 = new byte[2][3];
@@ -710,11 +716,13 @@ static void decompressBlockTHUMB58Hc(int block_part1, int block_part2, byte[] im
 			//block_mask[x][y] = GETBITS(block_part2,2,31-(y*4+x)*2);
 			block_mask[x][y] = (byte)(GETBITS(block_part2,1,(y+x*4)+16)<<1);
 			block_mask[x][y] = (byte)(block_mask[x][y] | GETBITS(block_part2,1,(y+x*4)));
-			img[channels*((starty+y)*width+startx+x)+R] =
+			
+			int idx = singleBlockDest ? channels*((y)*BLOCKWIDTH+x): channels*((starty+y)*width+startx+x);
+			img[idx+R] =
 				CLAMP(0,paint_colors[block_mask[x][y]][R],255); // RED
-			img[channels*((starty+y)*width+startx+x)+G] =
+			img[idx+G] =
 				CLAMP(0,paint_colors[block_mask[x][y]][G],255); // GREEN
-			img[channels*((starty+y)*width+startx+x)+B] =
+			img[idx+B] =
 				CLAMP(0,paint_colors[block_mask[x][y]][B],255); // BLUE
 		}
 	}
@@ -728,6 +736,8 @@ static void decompressBlockTHUMB58H(int block_part1, int block_part2, byte[] img
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 static void decompressBlockPlanar57c(int compressed57_1, int compressed57_2, byte[] img, int width, int height, int startx, int starty, int channels)
 {
+	boolean singleBlockDest = img.length == 4 * 4 * 3; // special indicator for a small decompression target
+	
 	byte[] colorO = new byte[3], colorH = new byte[3], colorV = new byte[3];
 
 	colorO[0] = (byte)GETBITSHIGH( compressed57_1, 6, 63);
@@ -758,9 +768,10 @@ static void decompressBlockPlanar57c(int compressed57_1, int compressed57_2, byt
 	{
 		for( yy=0; yy<4; yy++)
 		{
-			img[channels*width*(starty+yy) + channels*(startx+xx) + 0] = (byte)CLAMP(0, ((xx*((colorH[0]&0xff)-(colorO[0]&0xff)) + yy*((colorV[0]&0xff)-(colorO[0]&0xff)) + 4*(colorO[0]&0xff) + 2) >> 2),255);
-			img[channels*width*(starty+yy) + channels*(startx+xx) + 1] = (byte)CLAMP(0, ((xx*((colorH[1]&0xff)-(colorO[1]&0xff)) + yy*((colorV[1]&0xff)-(colorO[1]&0xff)) + 4*(colorO[1]&0xff) + 2) >> 2),255);
-			img[channels*width*(starty+yy) + channels*(startx+xx) + 2] = (byte)CLAMP(0, ((xx*((colorH[2]&0xff)-(colorO[2]&0xff)) + yy*((colorV[2]&0xff)-(colorO[2]&0xff)) + 4*(colorO[2]&0xff) + 2) >> 2),255);
+			int idx = singleBlockDest ? channels*BLOCKWIDTH*(yy) + channels*(xx) : channels*width*(starty+yy) + channels*(startx+xx);
+			img[idx + 0] = (byte)CLAMP(0, ((xx*((colorH[0]&0xff)-(colorO[0]&0xff)) + yy*((colorV[0]&0xff)-(colorO[0]&0xff)) + 4*(colorO[0]&0xff) + 2) >> 2),255);
+			img[idx + 1] = (byte)CLAMP(0, ((xx*((colorH[1]&0xff)-(colorO[1]&0xff)) + yy*((colorV[1]&0xff)-(colorO[1]&0xff)) + 4*(colorO[1]&0xff) + 2) >> 2),255);
+			img[idx + 2] = (byte)CLAMP(0, ((xx*((colorH[2]&0xff)-(colorO[2]&0xff)) + yy*((colorV[2]&0xff)-(colorO[2]&0xff)) + 4*(colorO[2]&0xff) + 2) >> 2),255);
 
 			//Equivalent method
 			/*img[channels*width*(starty+yy) + channels*(startx+xx) + 0] = (int)CLAMP(0, JAS_ROUND((xx*(colorH[0]-colorO[0])/4.0 + yy*(colorV[0]-colorO[0])/4.0 + colorO[0])), 255);
@@ -1381,7 +1392,8 @@ static void decompressBlockDifferentialWithAlpha(int block_part1, int block_part
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 static void decompressBlockTHUMB59TAlphaC(int block_part1, int block_part2, byte[] img, byte[] alpha, int width, int height, int startx, int starty, int channelsRGB)
 {
-
+	boolean singleBlockDest = img.length == 4 * 4 * 3; // special indicator for a small decompression target
+	
 	byte[][] colorsRGB444 = new byte[2][3];
 	byte[][] colors = new byte[2][3];
 	byte[][] paint_colors = new byte[4][3];
@@ -1428,24 +1440,27 @@ static void decompressBlockTHUMB59TAlphaC(int block_part1, int block_part2, byte
 			//block_mask[x][y] = GETBITS(block_part2,2,31-(y*4+x)*2);
 			block_mask[x][y] = (byte)(GETBITS(block_part2,1,(y+x*4)+16)<<1);
 			block_mask[x][y] = (byte)(block_mask[x][y] | GETBITS(block_part2,1,(y+x*4)));
-			img[channelsRGB*((starty+y)*width+startx+x)+R] = 
+			
+			int idx = singleBlockDest ? channelsRGB*((y)*BLOCKWIDTH+x) : channelsRGB*((starty+y)*width+startx+x);
+			
+			img[idx+R] = 
 				 CLAMP(0,paint_colors[block_mask[x][y]][R],255); // RED
-			img[channelsRGB*((starty+y)*width+startx+x)+G] =
+			img[idx+G] =
 				 CLAMP(0,paint_colors[block_mask[x][y]][G],255); // GREEN
-			img[channelsRGB*((starty+y)*width+startx+x)+B] =
+			img[idx+B] =
 				 CLAMP(0,paint_colors[block_mask[x][y]][B],255); // BLUE
 			if(block_mask[x][y]==2)  
 			{
 				// see above! alpha[channelsA*(x+startx+(y+starty)*width)]=0;
-				img[channelsA*(x+startx+(y+starty)*width  + 3)]=0;
+				img[idx  + 3]=0;
 				
-				img[channelsRGB*((starty+y)*width+startx+x)+R] =0;
-				img[channelsRGB*((starty+y)*width+startx+x)+G] =0;
-				img[channelsRGB*((starty+y)*width+startx+x)+B] =0;
+				img[idx+R] =0;
+				img[idx+G] =0;
+				img[idx+B] =0;
 			}
 			else {
 				// see above! alpha[channelsA*(x+startx+(y+starty)*width)]=(byte)255;
-				img[channelsA*(x+startx+(y+starty)*width  + 3)]=(byte)255;
+				img[idx  + 3]=(byte)255;
 			}
 		}
 	}
@@ -1460,30 +1475,32 @@ static void decompressBlockTHUMB59TAlpha(int block_part1, int block_part2, byte[
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 static void decompressBlockTHUMB58HAlphaC(int block_part1, int block_part2, byte[] img, byte[] alpha, int width, int height, int startx, int starty, int channelsRGB)
 {
+	boolean singleBlockDest = img.length == 4 * 4 * 3; // special indicator for a small decompression target
+	
 	int col0, col1;
 	byte[][] colors = new byte[2][3];
 	byte[][] colorsRGB444 = new byte[2][3];
 	byte[][] paint_colors = new byte[4][3];
 	byte distance;
 	byte[][] block_mask = new byte[4][4];
-  int channelsA;	
-
-  if(channelsRGB == 3)
-  {
-    // We will decode the alpha data to a separate memory area. 
-    channelsA = 1;
-  }
-  else
-  {
-    // We will decode the RGB data and the alpha data to the same memory area, 
-    // interleaved as RGBA. 
-    channelsA = 4;
-    
-    // I don't have any code lines that use 4 so I can't test how teh user uses this, so just ... edit the img data!
-    // the calls with channelsRGB == 3 seem to set up a w x x h 1 byte array ready for filling
-    // all other similar methods only come in with 3 channels!
-    //alpha = img[0+3];
-  }
+	int channelsA;	
+	
+	if(channelsRGB == 3)
+	{
+		// We will decode the alpha data to a separate memory area. 
+		channelsA = 1;
+	}
+	else
+	{
+	    // We will decode the RGB data and the alpha data to the same memory area, 
+		// interleaved as RGBA. 
+		channelsA = 4;
+		
+		// I don't have any code lines that use 4 so I can't test how teh user uses this, so just ... edit the img data!
+		// the calls with channelsRGB == 3 seem to set up a w x x h 1 byte array ready for filling
+		// all other similar methods only come in with 3 channels!
+		//alpha = img[0+3];
+	  }
 
 	// First decode left part of block.
 	colorsRGB444[0][R]= (byte)GETBITSHIGH(block_part1, 4, 57);
@@ -1518,25 +1535,27 @@ static void decompressBlockTHUMB58HAlphaC(int block_part1, int block_part2, byte
 			//block_mask[x][y] = GETBITS(block_part2,2,31-(y*4+x)*2);
 			block_mask[x][y] = (byte)(GETBITS(block_part2,1,(y+x*4)+16)<<1);
 			block_mask[x][y] = (byte)(block_mask[x][y] | GETBITS(block_part2,1,(y+x*4)));
-			img[channelsRGB*((starty+y)*width+startx+x)+R] =
+			
+			int idx = singleBlockDest ? channelsRGB*((y)*BLOCKWIDTH+x) : channelsRGB*((starty+y)*width+startx+x);
+			img[idx+R] =
 				CLAMP(0,paint_colors[block_mask[x][y]][R],255); // RED
-			img[channelsRGB*((starty+y)*width+startx+x)+G] =
+			img[idx+G] =
 				CLAMP(0,paint_colors[block_mask[x][y]][G],255); // GREEN
-			img[channelsRGB*((starty+y)*width+startx+x)+B] =
+			img[idx+B] =
 				CLAMP(0,paint_colors[block_mask[x][y]][B],255); // BLUE
 			
 			if(block_mask[x][y]==2)  
 			{
 				//see above! alpha[channelsA*(x+startx+(y+starty)*width)]=0;
-				img[channelsA*(x+startx+(y+starty)*width) + 3]=0;
+				img[idx + 3]=0;
 				
-				img[channelsRGB*((starty+y)*width+startx+x)+R] =0;
-				img[channelsRGB*((starty+y)*width+startx+x)+G] =0;
-				img[channelsRGB*((starty+y)*width+startx+x)+B] =0;
+				img[idx+R] =0;
+				img[idx+G] =0;
+				img[idx+B] =0;
 			}
 			else {
 				//see above! alpha[channelsA*(x+startx+(y+starty)*width)]=(byte)255;
-				img[channelsA*(x+startx+(y+starty)*width) + 3]=(byte)255;
+				img[idx + 3]=(byte)255;
 			}
 		}
 	}
@@ -1549,28 +1568,30 @@ static void decompressBlockTHUMB58HAlpha(int block_part1, int block_part2, byte[
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 static void decompressBlockETC21BitAlphaC(int block_part1, int block_part2, byte[] img, byte[] alphaimg, int width, int height, int startx, int starty, int channelsRGB)
 {
+	boolean singleBlockDest = img.length == 4 * 4 * 3; // special indicator for a small decompression target
+	
 	int diffbit;
 	byte[] color1 = new byte[3];
 	byte[] diff = new byte[3];
 	byte red, green, blue;
-  int channelsA;	
-
-  if(channelsRGB == 3)
-  {
-    // We will decode the alpha data to a separate memory area. 
-    channelsA = 1;
-  }
-  else
-  {
-    // We will decode the RGB data and the alpha data to the same memory area, 
-    // interleaved as RGBA. 
-    channelsA = 4;
-    
-    // I don't have any code lines that use 4 so I can't test how teh user uses this, so just ... edit the img data!
-    // the calls with channelsRGB == 3 seem to set up a w x x h 1 byte array ready for filling
-    // all other similar methods only come in with 3 channels!    
-    //alphaimg = img[0+3];
-  }
+	int channelsA;	
+	
+	if(channelsRGB == 3)
+	{
+	  // We will decode the alpha data to a separate memory area. 
+	  channelsA = 1;
+	}
+	else
+	{
+	    // We will decode the RGB data and the alpha data to the same memory area, 
+		// interleaved as RGBA. 
+		channelsA = 4;
+		
+		// I don't have any code lines that use 4 so I can't test how teh user uses this, so just ... edit the img data!
+		// the calls with channelsRGB == 3 seem to set up a w x x h 1 byte array ready for filling
+		// all other similar methods only come in with 3 channels!    
+		//alphaimg = img[0+3];
+	}
 
 	diffbit = (GETBITSHIGH(block_part1, 1, 33));
 
@@ -1628,7 +1649,9 @@ static void decompressBlockETC21BitAlphaC(int block_part1, int block_part2, byte
 			for(int y=starty; y<starty+4; y++) 
 			{
 				// see above! alphaimg[channelsA*(x+y*width)]=(byte)255;
-				img[channelsA*(x+y*width)  + 3 ]=(byte)255;
+				
+				int idx = singleBlockDest ? channelsA*(x+y*BLOCKWIDTH) : channelsA*(x+y*width);
+				img[idx  + 3 ]=(byte)255;
 			}
 		}
 	}
@@ -1680,7 +1703,8 @@ static void decompressBlockETC21BitAlphaC(int block_part1, int block_part2, byte
 				for(int y=starty; y<starty+4; y++) 
 				{
 					// see above! alphaimg[channelsA*(x+y*width)]=(byte)255;
-					img[channelsA*(x+y*width) +3]=(byte)255;
+					int idx = singleBlockDest ? channelsA*(x+y*BLOCKWIDTH) : channelsA*(x+y*width);
+					img[idx +3]=(byte)255;
 				}
 			}
 		}
@@ -1731,6 +1755,8 @@ static int clamp(int val)
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 static void decompressBlockAlphaC(byte[] data, byte[] img, int width, int height, int ix, int iy, int channels) 
 {
+	boolean singleBlockDest = img.length == 4 * 4 * 3; // special indicator for a small decompression target
+	
 	byte alpha = data[0];
 	byte table = data[1];
 	
@@ -1753,7 +1779,8 @@ static void decompressBlockAlphaC(byte[] data, byte[] img, int width, int height
 					byte_++;
 				}
 			}
-			img[(ix+x+(iy+y)*width)*channels]=(byte)clamp((alpha&0xff) +alphaTable[table][index]);
+			int idx = singleBlockDest ? (ix+x+(iy+y)*BLOCKWIDTH)*channels : (ix+x+(iy+y)*width)*channels;
+			img[idx]=(byte)clamp((alpha&0xff) +alphaTable[table][index]);
 		}
 	}
 }
