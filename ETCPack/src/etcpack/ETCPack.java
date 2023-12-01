@@ -7846,6 +7846,7 @@ static void compressBlockDiffFlipCombinedPerceptual(byte[] img,int width,int hei
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 static double calcBlockErrorRGB(byte[] img, byte[] imgdec, int width, int height, int startx, int starty)
 {
+	boolean singleBlockDest = imgdec.length == 4 * 4 * 3; // special indicator for a small decompression target
 	int xx,yy;
 	double err;
 
@@ -7855,9 +7856,10 @@ static double calcBlockErrorRGB(byte[] img, byte[] imgdec, int width, int height
 	{
 		for(yy = starty; yy<starty+4; yy++)
 		{
-			err += SQUARE(1.0*(RED(img,width,xx,yy)&0xff)  - 1.0*(RED(imgdec, width, xx,yy)&0xff));
-			err += SQUARE(1.0*(GREEN(img,width,xx,yy)&0xff)- 1.0*(GREEN(imgdec, width, xx,yy)&0xff));
-			err += SQUARE(1.0*(BLUE(img,width,xx,yy)&0xff) - 1.0*(BLUE(imgdec, width, xx,yy)&0xff));
+			int idx = singleBlockDest ? (yy - starty) * 4 + (xx - startx) : (yy * width + xx);
+			err += SQUARE(1.0*(RED(img,width,xx,yy)&0xff)  - 1.0*(imgdec[3*idx+0]&0xff));
+			err += SQUARE(1.0*(GREEN(img,width,xx,yy)&0xff)- 1.0*(imgdec[3*idx+1]&0xff));
+			err += SQUARE(1.0*(BLUE(img,width,xx,yy)&0xff) - 1.0*(imgdec[3*idx+2]&0xff));
 		}
 	}
 
@@ -7867,7 +7869,8 @@ static double calcBlockErrorRGB(byte[] img, byte[] imgdec, int width, int height
 //Calculate the perceptually weighted error of a block
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 static double calcBlockPerceptualErrorRGB(byte[] img, byte[] imgdec, int width, int height, int startx, int starty)
-{
+{	
+	boolean singleBlockDest = imgdec.length == 4 * 4 * 3; // special indicator for a small decompression target
 	int xx,yy;
 	double err;
 
@@ -7877,9 +7880,10 @@ static double calcBlockPerceptualErrorRGB(byte[] img, byte[] imgdec, int width, 
 	{
 		for(yy = starty; yy<starty+4; yy++)
 		{			
-			err += PERCEPTUAL_WEIGHT_R_SQUARED*SQUARE(1.0*(RED(img,width,xx,yy)&0xff)  - 1.0*(RED(imgdec, width, xx,yy)&0xff));
-			err += PERCEPTUAL_WEIGHT_G_SQUARED*SQUARE(1.0*(GREEN(img,width,xx,yy)&0xff)- 1.0*(GREEN(imgdec, width, xx,yy)&0xff));
-			err += PERCEPTUAL_WEIGHT_B_SQUARED*SQUARE(1.0*(BLUE(img,width,xx,yy)&0xff) - 1.0*(BLUE(imgdec, width, xx,yy)&0xff));
+			int idx = singleBlockDest ? (yy - starty) * 4 + (xx - startx) : (yy * width + xx);
+			err += PERCEPTUAL_WEIGHT_R_SQUARED*SQUARE(1.0*(RED(img,width,xx,yy)&0xff)  - 1.0*(imgdec[3*idx+0]&0xff));
+			err += PERCEPTUAL_WEIGHT_G_SQUARED*SQUARE(1.0*(GREEN(img,width,xx,yy)&0xff)- 1.0*(imgdec[3*idx+1]&0xff));
+			err += PERCEPTUAL_WEIGHT_B_SQUARED*SQUARE(1.0*(BLUE(img,width,xx,yy)&0xff) - 1.0*(imgdec[3*idx+2]&0xff));
 		}
 	}
 
@@ -8197,6 +8201,7 @@ static void compressBlockDifferentialWithAlpha(boolean isTransparent, byte[] img
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 static double calcBlockErrorRGBA(byte[] img, byte[] imgdec, byte[] alpha, int width, int height, int startx, int starty)
 {
+	boolean singleBlockDest = imgdec.length == 4 * 4 * 3; // special indicator for a small decompression target
 	int xx,yy;
 	double err;
 
@@ -8209,9 +8214,10 @@ static double calcBlockErrorRGBA(byte[] img, byte[] imgdec, byte[] alpha, int wi
 			//only count non-transparent pixels.
 			if((alpha[yy*width+xx]&0xff)>128)	
 			{
-				err += SQUARE(1.0*(RED(img,width,xx,yy)&0xff)  - 1.0*(RED(imgdec, width, xx,yy)&0xff));
-				err += SQUARE(1.0*(GREEN(img,width,xx,yy)&0xff)- 1.0*(GREEN(imgdec, width, xx,yy)&0xff));
-				err += SQUARE(1.0*(BLUE(img,width,xx,yy)&0xff) - 1.0*(BLUE(imgdec, width, xx,yy)&0xff));
+				int idx = singleBlockDest ? (yy - starty) * 4 + (xx - startx) : (yy * width + xx);
+				err += SQUARE(1.0*(RED(img,width,xx,yy)&0xff)  - 1.0*(imgdec[3*idx+0]&0xff));
+				err += SQUARE(1.0*(GREEN(img,width,xx,yy)&0xff)- 1.0*(imgdec[3*idx+1]&0xff));
+				err += SQUARE(1.0*(BLUE(img,width,xx,yy)&0xff) - 1.0*(imgdec[3*idx+2]&0xff));
 			}
 		}
 	}
@@ -10947,8 +10953,10 @@ int compressImageToBB(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int expande
 	int[] block1 = new int[1], block2 = new int[1];
 	byte[] imgdec;
 	byte[] alphaimg2 = null;
-	imgdec = new byte[expandedwidth * expandedheight * 3];
-
+	//imgdec = new byte[expandedwidth * expandedheight * 3]; 
+	imgdec = new byte[4 * 4 * 3]; // special signal to decompressor to use a single block
+	byte[] alphadata = new byte[8];
+	
 	int totblocks = expandedheight / 4 * expandedwidth / 4;
 	totblocks = totblocks < 1 ? 1: totblocks;
 	int countblocks = 0;
@@ -10988,42 +10996,36 @@ int compressImageToBB(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int expande
 			if (codec == CODEC.CODEC_ETC) {
 				if (metric == METRIC.METRIC_NONPERCEPTUAL) {
 					if (speed == SPEED.SPEED_FAST)
-						compressBlockDiffFlipFast(img, imgdec, expandedwidth, expandedheight, 4 * x, 4 * y, block1,
-								block2);
+						compressBlockDiffFlipFast(img, imgdec, expandedwidth, expandedheight, 4 * x, 4 * y, block1, block2);
 					else
 						System.out.println("Not implemented in this version");
 				} else {
 					if (speed == SPEED.SPEED_FAST)
-						compressBlockDiffFlipFastPerceptual(img, imgdec, expandedwidth, expandedheight, 4 * x, 4 * y,
-								block1, block2);
+						compressBlockDiffFlipFastPerceptual(img, imgdec, expandedwidth, expandedheight, 4 * x, 4 * y, block1, block2);
 					else
 						System.out.println("Not implemented in this version");
 				}
 			} else {
-				
-				byte[] alphadata = new byte[8];
 				//compression of alpha channel in case of 4-bit alpha. Uses 8-bit alpha channel as input, and has 8-bit precision.
-				if (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA) {
-					
-					if (speed == SPEED.SPEED_SLOW)
-						compressBlockAlphaSlow(alphaimg, 4 * x, 4 * y, expandedwidth, expandedheight, alphadata);
-					else
-						compressBlockAlphaFast(alphaimg, 4 * x, 4 * y, expandedwidth, expandedheight, alphadata);
+				if (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA) {					
+					if (speed == SPEED.SPEED_SLOW && first_time_message) {
+						System.out.println("Slow codec not implemented for RGBA --- using fast codec instead.");
+						first_time_message = false;
+					}
+					compressBlockAlphaFast(alphaimg, 4 * x, 4 * y, expandedwidth, expandedheight, alphadata);
 					//write the 8 bytes of alphadata into dstBB.
 					fwrite(alphadata, 1, 8, dstBB);
 				}				
 				
 				if (format == FORMAT.ETC2PACKAGE_R || format == FORMAT.ETC2PACKAGE_RG) {
 					//don't compress color
-				} else if (format == FORMAT.ETC2PACKAGE_RGBA1
-							|| format == FORMAT.ETC2PACKAGE_sRGBA1) {
+				} else if (format == FORMAT.ETC2PACKAGE_RGBA1 || format == FORMAT.ETC2PACKAGE_sRGBA1) {
 					//this is only available for fast/nonperceptual
 					if (speed == SPEED.SPEED_SLOW && first_time_message) {
 						System.out.println("Slow codec not implemented for RGBA1 --- using fast codec instead.");
 						first_time_message = false;
 					}
-					compressBlockETC2Fast(img, alphaimg, imgdec, expandedwidth, expandedheight, 4 * x, 4 * y, block1,
-							block2);
+					compressBlockETC2Fast(img, alphaimg, imgdec, expandedwidth, expandedheight, 4 * x, 4 * y, block1, block2);
 				} else if (metric == METRIC.METRIC_NONPERCEPTUAL) {
 					if (speed == SPEED.SPEED_FAST) {
 							compressBlockETC2Fast(img, alphaimg, imgdec, expandedwidth, expandedheight, 4 * x, 4 * y, block1, block2);
@@ -11041,28 +11043,28 @@ int compressImageToBB(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int expande
 			if (format != FORMAT.ETC2PACKAGE_R && format != FORMAT.ETC2PACKAGE_RG) {
 				write_big_endian_4byte_word(block1, dstBB);
 				write_big_endian_4byte_word(block2, dstBB);
+			} else {
+				//1-channel or 2-channel alpha compression: uses 16-bit data as input, and has 11-bit precision
+				if (format == FORMAT.ETC2PACKAGE_R || format == FORMAT.ETC2PACKAGE_RG) {
+					compressBlockAlpha16(alphaimg, 4 * x, 4 * y, expandedwidth, expandedheight, alphadata);
+					fwrite(alphadata, 1, 8, dstBB);
+				}
+				//compression of second alpha channel in RG-compression
+				if (format == FORMAT.ETC2PACKAGE_RG) {
+					compressBlockAlpha16(alphaimg2, 4 * x, 4 * y, expandedwidth, expandedheight, alphadata);
+					fwrite(alphadata, 1, 8, dstBB);
+				}
 			}
-
-			//1-channel or 2-channel alpha compression: uses 16-bit data as input, and has 11-bit precision
-			if (format == FORMAT.ETC2PACKAGE_R || format == FORMAT.ETC2PACKAGE_RG) {
-				byte[] alphadata = new byte[8];
-				compressBlockAlpha16(alphaimg, 4 * x, 4 * y, expandedwidth, expandedheight, alphadata);
-				fwrite(alphadata, 1, 8, dstBB);
-			}
-			//compression of second alpha channel in RG-compression
-			if (format == FORMAT.ETC2PACKAGE_RG) {
-				byte[] alphadata = new byte[8];
-				compressBlockAlpha16(alphaimg2, 4 * x, 4 * y, expandedwidth, expandedheight, alphadata);
-				fwrite(alphadata, 1, 8, dstBB);
-			}
+			
 			if (verbose) {
 				if (speed == SPEED.SPEED_FAST) {
 					if (((int)(percentageblocks) != (int)(oldpercentageblocks)) || percentageblocks == 100.0)
 						System.out.println("Compressed "	+ countblocks + " of " + totblocks + " blocks, "
 											+ (100.0 * countblocks / (1.0 * totblocks)) + " finished.");
-				} else
+				} else {
 					System.out.println("Compressed "	+ countblocks + " of " + totblocks + " blocks, "
 										+ (100.0 * countblocks / (1.0 * totblocks)) + " finished.");
+				}
 			}
 		}
 

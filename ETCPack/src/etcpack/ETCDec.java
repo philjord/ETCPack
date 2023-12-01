@@ -778,6 +778,8 @@ static void decompressBlockPlanar57(int compressed57_1, int compressed57_2, byte
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 static void decompressBlockDiffFlipC(int block_part1, int block_part2, byte[] img, int width, int height, int startx, int starty, int channels)
 {
+	boolean singleBlockDest = img.length == 4 * 4 * 3; // special indicator for a small decompression target
+	
 	byte[] avg_color = new byte[3], enc_color1 = new byte[3], enc_color2 = new byte[3];
 	byte[] diff = new byte[3];
 	int table;
@@ -824,10 +826,11 @@ static void decompressBlockDiffFlipC(int block_part1, int block_part2, byte[] im
 					index |= ((pixel_indices_LSB >> shift) & 1);
 					shift++;
 					index=unscramble[index];
-
-					img[channels*(y*width+x)+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+compressParams[table][index],255);
-					img[channels*(y*width+x)+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+compressParams[table][index],255);
-					img[channels*(y*width+x)+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+compressParams[table][index],255);
+					
+					int idx = singleBlockDest ? (y - starty) * 4 + (x - startx) : (y * width + x);
+					img[channels*idx+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+compressParams[table][index],255);
+					img[channels*idx+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+compressParams[table][index],255);
+					img[channels*idx+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+compressParams[table][index],255);
 				}
 			}
 		}
@@ -844,9 +847,10 @@ static void decompressBlockDiffFlipC(int block_part1, int block_part2, byte[] im
 					shift++;
 					index=unscramble[index];
 
-					img[channels*(y*width+x)+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+compressParams[table][index],255);
-					img[channels*(y*width+x)+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+compressParams[table][index],255);
-					img[channels*(y*width+x)+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+compressParams[table][index],255);
+					int idx = singleBlockDest ? (y - starty) * 4 + (x - startx) : (y * width + x);
+					img[channels*idx+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+compressParams[table][index],255);
+					img[channels*idx+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+compressParams[table][index],255);
+					img[channels*idx+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+compressParams[table][index],255);
 				}
 				shift+=2;
 			}
@@ -881,9 +885,10 @@ static void decompressBlockDiffFlipC(int block_part1, int block_part2, byte[] im
 					shift++;
 					index=unscramble[index];
 
-					img[channels*(y*width+x)+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+compressParams[table][index],255);
-					img[channels*(y*width+x)+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+compressParams[table][index],255);
-					img[channels*(y*width+x)+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+compressParams[table][index],255);
+					int idx = singleBlockDest ? (y - starty) * 4 + (x - startx) : (y * width + x);
+					img[channels*idx+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+compressParams[table][index],255);
+					img[channels*idx+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+compressParams[table][index],255);
+					img[channels*idx+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+compressParams[table][index],255);
 				}
 			}
 		}
@@ -900,9 +905,10 @@ static void decompressBlockDiffFlipC(int block_part1, int block_part2, byte[] im
 					shift++;
 					index=unscramble[index];
 
-					img[channels*(y*width+x)+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+compressParams[table][index],255);
-					img[channels*(y*width+x)+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+compressParams[table][index],255);
-					img[channels*(y*width+x)+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+compressParams[table][index],255);
+					int idx = singleBlockDest ? (y - starty) * 4 + (x - startx) : (y * width + x);
+					img[channels*idx+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+compressParams[table][index],255);
+					img[channels*idx+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+compressParams[table][index],255);
+					img[channels*idx+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+compressParams[table][index],255);
 				}
 				shift += 2;
 			}
@@ -957,9 +963,10 @@ static void decompressBlockDiffFlipC(int block_part1, int block_part2, byte[] im
 					shift++;
 					index=unscramble[index];
 
-					img[channels*(y*width+x)+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+compressParams[table][index],255);
-					img[channels*(y*width+x)+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+compressParams[table][index],255);
-					img[channels*(y*width+x)+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+compressParams[table][index],255);
+					int idx = singleBlockDest ? (y - starty) * 4 + (x - startx) : (y * width + x);
+					img[channels*idx+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+compressParams[table][index],255);
+					img[channels*idx+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+compressParams[table][index],255);
+					img[channels*idx+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+compressParams[table][index],255);
 				}
 			}
 		}
@@ -976,9 +983,10 @@ static void decompressBlockDiffFlipC(int block_part1, int block_part2, byte[] im
 					shift++;
 					index=unscramble[index];
 
-					img[channels*(y*width+x)+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+compressParams[table][index],255);
-					img[channels*(y*width+x)+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+compressParams[table][index],255);
-					img[channels*(y*width+x)+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+compressParams[table][index],255);
+					int idx = singleBlockDest ? (y - starty) * 4 + (x - startx) : (y * width + x);
+					img[channels*idx+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+compressParams[table][index],255);
+					img[channels*idx+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+compressParams[table][index],255);
+					img[channels*idx+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+compressParams[table][index],255);
 				}
 				shift+=2;
 			}
@@ -1024,9 +1032,10 @@ static void decompressBlockDiffFlipC(int block_part1, int block_part2, byte[] im
 					shift++;
 					index=unscramble[index];
 
-					img[channels*(y*width+x)+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+compressParams[table][index],255);
-					img[channels*(y*width+x)+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+compressParams[table][index],255);
-					img[channels*(y*width+x)+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+compressParams[table][index],255);
+					int idx = singleBlockDest ? (y - starty) * 4 + (x - startx) : (y * width + x);
+					img[channels*idx+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+compressParams[table][index],255);
+					img[channels*idx+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+compressParams[table][index],255);
+					img[channels*idx+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+compressParams[table][index],255);
 				}
 			}
 		}
@@ -1043,9 +1052,10 @@ static void decompressBlockDiffFlipC(int block_part1, int block_part2, byte[] im
 					shift++;
 					index=unscramble[index];
 
-					img[channels*(y*width+x)+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+compressParams[table][index],255);
-					img[channels*(y*width+x)+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+compressParams[table][index],255);
-					img[channels*(y*width+x)+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+compressParams[table][index],255);
+					int idx = singleBlockDest ? (y - starty) * 4 + (x - startx) : (y * width + x);
+					img[channels*idx+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+compressParams[table][index],255);
+					img[channels*idx+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+compressParams[table][index],255);
+					img[channels*idx+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+compressParams[table][index],255);
 				}
 				shift += 2;
 			}
@@ -1132,7 +1142,7 @@ static void decompressBlockETC2(int block_part1, int block_part2, byte[] img, in
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 static void decompressBlockDifferentialWithAlphaC(int block_part1, int block_part2, byte[] img, byte[] alpha, int width, int height, int startx, int starty, int channelsRGB)
 {
-	
+	boolean singleBlockDest = img.length == 4 * 4 * 3; // special indicator for a small decompression target
 	byte[] avg_color = new byte[3], enc_color1 = new byte[3], enc_color2 = new byte[3];
 	byte[] diff = new byte[3];
 	int table;
@@ -1153,7 +1163,7 @@ static void decompressBlockDifferentialWithAlphaC(int block_part1, int block_par
       // interleaved as RGBA. 
       channelsA = 4;
       
-      // I don't have any code lines that use 4 so I can't test how teh user uses this, so just ... edit the img data!
+      // I don't have any code lines that use 4 so I can't test how the user uses this, so just ... edit the img data!
       // the calls with channelsRGB == 3 seem to set up a w x x h 1 byte array ready for filling
       // all other similar methods only come in with 3 channels!
       //alpha = img[0+3];
@@ -1182,6 +1192,7 @@ static void decompressBlockDifferentialWithAlphaC(int block_part1, int block_par
 
 	if( (flipbit) == 0 )
 	{
+		
 		// We should not flip
 		shift = 0;
 		for(int x=startx; x<startx+2; x++)
@@ -1199,23 +1210,24 @@ static void decompressBlockDifferentialWithAlphaC(int block_part1, int block_par
 					mod=0;
 				}
 				
-				img[channelsRGB*(y*width+x)+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+mod,255);
-				img[channelsRGB*(y*width+x)+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+mod,255);
-				img[channelsRGB*(y*width+x)+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+mod,255);
+				int idx = singleBlockDest ? (y - starty) * 4 + (x - startx) : (y * width + x);
+				img[channelsRGB*idx+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+mod,255);
+				img[channelsRGB*idx+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+mod,255);
+				img[channelsRGB*idx+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+mod,255);
 				if(diffbit==0&&index==1) 
 				{
 					
 					//see above! alpha[(y*width+x)*channelsA]=0;
-					img[(y*width+x)*channelsA + 3]=0;
+					img[idx*channelsA + 3]=0;
 					
-					img[channelsRGB*(y*width+x)+0]=0;
-					img[channelsRGB*(y*width+x)+1]=0;
-					img[channelsRGB*(y*width+x)+2]=0;
+					img[channelsRGB*idx+0]=0;
+					img[channelsRGB*idx+1]=0;
+					img[channelsRGB*idx+2]=0;
 				}
 				else 
 				{
 					//see above! alpha[(y*width+x)*channelsA]=(byte)255;
-					img[(y*width+x)*channelsA + 3]=(byte)255;
+					img[idx*channelsA + 3]=(byte)255;
 				}
 
 			}
@@ -1238,19 +1250,21 @@ static void decompressBlockDifferentialWithAlphaC(int block_part1, int block_par
 				{
 					mod=0;
 				}
-				img[channelsRGB*(y*width+x)+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+mod,255);
-				img[channelsRGB*(y*width+x)+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+mod,255);
-				img[channelsRGB*(y*width+x)+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+mod,255);
+				
+				int idx = singleBlockDest ? (y - starty) * 4 + (x - startx) : (y * width + x);
+				img[channelsRGB*idx+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+mod,255);
+				img[channelsRGB*idx+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+mod,255);
+				img[channelsRGB*idx+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+mod,255);
 				if(diffbit==0&&index==1) 
 				{
-					alpha[(y*width+x)*channelsA]=0;
-					img[channelsRGB*(y*width+x)+0]=0;
-					img[channelsRGB*(y*width+x)+1]=0;
-					img[channelsRGB*(y*width+x)+2]=0;
+					alpha[idx*channelsA]=0;
+					img[channelsRGB*idx+0]=0;
+					img[channelsRGB*idx+1]=0;
+					img[channelsRGB*idx+2]=0;
 				}
 				else 
 				{
-					alpha[(y*width+x)*channelsA]=(byte)255;
+					alpha[idx*channelsA]=(byte)255;
 				}
 			}
 			shift+=2;
@@ -1301,19 +1315,20 @@ static void decompressBlockDifferentialWithAlphaC(int block_part1, int block_par
 					mod=0;
 				}
 				
-				img[channelsRGB*(y*width+x)+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+mod,255);
-				img[channelsRGB*(y*width+x)+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+mod,255);
-				img[channelsRGB*(y*width+x)+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+mod,255);
+				int idx = singleBlockDest ? (y - starty) * 4 + (x - startx) : (y * width + x);
+				img[channelsRGB*idx+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+mod,255);
+				img[channelsRGB*idx+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+mod,255);
+				img[channelsRGB*idx+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+mod,255);
 				if(diffbit==0&&index==1) 
 				{
-					alpha[(y*width+x)*channelsA]=0;
-					img[channelsRGB*(y*width+x)+0]=0;
-					img[channelsRGB*(y*width+x)+1]=0;
-					img[channelsRGB*(y*width+x)+2]=0;
+					alpha[idx*channelsA]=0;
+					img[channelsRGB*idx+0]=0;
+					img[channelsRGB*idx+1]=0;
+					img[channelsRGB*idx+2]=0;
 				}
 				else 
 				{
-					alpha[(y*width+x)*channelsA]=(byte)255;
+					alpha[idx*channelsA]=(byte)255;
 				}
 			}
 		}
@@ -1336,19 +1351,20 @@ static void decompressBlockDifferentialWithAlphaC(int block_part1, int block_par
 					mod=0;
 				}
 				
-				img[channelsRGB*(y*width+x)+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+mod,255);
-				img[channelsRGB*(y*width+x)+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+mod,255);
-				img[channelsRGB*(y*width+x)+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+mod,255);
+				int idx = singleBlockDest ? (y - starty) * 4 + (x - startx) : (y * width + x);
+				img[channelsRGB*idx+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+mod,255);
+				img[channelsRGB*idx+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+mod,255);
+				img[channelsRGB*idx+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+mod,255);
 				if(diffbit==0&&index==1) 
 				{
-					alpha[(y*width+x)*channelsA]=0;
-					img[channelsRGB*(y*width+x)+0]=0;
-					img[channelsRGB*(y*width+x)+1]=0;
-					img[channelsRGB*(y*width+x)+2]=0;
+					alpha[idx*channelsA]=0;
+					img[channelsRGB*idx+0]=0;
+					img[channelsRGB*idx+1]=0;
+					img[channelsRGB*idx+2]=0;
 				}
 				else 
 				{
-					alpha[(y*width+x)*channelsA]=(byte)255;
+					alpha[idx*channelsA]=(byte)255;
 				}
 			}
 			shift += 2;
