@@ -421,7 +421,7 @@ public static final int  GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC              =0x927
 //converts indices from        |a0|a1|e0|e1|i0|i1|m0|m1|b0|b1|f0|f1|j0|j1|n0|n1|c0|c1|g0|g1|k0|k1|o0|o1|d0|d1|h0|h1|l0|l1|p0|p1| previously used by T- and H-modes 
 //				         into  |p0|o0|n0|m0|l0|k0|j0|i0|h0|g0|f0|e0|d0|c0|b0|a0|p1|o1|n1|m1|l1|k1|j1|i1|h1|g1|f1|e1|d1|c1|b1|a1| which should be used for all modes.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static int indexConversion(int pixelIndices) 
+int indexConversion(int pixelIndices) 
 {
 	int correctIndices = 0;
 	int[][] LSB = new int[4][4];
@@ -1060,7 +1060,7 @@ boolean readCompressParams()
 
 //Computes the average color in a 2x4 area and returns the average color as a float.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static void computeAverageColor2x4noQuantFloat(byte[] img,int width,int height,int startx,int starty,float[] avg_color)
+void computeAverageColor2x4noQuantFloat(byte[] img,int width,int height,int startx,int starty,float[] avg_color)
 {
 	int r=0,g=0,b=0;
 	for(int y=starty; y<starty+4; y++)
@@ -1081,7 +1081,7 @@ static void computeAverageColor2x4noQuantFloat(byte[] img,int width,int height,i
 
 //Computes the average color in a 4x2 area and returns the average color as a float.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static void computeAverageColor4x2noQuantFloat(byte[] img,int width,int height,int startx,int starty,float[] avg_color)
+void computeAverageColor4x2noQuantFloat(byte[] img,int width,int height,int startx,int starty,float[] avg_color)
 {
 	int r=0,g=0,b=0;
 	for(int y=starty; y<starty+2; y++)
@@ -1101,7 +1101,7 @@ static void computeAverageColor4x2noQuantFloat(byte[] img,int width,int height,i
 
 //Finds all pixel indices for a 2x4 block.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static int compressBlockWithTable2x4(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
+int compressBlockWithTable2x4(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
 {
 	int[] orig= new int[3],approx= new int[3];
 	int[] pixel_indices_MSB=new int[] {0}, pixel_indices_LSB=new int[] {0};
@@ -1163,7 +1163,7 @@ static final int MAXERR1000 = 1000*255*255*16;
 //Done using fixed poinit arithmetics where weights are multiplied by 1000.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //unsigned 
-static int compressBlockWithTable2x4percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table, int[] pixel_indices_MSBp,  int[] pixel_indices_LSBp)
+int compressBlockWithTable2x4percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table, int[] pixel_indices_MSBp,  int[] pixel_indices_LSBp)
 {
 	int[] orig = new int[3], approx=new int[3];
 	int[] pixel_indices_MSB=new int[] {0}, pixel_indices_LSB=new int[] {0};
@@ -1228,7 +1228,7 @@ static int compressBlockWithTable2x4percep1000(byte[] img,int width,int height,i
 //Finds all pixel indices for a 2x4 block using perceptual weighting of error.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int[] pixel_indices_MSBp, int[] pixel_indices_LSBp
-static float compressBlockWithTable2x4percep(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
+float compressBlockWithTable2x4percep(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
 {
 	byte[] orig= new byte[3],approx= new byte[3];
 	int[] pixel_indices_MSB=new int[] {0}, pixel_indices_LSB=new int[] {0};
@@ -1293,7 +1293,7 @@ static float compressBlockWithTable2x4percep(byte[] img,int width,int height,int
 //Finds all pixel indices for a 4x2 block.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int[] pixel_indices_MSBp, int[] pixel_indices_LSBp
-static int compressBlockWithTable4x2(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
+int compressBlockWithTable4x2(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
 {
 	byte[] orig= new byte[3],approx= new byte[3];
 	int[] pixel_indices_MSB=new int[] {0}, pixel_indices_LSB=new int[] {0};
@@ -1354,7 +1354,7 @@ static int compressBlockWithTable4x2(byte[] img,int width,int height,int startx,
 //Done using fixed point arithmetics where 1000 corresponds to 1.0.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int[] pixel_indices_MSBp, int[] pixel_indices_LSBp
-static int compressBlockWithTable4x2percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
+int compressBlockWithTable4x2percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
 {
 	byte[] orig= new byte[3],approx= new byte[3];
 	int[] pixel_indices_MSB=new int[] {0}, pixel_indices_LSB=new int[] {0};
@@ -1417,7 +1417,7 @@ static int compressBlockWithTable4x2percep1000(byte[] img,int width,int height,i
 //Finds all pixel indices for a 4x2 block using perceptual weighting of error.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int[] pixel_indices_MSBp, int[] pixel_indices_LSBp
-static float compressBlockWithTable4x2percep(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
+float compressBlockWithTable4x2percep(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
 {
 	byte[] orig= new byte[3],approx= new byte[3];
 	int[] pixel_indices_MSB=new int[] {0}, pixel_indices_LSB=new int[] {0};
@@ -1636,7 +1636,7 @@ static final int[] square_table_percep_blue=new int[] {
 //Find the best table to use for a 2x4 area by testing all.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB)
-static int tryalltables_3bittable2x4(byte[] img,int width,int height,int startx,int starty,byte[] avg_color, int[] best_table, int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
+int tryalltables_3bittable2x4(byte[] img,int width,int height,int startx,int starty,byte[] avg_color, int[] best_table, int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
 {
 	int min_error = 3*255*255*16;
 	int q;
@@ -1663,7 +1663,7 @@ static int tryalltables_3bittable2x4(byte[] img,int width,int height,int startx,
 //Uses fixed point implementation where 1000 equals 1.0
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //addressint &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB
-static int tryalltables_3bittable2x4percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,  int[] best_table, int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
+int tryalltables_3bittable2x4percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,  int[] best_table, int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
 {
 	int min_error = MAXERR1000;
 	int q;
@@ -1692,7 +1692,7 @@ static int tryalltables_3bittable2x4percep1000(byte[] img,int width,int height,i
 //Uses perceptual weighting. 
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //addressint &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB
-static int tryalltables_3bittable2x4percep(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,  int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
+int tryalltables_3bittable2x4percep(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,  int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
 {
 	float min_error = 3*255*255*16;
 	int q;
@@ -1718,7 +1718,7 @@ static int tryalltables_3bittable2x4percep(byte[] img,int width,int height,int s
 //Find the best table to use for a 4x2 area by testing all.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //addressint &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB
-static int tryalltables_3bittable4x2(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,   int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
+int tryalltables_3bittable4x2(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,   int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
 {
 	int min_error = 3*255*255*16;
 	int q;
@@ -1746,7 +1746,7 @@ static int tryalltables_3bittable4x2(byte[] img,int width,int height,int startx,
 //Uses fixed point implementation where 1000 equals 1.0
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //addressint &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB
-static int tryalltables_3bittable4x2percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,   int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
+int tryalltables_3bittable4x2percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,   int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
 {
 	int min_error = MAXERR1000;
 	int q;
@@ -1772,7 +1772,7 @@ static int tryalltables_3bittable4x2percep1000(byte[] img,int width,int height,i
 //Uses perceptual weighting. 
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //addressint &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB
-static int tryalltables_3bittable4x2percep(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,    int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
+int tryalltables_3bittable4x2percep(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,    int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
 {
 	float min_error = 3*255*255*16;
 	int q;
@@ -1803,7 +1803,7 @@ static int tryalltables_3bittable4x2percep(byte[] img,int width,int height,int s
 //(See the presentation http://www.jacobstrom.com/publications/PACKMAN.ppt for more info.) 
 //
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static void quantize444ColorCombined(float[] avg_col_in, int[] enc_color, byte[] avg_color)
+void quantize444ColorCombined(float[] avg_col_in, int[] enc_color, byte[] avg_color)
 {
 	float dr, dg, db;
 	float kr, kg, kb;
@@ -1978,7 +1978,7 @@ static void quantize444ColorCombined(float[] avg_col_in, int[] enc_color, byte[]
 //(See the presentation http://www.jacobstrom.com/publications/PACKMAN.ppt for more info.) 
 //
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static void quantize555ColorCombined(float[] avg_col_in, int[] enc_color, float[] avg_color)
+void quantize555ColorCombined(float[] avg_col_in, int[] enc_color, float[] avg_color)
 {
 	float dr, dg, db;
 	float kr, kg, kb;
@@ -2133,7 +2133,7 @@ static void quantize555ColorCombined(float[] avg_col_in, int[] enc_color, float[
 //(See the presentation http://www.jacobstrom.com/publications/PACKMAN.ppt for more info.) 
 //
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static void quantize444ColorCombinedPerceptual(float[] avg_col_in, int[] enc_color, byte[] avg_color)
+void quantize444ColorCombinedPerceptual(float[] avg_col_in, int[] enc_color, byte[] avg_color)
 {
 	float dr, dg, db;
 	float kr, kg, kb;
@@ -2287,7 +2287,7 @@ static void quantize444ColorCombinedPerceptual(float[] avg_col_in, int[] enc_col
 //(See the presentation http://www.jacobstrom.com/publications/PACKMAN.ppt for more info.) 
 //
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static void quantize555ColorCombinedPerceptual(float[] avg_col_in, int[] enc_color, byte[] avg_color)
+void quantize555ColorCombinedPerceptual(float[] avg_col_in, int[] enc_color, byte[] avg_color)
 {
 	float dr, dg, db;
 	float kr, kg, kb;
@@ -2438,7 +2438,7 @@ static void quantize555ColorCombinedPerceptual(float[] avg_col_in, int[] enc_col
 //Uses fixed point arithmetics where 1000 equals 1.0
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &compressed1,  int &compressed2, int &best_flip,  int &best_err_upper,  int &best_err_lower,  int &best_err_left,  int &best_err_right
-static int compressBlockOnlyIndividualAveragePerceptual1000(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2, int[] best_enc_color1, int[] best_enc_color2, int[] best_flip,  int[] best_err_upper,  int[] best_err_lower,  int[] best_err_left,  int[] best_err_right, int[] best_color_upper, int[] best_color_lower, int[] best_color_left, int[] best_color_right)
+int compressBlockOnlyIndividualAveragePerceptual1000(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2, int[] best_enc_color1, int[] best_enc_color2, int[] best_flip,  int[] best_err_upper,  int[] best_err_lower,  int[] best_err_left,  int[] best_err_right, int[] best_color_upper, int[] best_color_lower, int[] best_color_left, int[] best_color_right)
 {
 	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
 	int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
@@ -2637,7 +2637,7 @@ static int compressBlockOnlyIndividualAveragePerceptual1000(byte[] img,int width
 //Compresses the block using only the individual mode in ETC1/ETC2 using the average color as the base color.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &compressed1,  int &compressed2, int &best_flip,  int &best_err_upper,  int &best_err_lower,  int &best_err_left,  int &best_err_right
-static int compressBlockOnlyIndividualAverage(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2, int[] best_enc_color1, int[] best_enc_color2, int[] best_flip,  int[] best_err_upper,  int[] best_err_lower,  int[] best_err_left,  int[] best_err_right, int[] best_color_upper, int[] best_color_lower, int[] best_color_left, int[] best_color_right)
+int compressBlockOnlyIndividualAverage(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2, int[] best_enc_color1, int[] best_enc_color2, int[] best_flip,  int[] best_err_upper,  int[] best_err_lower,  int[] best_err_left,  int[] best_err_right, int[] best_color_upper, int[] best_color_lower, int[] best_color_left, int[] best_color_right)
 {
 	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
 	int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
@@ -2839,7 +2839,7 @@ static int compressBlockOnlyIndividualAverage(byte[] img,int width,int height,in
 //Tries both flipped and unflipped.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &compressed1, int &compressed2
-static void compressBlockDiffFlipAverage(byte[] img,int width,int height,int startx,int starty, int[] compressed1, int[] compressed2)
+void compressBlockDiffFlipAverage(byte[] img,int width,int height,int startx,int starty, int[] compressed1, int[] compressed2)
 {
 	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
 	int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
@@ -3158,7 +3158,7 @@ static void compressBlockDiffFlipAverage(byte[] img,int width,int height,int sta
 //Tries both flipped and unflipped.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &compressed1,  int &compressed2,  int &best_flip
-static int compressBlockOnlyDiffFlipAverage(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2, int[] best_enc_color1, int[] best_enc_color2, int[] best_flip)
+int compressBlockOnlyDiffFlipAverage(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2, int[] best_enc_color1, int[] best_enc_color2, int[] best_flip)
 {
 	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
 	int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
@@ -3394,7 +3394,7 @@ static int compressBlockOnlyDiffFlipAverage(byte[] img,int width,int height,int 
 //Uses fixed point arithmetics where 1000 represents 1.0.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address  int &compressed1, int &compressed2
-static int compressBlockOnlyDiffFlipAveragePerceptual1000(byte[] img,int width,int height,int startx,int starty, int[] compressed1, int[] compressed2)
+int compressBlockOnlyDiffFlipAveragePerceptual1000(byte[] img,int width,int height,int startx,int starty, int[] compressed1, int[] compressed2)
 {
 	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
 	int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
@@ -3617,7 +3617,7 @@ static int compressBlockOnlyDiffFlipAveragePerceptual1000(byte[] img,int width,i
 //Tries both flipped and unflipped.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 // address unsigned int &compressed1, unsigned int &compressed2)
-static double compressBlockDiffFlipAveragePerceptual(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2)
+double compressBlockDiffFlipAveragePerceptual(byte[] img,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2)
 {
 	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
 	int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
@@ -5017,7 +5017,7 @@ static void decompressBlockPlanar57errorPerComponent(int compressed57_1, int com
 //quantization. Both flip modes are tried. 
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address int &compressed1, int &compressed2
-static void compressBlockDiffFlipCombined(byte[] img,int width,int height,int startx,int starty, int[] compressed1, int[] compressed2)
+void compressBlockDiffFlipCombined(byte[] img,int width,int height,int startx,int starty, int[] compressed1, int[] compressed2)
 {
 	int[] compressed1_norm=new int[1], compressed2_norm=new int[1];
 	int[] compressed1_flip=new int[1], compressed2_flip=new int[1];
@@ -6275,7 +6275,7 @@ void computeColorLBGfast(byte[] img,int width,int startx,int starty, byte[][] LB
 //Each color component is compressed to fit in its specified number of bits
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(current_color)[2][3], byte(quantized_color)[2][3])
-static void compressColor(int R_B, int G_B, int B_B, byte[][] current_color, byte[][] quantized_color) 
+void compressColor(int R_B, int G_B, int B_B, byte[][] current_color, byte[][] quantized_color) 
 {
 	//
 	//	The color is calculated as:
@@ -6299,7 +6299,7 @@ static void compressColor(int R_B, int G_B, int B_B, byte[][] current_color, byt
 //Swapping two RGB-colors
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(current_color)[2][3], byte(quantized_color)[2][3])
-static void swapColors(byte[][] colors) 
+void swapColors(byte[][] colors) 
 {
 	byte temp = colors[0][R];
 	colors[0][R] = colors[1][R];
@@ -6329,7 +6329,7 @@ static void swapColors(byte[][] colors)
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //address  byte &distance, int &pixel_indices
-static int calculateError59Tperceptual1000(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
+int calculateError59Tperceptual1000(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
 {
 
 	int block_error = 0, 
@@ -6418,7 +6418,7 @@ static int calculateError59Tperceptual1000(byte[] srcimg, int width, int startx,
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //address byte &distance,  int &pixel_indices
-static double calculateError59T(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance,  int[] pixel_indices) 
+double calculateError59T(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance,  int[] pixel_indices) 
 {
 	double block_error = 0, 
 		     best_block_error = MAXIMUM_ERROR, 
@@ -6504,7 +6504,7 @@ static double calculateError59T(byte[] srcimg, int width, int startx, int starty
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //address  byte &distance, int &pixel_indices
-static int calculateError59TnoSwapPerceptual1000(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
+int calculateError59TnoSwapPerceptual1000(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
 {
 
 	int block_error = 0, 
@@ -6580,7 +6580,7 @@ static int calculateError59TnoSwapPerceptual1000(byte[] srcimg, int width, int s
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //byte &distance, int &pixel_indices
-static double calculateError59TnoSwap(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
+double calculateError59TnoSwap(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
 {
 	double block_error = 0, 
 		     best_block_error = MAXIMUM_ERROR, 
@@ -6658,7 +6658,7 @@ static double calculateError59TnoSwap(byte[] srcimg, int width, int startx, int 
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colors)[2][3]
 //address int &compressed1, int &compressed2
-static void packBlock59T(byte[][] colors, byte d, int pixel_indices, int[] compressed1, int[] compressed2) 
+void packBlock59T(byte[][] colors, byte d, int pixel_indices, int[] compressed1, int[] compressed2) 
 { 
 	
 	compressed1[0] = 0;
@@ -6678,7 +6678,7 @@ static void packBlock59T(byte[][] colors, byte d, int pixel_indices, int[] compr
 //Copy colors from source to dest
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(source)[2][3], byte(dest)[2][3]
-static void copyColors(byte[][] source, byte[][] dest)
+void copyColors(byte[][] source, byte[][] dest)
 {
 	int x,y;
 
@@ -6940,7 +6940,7 @@ double compressBlockTHUMB59TFast(byte[] img,int width,int height,int startx,int 
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //address byte &distance, int &pixel_indices)
-static int calculateErrorAndCompress58Hperceptual1000(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
+int calculateErrorAndCompress58Hperceptual1000(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
 {
 	int block_error = 0, 
 		           best_block_error = MAXERR1000, 
@@ -7006,7 +7006,7 @@ static int calculateErrorAndCompress58Hperceptual1000(byte[] srcimg, int width, 
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //address  byte &distance,  int &pixel_indices) 
-static double calculateErrorAndCompress58HAlpha(byte[] srcimg, byte[] alphaimg,int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance,  int[] pixel_indices) 
+double calculateErrorAndCompress58HAlpha(byte[] srcimg, byte[] alphaimg,int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance,  int[] pixel_indices) 
 {
 	double block_error = 0, 
 		   best_block_error = MAXIMUM_ERROR, 
@@ -7103,7 +7103,7 @@ static double calculateErrorAndCompress58HAlpha(byte[] srcimg, byte[] alphaimg,i
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 //address byte &distance, int &pixel_indices) 
-static double calculateErrorAndCompress58H(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
+double calculateErrorAndCompress58H(byte[] srcimg, int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance, int[] pixel_indices) 
 {
 	double block_error = 0, 
 	       best_block_error = MAXIMUM_ERROR, 
@@ -7170,7 +7170,7 @@ static double calculateErrorAndCompress58H(byte[] srcimg, int width, int startx,
 //Makes sure that col0 < col1;
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
-static void sortColorsRGB444(byte[][] colorsRGB444)
+void sortColorsRGB444(byte[][] colorsRGB444)
 {
 	int col0, col1, tcol;
 
@@ -7548,7 +7548,7 @@ double compressBlockTHUMB58HFast(byte[] img,int width,int height,int startx,int 
 //Both flipped and unflipped tested.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //address  int &compressed1,  int &compressed2) 
-static void compressBlockDiffFlipCombinedPerceptual(byte[] img,int width,int height,int startx,int starty,    int[] compressed1,  int[] compressed2) 
+void compressBlockDiffFlipCombinedPerceptual(byte[] img,int width,int height,int startx,int starty,    int[] compressed1,  int[] compressed2) 
 {
 
 	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
@@ -7844,7 +7844,7 @@ static void compressBlockDiffFlipCombinedPerceptual(byte[] img,int width,int hei
 
 //Calculate the error of a block
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static double calcBlockErrorRGB(byte[] img, byte[] imgdec, int width, int height, int startx, int starty)
+double calcBlockErrorRGB(byte[] img, byte[] imgdec, int width, int height, int startx, int starty)
 {
 	boolean singleBlockDest = imgdec.length == 4 * 4 * 3; // special indicator for a small decompression target
 	int xx,yy;
@@ -7868,7 +7868,7 @@ static double calcBlockErrorRGB(byte[] img, byte[] imgdec, int width, int height
 
 //Calculate the perceptually weighted error of a block
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static double calcBlockPerceptualErrorRGB(byte[] img, byte[] imgdec, int width, int height, int startx, int starty)
+double calcBlockPerceptualErrorRGB(byte[] img, byte[] imgdec, int width, int height, int startx, int starty)
 {	
 	boolean singleBlockDest = imgdec.length == 4 * 4 * 3; // special indicator for a small decompression target
 	int xx,yy;
@@ -7893,7 +7893,7 @@ static double calcBlockPerceptualErrorRGB(byte[] img, byte[] imgdec, int width, 
 //Compress an ETC1 block (or the individual and differential modes of an ETC2 block)
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address int &compressed1,  int &compressed2)
-static double compressBlockDiffFlipFast(byte[] img, byte[] imgdec,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2)
+void compressBlockDiffFlipFast(byte[] img, byte[] imgdec,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2)
 {
 	int[] average_block1 = new int[1];
 	int[] average_block2 = new int[1];
@@ -7903,7 +7903,7 @@ static double compressBlockDiffFlipFast(byte[] img, byte[] imgdec,int width,int 
 	int[] combined_block2 = new int[1];
 	double error_combined;
 
-	double best_error;
+	//double best_error;
 
 	// First quantize the average color to the nearest neighbor.
 	compressBlockDiffFlipAverage(img, width, height, startx, starty, average_block1, average_block2);
@@ -7919,22 +7919,21 @@ static double compressBlockDiffFlipFast(byte[] img, byte[] imgdec,int width,int 
 	{
 		compressed1[0] = combined_block1[0];
 		compressed2[0] = combined_block2[0];
-		best_error = error_combined;
+		//best_error = error_combined;
 	}
 	else
 	{
 		compressed1[0] = average_block1[0];
 		compressed2[0] = average_block2[0];
-		best_error = error_average;
+		//best_error = error_average;
 	}
-	return best_error;
 }
 
 //Compress an ETC1 block (or the individual and differential modes of an ETC2 block)
 //Uses perceptual error metric.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address  int &compressed1,  int &compressed2)
-static void compressBlockDiffFlipFastPerceptual(byte[] img, byte[] imgdec,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2)
+void compressBlockDiffFlipFastPerceptual(byte[] img, byte[] imgdec,int width,int height,int startx,int starty,  int[] compressed1,  int[] compressed2)
 {
 	int[] average_block1 = new int[1];
 	int[] average_block2 = new int[1];
@@ -7969,7 +7968,7 @@ static void compressBlockDiffFlipFastPerceptual(byte[] img, byte[] imgdec,int wi
 //Compresses the differential mode of an ETC2 block with punchthrough alpha
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address int &etc1_word1,  int &etc1_word2) 
-static void compressBlockDifferentialWithAlpha(boolean isTransparent, byte[] img, byte[] alphaimg, byte[] imgdec, int width, int height, int startx, int starty,  int[] etc1_word1,  int[] etc1_word2) 
+void compressBlockDifferentialWithAlpha(boolean isTransparent, byte[] img, byte[] alphaimg, byte[] imgdec, int width, int height, int startx, int starty,  int[] etc1_word1,  int[] etc1_word2) 
 {
 	int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
 	int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
@@ -8199,7 +8198,7 @@ static void compressBlockDifferentialWithAlpha(boolean isTransparent, byte[] img
 
 //Calculate RGBA error --- only count non-transparent pixels (alpha > 128)
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static double calcBlockErrorRGBA(byte[] img, byte[] imgdec, byte[] alpha, int width, int height, int startx, int starty)
+double calcBlockErrorRGBA(byte[] img, byte[] imgdec, byte[] alpha, int width, int height, int startx, int starty)
 {
 	boolean singleBlockDest = imgdec.length == 4 * 4 * 3; // special indicator for a small decompression target
 	int xx,yy;
@@ -8228,7 +8227,7 @@ static double calcBlockErrorRGBA(byte[] img, byte[] imgdec, byte[] alpha, int wi
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 //byte(colorsRGB444)[2][3]
 	//address byte &distance,  int &pixel_indices) 
-static double calculateError59TAlpha(byte[] srcimg, byte[] alpha,int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance,  int[] pixel_indices) 
+double calculateError59TAlpha(byte[] srcimg, byte[] alpha,int width, int startx, int starty, byte[][] colorsRGB444, byte[] distance,  int[] pixel_indices) 
 {
 
 	double block_error = 0, 
@@ -8357,7 +8356,7 @@ double compressBlockTHUMB59TAlpha(byte[] img, byte[] alpha, int width,int height
 //Put bits in order for the format.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address int &thumbT_word1,  int &thumbT_word2)
-static void stuff59bitsDiffFalse(int thumbT59_word1, int thumbT59_word2,  int[] thumbT_word1,  int[] thumbT_word2)
+void stuff59bitsDiffFalse(int thumbT59_word1, int thumbT59_word2,  int[] thumbT_word1,  int[] thumbT_word2)
 {
 	// Put bits in twotimer configuration for 59 (red overflows)
 	// 
@@ -8417,7 +8416,7 @@ static void stuff59bitsDiffFalse(int thumbT59_word1, int thumbT59_word2,  int[] 
 
 //Tests if there is at least one pixel in the image which would get alpha = 0 in punchthrough mode.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static boolean hasAlpha(byte[] alphaimg, int ix, int iy, int width) 
+boolean hasAlpha(byte[] alphaimg, int ix, int iy, int width) 
 {
 	for(int x=ix; x<ix+4; x++) 
 	{
@@ -8925,7 +8924,7 @@ void readAlpha(byte[][] data, byte[] imgalpha, int width, int height, int[] exte
 
 //Compresses the alpha part of a GL_COMPRESSED_RGBA8_ETC2_EAC block.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static void compressBlockAlphaFast(byte[] data, int ix, int iy, int width, int height, byte[] returnData) 
+void compressBlockAlphaFast(byte[] data, int ix, int iy, int width, int height, byte[] returnData) 
 {
 	int alphasum=0;
 	int maxdist=-2;
@@ -9098,7 +9097,7 @@ static void compressBlockAlphaFast(byte[] data, int ix, int iy, int width, int h
 
 //Helper function for the below function
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static int getPremulIndex(int base, int tab, int mul, int index) 
+int getPremulIndex(int base, int tab, int mul, int index) 
 {
 	return (base<<11)+(tab<<7)+(mul<<3)+index;
 }
@@ -9243,7 +9242,7 @@ void compressBlockAlpha16(byte[] data, int ix, int iy, int width, int height, by
 
 //Exhaustive compression of alpha compression in a GL_COMPRESSED_RGB8_ETC2 block
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static void compressBlockAlphaSlow(byte[] data, int ix, int iy, int width, int height, byte[] returnData) 
+void compressBlockAlphaSlow(byte[] data, int ix, int iy, int width, int height, byte[] returnData) 
 {
 	//determine the best table and base alpha value for this block using MSE
 	int alphasum=0;
@@ -9390,7 +9389,7 @@ static void compressBlockAlphaSlow(byte[] data, int ix, int iy, int width, int h
 
 //Calculate weighted PSNR
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static double calculateWeightedPSNR(byte[] lossyimg, byte[] origimg, int width, int height, double w1, double w2, double w3)
+double calculateWeightedPSNR(byte[] lossyimg, byte[] origimg, int width, int height, double w1, double w2, double w3)
 {
 	// Note: This calculation of PSNR uses the formula
 	//
@@ -9434,7 +9433,7 @@ static double calculateWeightedPSNR(byte[] lossyimg, byte[] origimg, int width, 
 
 //Calculate unweighted PSNR (weights are (1,1,1))
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-static double calculatePSNR(byte[] lossyimg, byte[] origimg, int width, int height)
+double calculatePSNR(byte[] lossyimg, byte[] origimg, int width, int height)
 {
 	// Note: This calculation of PSNR uses the formula
 	//
@@ -10660,7 +10659,7 @@ protected static int computeLog(int value) {
 ByteBuffer compressImageBytes(byte[] img, byte[] alphaimg, int width, int height, int expandedwidth,	int expandedheight)
 		throws IOException {
 	ByteBuffer dstBB;
-	long tstart = System.currentTimeMillis();
+	//long tstart = System.currentTimeMillis();
 	int w, h;
 	short wi, hi;
 	
@@ -10935,7 +10934,7 @@ ByteBuffer compressImageBytes(byte[] img, byte[] alphaimg, int width, int height
 	}
 	
 
-	System.out.println("It took " + (System.currentTimeMillis() - tstart) + " milliseconds to compress");
+	//System.out.println("It took " + (System.currentTimeMillis() - tstart) + " milliseconds to compress");
 	//dstBB is all loaded up, now set it up for reading
 	dstBB.rewind();
 	return dstBB;
@@ -11074,7 +11073,7 @@ int compressImageToBB(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int expande
 
 //Calculates the PSNR between two files.
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-public static double calculatePSNRTwoFiles(String srcfile1,String srcfile2)
+public double calculatePSNRTwoFiles(String srcfile1,String srcfile2)
 {
 	byte[][] srcimg1 = new byte[1][];;
 	byte[][] srcimg2 = new byte[1][];
