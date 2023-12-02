@@ -8811,16 +8811,16 @@ static boolean valtabTableInitialized = false;
 void setupAlphaTableAndValtab()
 {
 	setupAlphaTable();
-	
-	//point to which ever is appropriate
-	if(formatSigned!=0)
-		valtab=valtabsigned;
-	else
-		valtab=valtabunsigned;
-	
+		
 	//initialize once
-    if(valtabTableInitialized)
+    if(valtabTableInitialized) {
+    	//point to which ever is appropriate
+    	if(formatSigned!=0)
+    		valtab=valtabsigned;
+    	else
+    		valtab=valtabunsigned;
     	return;
+    }
     valtabTableInitialized = true;
 
     valtabsigned = new int[1024*512];
@@ -8843,6 +8843,12 @@ void setupAlphaTableAndValtab()
 			}
 		}
 	}
+	
+	//point to which ever is appropriate
+	if(formatSigned!=0)
+		valtab=valtabsigned;
+	else
+		valtab=valtabunsigned;
 }
 
 //Reads alpha data
@@ -10512,14 +10518,12 @@ void compressFile(String srcfile, String dstfile)
 			}
 			else if(format==FORMAT.ETC2PACKAGE_R) 
 			{
-				throw new UnsupportedOperationException();
-				//TODO: This format assumes the macick exe has put the R data into the odd seperate pgm alpha file
 				//String str ="magick convert "+srcfile+" alpha.pgm\n";
 				//system(str);
 				//System.err.println("I'd would like to fire: " +str);
-				//readAlpha(alphaimg,alphatemp[0],width[0],height[0],extendedwidth,extendedheight);
+				readAlpha(alphaimg,alphatemp[0],width[0],height[0],extendedwidth,extendedheight);
 				//System.out.println("read alpha ok, size is "+width+","+height+" ("+extendedwidth+","+extendedheight+")");
-				//setupAlphaTableAndValtab();
+				setupAlphaTableAndValtab();
 			}
 			System.out.print("Compressing...");
 
@@ -10632,7 +10636,8 @@ public ByteBuffer compressImageBytes(byte[] srcimg, byte[] srcimgalpha, int widt
 		readAlpha(alphaimg, srcimgalpha, width2[0], height2[0], extendedwidth, extendedheight);
 		setupAlphaTableAndValtab();
 	} else if (format == FORMAT.ETC2PACKAGE_R) {
-		throw new UnsupportedOperationException();
+		readAlpha(alphaimg, srcimgalpha, width2[0], height2[0], extendedwidth, extendedheight);
+		setupAlphaTableAndValtab();
 	}
 
 	try {
@@ -10945,8 +10950,8 @@ int compressImageToBB(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int expande
 	
 	// keep track of how much we've written to the buffer
 	int posAtStart = dstBB.position();
-	// can only compress a 4x4 block of RGB
-	if(img.length<4*4*3)
+	// can only compress a 4x4 block of RGB or A
+	if((img != null && img.length<4*4*3) && (alphaimg != null && alphaimg.length < 4*4*1))
 		return 0;
 	int x, y, w, h;
 	int[] block1 = new int[1], block2 = new int[1];
