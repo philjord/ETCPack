@@ -80,27 +80,27 @@ public class ETCPack {
 	//Reads a pgm file which is width x height x [1 or 2] bytes (if bit is 8 or 16) of alpha data!
 //	protected void fReadPGM(String string, int[] w, int[] h, byte[][] tempdata, int wantedBitDepth) 
 //	{  Image.fReadPGM(string, w, h, tempdata, wantedBitDepth); }
-	private static void fwrite(int intval, int i, FileChannel f) throws IOException {
+	protected static void fwrite(int intval, int i, FileChannel f) throws IOException {
 		// i tends to be 1	
 		ByteBuffer bb = ByteBuffer.allocateDirect(4);
 		bb.putInt(intval);
 		f.write((ByteBuffer)bb.flip());		
 	}
-	private static void fwrite(char c, int i, FileChannel f) throws IOException {
+	protected static void fwrite(char c, int i, FileChannel f) throws IOException {
 		ByteBuffer bb = ByteBuffer.allocateDirect(1);
 		bb.put((byte)c);
 		f.write((ByteBuffer)bb.flip());
 	}
-	private static void fwrite(byte b, int i, FileChannel f) throws IOException {
+	protected static void fwrite(byte b, int i, FileChannel f) throws IOException {
 		ByteBuffer bb = ByteBuffer.allocateDirect(1);
 		bb.put(b);
 		f.write((ByteBuffer)bb.flip());
 	}
-	private static void fwrite(byte[] data, int i, int j, FileChannel f) throws IOException {
+	protected static void fwrite(byte[] data, int i, int j, FileChannel f) throws IOException {
 		ByteBuffer bb = ByteBuffer.wrap(data);
 		f.write(bb);// no flip as straight wrap
 	}
-	private static void fwrite(ETCPack.KTX_header header, int i, FileChannel f) throws IOException {
+	protected static void fwrite(ETCPack.KTX_header header, int i, FileChannel f) throws IOException {
 		ByteBuffer bb = ByteBuffer.allocateDirect(12 + 13*4);
 		bb.put(KTX_header.KTX_IDENTIFIER_REF);//12
 		// now 13*4 bytes => 12+(13*4) = 64bytes
@@ -119,20 +119,20 @@ public class ETCPack {
 		bb.putInt(header.bytesOfKeyValueData);
 		f.write((ByteBuffer)bb.flip());		
 	}
-	private static void fwrite(int intval, int i, ByteBuffer bb) throws IOException {
+	protected static void fwrite(int intval, int i, ByteBuffer bb) throws IOException {
 		// i tends to be 1	
 		bb.putInt(intval);
 	}
-	private static void fwrite(char c, int i, ByteBuffer bb) throws IOException {
+	protected static void fwrite(char c, int i, ByteBuffer bb) throws IOException {
 		bb.put((byte)c);
 	}
-	private static void fwrite(byte b, int i, ByteBuffer bb) throws IOException {
+	protected static void fwrite(byte b, int i, ByteBuffer bb) throws IOException {
 		bb.put(b);
 	}
-	private static void fwrite(byte[] data, int i, int j, ByteBuffer bb) throws IOException {
+	protected static void fwrite(byte[] data, int i, int j, ByteBuffer bb) throws IOException {
 		bb.put(data); 
 	}
-	private static void fwrite(ETCPack.KTX_header header, int i, ByteBuffer bb) throws IOException {
+	protected static void fwrite(ETCPack.KTX_header header, int i, ByteBuffer bb) throws IOException {
 		bb.put(KTX_header.KTX_IDENTIFIER_REF);//12
 		// now 13*4 bytes => 12+(13*4) = 64bytes
 		bb.putInt(header.endianness);
@@ -151,13 +151,13 @@ public class ETCPack {
 	}
 	
 	//helpers
-	private static void strcpy(String[] string, String string2) {
+	protected static void strcpy(String[] string, String string2) {
 		string[0]=string2;	
 	}
-	private static boolean strncmp(String string, int from, String string2, int count) {
+	protected static boolean strncmp(String string, int from, String string2, int count) {
 		return string.substring(from).contains(string2.substring(0, count));
 	}
-	private static boolean strcmp(String string, String string2) {	
+	protected static boolean strcmp(String string, String string2) {	
 		return string.equals(string2);
 	}
 	
@@ -352,19 +352,19 @@ public static enum CODEC{CODEC_ETC, CODEC_ETC2};
 
 
 //NOT static, used per instance
-private MODE2 mode = MODE2.MODE_COMPRESS;
-private SPEED speed = SPEED.SPEED_FAST;
-private METRIC metric = METRIC.METRIC_PERCEPTUAL;
-private CODEC codec = CODEC.CODEC_ETC2;
+protected MODE2 mode = MODE2.MODE_COMPRESS;
+protected SPEED speed = SPEED.SPEED_FAST;
+protected METRIC metric = METRIC.METRIC_PERCEPTUAL;
+protected CODEC codec = CODEC.CODEC_ETC2;
 protected FORMAT format = FORMAT.ETC2PACKAGE_RGB;
-private boolean verbose = true;
-private boolean generateMipMaps = false;
+protected boolean verbose = true;
+protected boolean generateMipMaps = false;
 //extern 
-private int formatSigned = 0;
-private boolean ktxFile=false;
-private boolean first_time_message = true;
+protected int formatSigned = 0;
+protected boolean ktxFile=false;
+protected boolean first_time_message = true;
 
-private Random rand = new Random(10000);
+protected Random rand = new Random(10000);
 
 static final int[] scramble= new int[]{3, 2, 0, 1};
 static final int[] unscramble= new int[]{2, 3, 1, 0};
@@ -10986,7 +10986,7 @@ int compressImageToBB(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int expande
 			}
 		}
 	}
-
+	
 	int ymax = expandedheight / 4;
 	ymax = ymax < 1 ? 1 : ymax;
 	int xmax = expandedwidth / 4;

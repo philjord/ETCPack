@@ -1,5 +1,15 @@
 package etcpack;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+
 /**
  * Amazing... https://github.com/wolfpld/etcpak/commit/da85020e690890f4356d42ab5802e4f957f220fd?diff=unified
  * https://nahjaeho.github.io/papers/SA20/QUICKETC2_SA20.pdf
@@ -7,6 +17,169 @@ package etcpack;
  * 
  */
 public class QuickETC extends ETCPack {
+
+	
+/**
+ * Override with only the addition of multi-threading
+ */
+ 
+int compressImageToBBa(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int expandedwidth, int expandedheight)
+		throws IOException {
+	
+	// keep track of how much we've written to the buffer
+	int posAtStart = dstBB.position();
+	// can only compress a 4x4 block of RGB or A
+	if((img != null && img.length<4*4*3) && (alphaimg != null && alphaimg.length < 4*4*1))
+		return 0;
+	int x, y, w, h;
+	int[] block1 = new int[1], block2 = new int[1];
+	byte[] imgdec;
+	byte[] alphaimg2 = null;
+	//imgdec = new byte[expandedwidth * expandedheight * 3]; 
+	imgdec = new byte[4 * 4 * 3]; // special signal to decompressor to use a single block
+	byte[] alphadata = new byte[8];
+	
+	int totblocks = expandedheight / 4 * expandedwidth / 4;
+	totblocks = totblocks < 1 ? 1: totblocks;
+	int countblocks = 0;
+	double percentageblocks = -1.0;
+	double oldpercentageblocks;
+
+	if (format == FORMAT.ETC2PACKAGE_RG) {
+		//extract data from red and green channel into two alpha channels.
+		//note that the image will be 16-bit per channel in this case.
+		alphaimg = new byte[expandedwidth * expandedheight * 2];
+		alphaimg2 = new byte[expandedwidth * expandedheight * 2];
+		setupAlphaTableAndValtab();
+		if (alphaimg == null || alphaimg2 == null) {
+			System.out.println("failed allocating space for alpha buffers!");
+			System.exit(1);
+		}
+		for (y = 0; y < expandedheight; y++) {
+			for (x = 0; x < expandedwidth; x++) {
+				alphaimg [2 * (y * expandedwidth + x)] = img [6 * (y * expandedwidth + x)];
+				alphaimg [2 * (y * expandedwidth + x) + 1] = img [6 * (y * expandedwidth + x) + 1];
+				alphaimg2 [2 * (y * expandedwidth + x)] = img [6 * (y * expandedwidth + x) + 2];
+				alphaimg2 [2 * (y * expandedwidth + x) + 1] = img [6 * (y * expandedwidth + x) + 3];
+			}
+		}
+	}
+	
+	final byte[] alphaimg3 = alphaimg;
+	final byte[] alphaimg4 = alphaimg2;
+	ExecutorService es = Executors.newFixedThreadPool(10);
+	List<Callable<Object>> todo = new ArrayList<Callable<Object>>();
+	
+	int ymax = expandedheight / 4;
+	ymax = ymax < 1 ? 1 : ymax;
+	int xmax = expandedwidth / 4;
+	xmax = xmax < 1 ? 1 : xmax;
+	for (y = 0; y < ymax; y++) {
+		countblocks++;
+		oldpercentageblocks = percentageblocks;
+		percentageblocks = 100.0 * countblocks / (1.0 * totblocks);
+		
+		for (x = 0; x < xmax; x++) {
+			final int yy = y;
+			final int xx = x;
+			todo.add(Executors.callable(new Runnable() {
+				@Override
+				public void run() {
+					try {
+					//compress color channels
+					if (codec == CODEC.CODEC_ETC) {
+						if (metric == METRIC.METRIC_NONPERCEPTUAL) {
+							if (speed == SPEED.SPEED_FAST)
+								compressBlockDiffFlipFast(img, imgdec, expandedwidth, expandedheight, 4 * xx, 4 * yy, block1, block2);
+							else
+								System.out.println("Not implemented in this version");
+						} else {
+							if (speed == SPEED.SPEED_FAST)
+								compressBlockDiffFlipFastPerceptual(img, imgdec, expandedwidth, expandedheight, 4 * xx, 4 * yy, block1, block2);
+							else
+								System.out.println("Not implemented in this version");
+						}
+					} else {
+						//compression of alpha channel in case of 4-bit alpha. Uses 8-bit alpha channel as input, and has 8-bit precision.
+						if (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA) {					
+							if (speed == SPEED.SPEED_SLOW && first_time_message) {
+								System.out.println("Slow codec not implemented for RGBA --- using fast codec instead.");
+								first_time_message = false;
+							}
+							compressBlockAlphaFast(alphaimg3, 4 * xx, 4 * yy, expandedwidth, expandedheight, alphadata);
+							//write the 8 bytes of alphadata into dstBB.
+							fwrite(alphadata, 1, 8, dstBB);
+						}				
+						
+						if (format == FORMAT.ETC2PACKAGE_R || format == FORMAT.ETC2PACKAGE_RG) {
+							//don't compress color
+						} else if (format == FORMAT.ETC2PACKAGE_RGBA1 || format == FORMAT.ETC2PACKAGE_sRGBA1) {
+							//this is only available for fast/nonperceptual
+							if (speed == SPEED.SPEED_SLOW && first_time_message) {
+								System.out.println("Slow codec not implemented for RGBA1 --- using fast codec instead.");
+								first_time_message = false;
+							}
+							compressBlockETC2Fast(img, alphaimg3, imgdec, expandedwidth, expandedheight, 4 * xx, 4 * yy, block1, block2);
+						} else if (metric == METRIC.METRIC_NONPERCEPTUAL) {
+							if (speed == SPEED.SPEED_FAST) {
+									compressBlockETC2Fast(img, alphaimg3, imgdec, expandedwidth, expandedheight, 4 * xx, 4 * yy, block1, block2);
+							} else
+								System.out.println("Not implemented in this version");
+						} else {
+							if(speed==SPEED.SPEED_FAST ) {
+									compressBlockETC2FastPerceptual(img, imgdec, expandedwidth, expandedheight, 4 * xx, 4 * yy, block1, block2);
+							} else
+								System.out.println("Not implemented in this version");
+						}
+					}			
+		
+					//store compressed color channels
+					if (format != FORMAT.ETC2PACKAGE_R && format != FORMAT.ETC2PACKAGE_RG) {
+						write_big_endian_4byte_word(block1, dstBB);
+						write_big_endian_4byte_word(block2, dstBB);
+					} else {
+						//1-channel or 2-channel alpha compression: uses 16-bit data as input, and has 11-bit precision
+						if (format == FORMAT.ETC2PACKAGE_R || format == FORMAT.ETC2PACKAGE_RG) {
+							compressBlockAlpha16(alphaimg3, 4 * xx, 4 * yy, expandedwidth, expandedheight, alphadata);
+							fwrite(alphadata, 1, 8, dstBB);
+						}
+						//compression of second alpha channel in RG-compression
+						if (format == FORMAT.ETC2PACKAGE_RG) {
+							compressBlockAlpha16(alphaimg4, 4 * xx, 4 * yy, expandedwidth, expandedheight, alphadata);
+							fwrite(alphadata, 1, 8, dstBB);
+						}
+					}
+					
+					
+					} catch(Exception e) {
+						e.printStackTrace();
+					}
+				} 
+			}));
+		}
+		
+		try {
+			List<Future<Object>> answers = es.invokeAll(todo);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		todo.clear();
+		
+		if (verbose) {
+			if (speed == SPEED.SPEED_FAST) {
+				if (((int)(percentageblocks) != (int)(oldpercentageblocks)) || percentageblocks == 100.0)
+					System.out.println("Compressed "	+ countblocks + " of " + totblocks + " blocks, "
+										+ (100.0 * countblocks / (1.0 * totblocks)) + " finished.");
+			} else {
+				System.out.println("Compressed "	+ countblocks + " of " + totblocks + " blocks, "
+									+ (100.0 * countblocks / (1.0 * totblocks)) + " finished.");
+			}
+		}
+
+	}
+	return dstBB.position() - posAtStart;
+}
+
 
 	//Compress a block with ETC2 RGB
 	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
