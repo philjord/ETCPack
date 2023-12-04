@@ -8773,11 +8773,11 @@ static void write_big_endian_4byte_word(int[] blockadr, FileChannel f) throws IO
 	fwrite(bytes[0],1,f);
 	fwrite(bytes[1],1,f);
 	fwrite(bytes[2],1,f);
-	fwrite(bytes[3],1,f);
+	fwrite(bytes[3],1,f); 
 }
 static void write_big_endian_4byte_word(int[] blockadr, ByteBuffer bb) throws IOException
 {
-	byte[] bytes = new byte[4];
+	/*byte[] bytes = new byte[4];
 	int block;
 
 	block = blockadr[0];
@@ -8790,7 +8790,8 @@ static void write_big_endian_4byte_word(int[] blockadr, ByteBuffer bb) throws IO
 	fwrite(bytes[0],1,bb);
 	fwrite(bytes[1],1,bb);
 	fwrite(bytes[2],1,bb);
-	fwrite(bytes[3],1,bb);
+	fwrite(bytes[3],1,bb);*/
+	bb.putInt(blockadr[0]);
 }
 
 //int[][] alphaTable = new int[256][8];
