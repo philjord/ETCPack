@@ -35,7 +35,6 @@ public class QuickETC extends ETCPack {
 		// can only compress a 4x4 block of RGB or A
 		if((img != null && img.length<4*4*3) && (alphaimg != null && alphaimg.length < 4*4*1))
 			return 0;
-		int x, y, w, h;
 		
 		final byte[] alphaimg2 = alphaimg;
 
@@ -44,81 +43,83 @@ public class QuickETC extends ETCPack {
 		// stride is either 8 bits alpha and 2 words or just 2 words
 		final int stride = (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA) ? 8+4+4 : 4+4;
 		
-		int ymax = expandedheight / 4;
-		ymax = ymax < 1 ? 1 : ymax;
-		int xmax = expandedwidth / 4;
-		xmax = xmax < 1 ? 1 : xmax;
-		for (y = 0; y < ymax; y++) {
-			final int yy = y;
-			final int bbpos = dstBB.position();
-			for (x = 0; x < xmax; x++) {				
-				final int xx = x;
-				
-				todo.add(Executors.callable(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							int[] block1 = new int[1], block2 = new int[1];// 2 ints?...
-							byte[] imgdec = null; // not used by the quick methods
-							byte[] alphadata = new byte[8]; // it would be nice to have a primitive that was 2 ints long... like a long!
-							//uummm... I could return longs... ummm
+		final int ymax = expandedheight / 4 <  1 ? 1 : expandedheight / 4;
+		final int xmax = expandedwidth / 4 < 1 ? 1 : expandedwidth / 4;
+		
+		final int bbpos = dstBB.position();
+		
+		for(int t = 0; t < NUM_THREADS; t++) {
+			final int set = t;
+			todo.add(Executors.callable(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						int[] block1 = new int[1], block2 = new int[1];// 2 ints?...
+						byte[] imgdec = null; // not used by the quick methods
+						byte[] alphadata = new byte[8]; // it would be nice to have a primitive that was 2 ints long... like a long!
+						//uummm... I could return longs... ummm
+		
+						// use set to pick only the lines I should process
+						for (int y = set; y < ymax; y+=NUM_THREADS) {							
 							
-							//compress color channels
-							if (codec == CODEC.CODEC_ETC) {
-								if (metric == METRIC.METRIC_NONPERCEPTUAL) {
-									compressBlockDiffFlipFast(img, imgdec, expandedwidth, expandedheight, 4 * xx, 4 * yy,
-											block1, block2);
+							for (int x = 0; x < xmax; x++) {				
+								//compress color channels
+								if (codec == CODEC.CODEC_ETC) {
+									if (metric == METRIC.METRIC_NONPERCEPTUAL) {
+										compressBlockDiffFlipFast(img, imgdec, expandedwidth, expandedheight, 4 * x, 4 * y,
+												block1, block2);
+									} else {
+										compressBlockDiffFlipFastPerceptual(img, imgdec, expandedwidth, expandedheight, 4 * x,
+												4 * y, block1, block2);
+									}
 								} else {
-									compressBlockDiffFlipFastPerceptual(img, imgdec, expandedwidth, expandedheight, 4 * xx,
-											4 * yy, block1, block2);
-								}
-							} else {
-								//compression of alpha channel in case of 4-bit alpha. Uses 8-bit alpha channel as input, and has 8-bit precision.
-								if (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA) {
-									compressBlockAlphaFast(alphaimg2, 4 * xx, 4 * yy, expandedwidth, expandedheight,
-											alphadata);	
-									//written together lower down									
-								}
-	
-								if (format == FORMAT.ETC2PACKAGE_RGBA1	|| format == FORMAT.ETC2PACKAGE_sRGBA1
-									|| metric == METRIC.METRIC_NONPERCEPTUAL) {
-									compressBlockETC2Fast(img, alphaimg2, imgdec, expandedwidth, expandedheight, 4 * xx,
-											4 * yy, block1, block2);
-								} else {
-									compressBlockETC2FastPerceptual(img, imgdec, expandedwidth, expandedheight, 4 * xx,
-											4 * yy, block1, block2);
-								}
-							}
-							
-							synchronized (dstBB) {
-								dstBB.position(bbpos + (xx * stride));
-								if (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA) {
-									//write the 8 bytes of alphadata into dstBB.
-									dstBB.put(alphadata); 
+									//compression of alpha channel in case of 4-bit alpha. Uses 8-bit alpha channel as input, and has 8-bit precision.
+									if (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA) {
+										compressBlockAlphaFast(alphaimg2, 4 * x, 4 * y, expandedwidth, expandedheight,
+												alphadata);	
+										//written together lower down									
+									}
+		
+									if (format == FORMAT.ETC2PACKAGE_RGBA1	|| format == FORMAT.ETC2PACKAGE_sRGBA1
+										|| metric == METRIC.METRIC_NONPERCEPTUAL) {
+										compressBlockETC2Fast(img, alphaimg2, imgdec, expandedwidth, expandedheight, 4 * x,
+												4 * y, block1, block2);
+									} else {
+										compressBlockETC2FastPerceptual(img, imgdec, expandedwidth, expandedheight, 4 * x,
+												4 * y, block1, block2);
+									}
 								}
 								
-								//store compressed color channels									 
-								dstBB.putInt(block1[0]);
-								dstBB.putInt(block2[0]);
+								synchronized (dstBB) {
+									dstBB.position(bbpos + (y * xmax * stride) + (x * stride));
+									if (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA) {
+										//write the 8 bytes of alphadata into dstBB.
+										dstBB.put(alphadata); 
+									}
+									
+									//store compressed color channels									 
+									dstBB.putInt(block1[0]);
+									dstBB.putInt(block2[0]);
+								}
+		
 							}
-	
-						} catch (Exception e) {
-							e.printStackTrace();
 						}
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-				}));
-			}
-			
-			
-			try {
-				List<Future<Object>> answers = es.invokeAll(todo);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			todo.clear();
-			int pos = bbpos + (xmax * stride);
-			dstBB.position(pos);	
+				}
+				
+			}));
 		}
+		
+		
+		try {
+			List<Future<Object>> answers = es.invokeAll(todo);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		todo.clear();
+		dstBB.position(bbpos + (ymax * xmax * stride));		
 		
 		es.shutdown();
 		return dstBB.position() - posAtStart;
