@@ -18,7 +18,7 @@ import java.util.concurrent.Future;
  */
 public class QuickETC extends ETCPack {
 
-		
+	public static int NUM_THREADS = 10;	
 	/**
 	 * Override with only the addition of multi-threading
 	 */
@@ -39,7 +39,7 @@ public class QuickETC extends ETCPack {
 		
 		final byte[] alphaimg2 = alphaimg;
 
-		ExecutorService es = Executors.newFixedThreadPool(10);
+		ExecutorService es = Executors.newFixedThreadPool(NUM_THREADS);
 		List<Callable<Object>> todo = new ArrayList<Callable<Object>>();
 		// stride is either 8 bits alpha and 2 words or just 2 words
 		final int stride = (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA) ? 8+4+4 : 4+4;
@@ -564,6 +564,11 @@ public class QuickETC extends ETCPack {
 
 		int norm_errA = 0;
 		int flip_errA = 0;
+		
+		int[] best_pixel_indices1_MSB = new int[1];
+		int[] best_pixel_indices1_LSB = new int[1];
+		int[] best_pixel_indices2_MSB = new int[1];
+		int[] best_pixel_indices2_LSB = new int[1];
 
 		// First try normal blocks 2x4:
 		computeAverageColor2x4noQuantFloat(img, width, height, startx, starty, avg_color24_float1);
@@ -634,20 +639,21 @@ public class QuickETC extends ETCPack {
 			PUTBITSHIGH(compressed1_normA, diff[1], 3, 50);
 			PUTBITSHIGH(compressed1_normA, diff[2], 3, 42);
 
-			int[] best_pixel_indices1_MSB = new int[1];
-			int[] best_pixel_indices1_LSB = new int[1];
-			int[] best_pixel_indices2_MSB = new int[1];
-			int[] best_pixel_indices2_LSB = new int[1];
+			best_pixel_indices1_MSB[0] = 0;
+			best_pixel_indices1_LSB[0] = 0;
+			best_pixel_indices2_MSB[0] = 0;
+			best_pixel_indices2_LSB[0] = 0;
 
 			norm_errA = 0;
 
+			//TODO: Average seems to force perceptual rather than use the variable check with the main code line to be sure
 			// left part of block 
-			norm_errA = tryalltables_3bittable2x4percep(img, width, height, startx, starty, avg_color_quant1,
-					best_table1, best_pixel_indices1_MSB, best_pixel_indices1_LSB);
+			norm_errA = tryalltables_3bittable2x4fast(img, width, height, startx, starty, avg_color_quant1,
+					best_table1, best_pixel_indices1_MSB, best_pixel_indices1_LSB, true);
 
 			// right part of block
-			norm_errA += tryalltables_3bittable2x4percep(img, width, height, startx + 2, starty, avg_color_quant2,
-					best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB);
+			norm_errA += tryalltables_3bittable2x4fast(img, width, height, startx + 2, starty, avg_color_quant2,
+					best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB, true);
 
 			PUTBITSHIGH(compressed1_normA, best_table1[0], 3, 39);
 			PUTBITSHIGH(compressed1_normA, best_table2[0], 3, 36);
@@ -691,18 +697,18 @@ public class QuickETC extends ETCPack {
 			PUTBITSHIGH(compressed1_normA, enc_color2[1], 4, 51);
 			PUTBITSHIGH(compressed1_normA, enc_color2[2], 4, 43);
 
-			int[] best_pixel_indices1_MSB = new int[1];
-			int[] best_pixel_indices1_LSB = new int[1];
-			int[] best_pixel_indices2_MSB = new int[1];
-			int[] best_pixel_indices2_LSB = new int[1];
+			best_pixel_indices1_MSB[0] = 0;
+			best_pixel_indices1_LSB[0] = 0;
+			best_pixel_indices2_MSB[0] = 0;
+			best_pixel_indices2_LSB[0] = 0;
 
 			// left part of block
-			norm_errA = tryalltables_3bittable2x4percep(img, width, height, startx, starty, avg_color_quant1,
-					best_table1, best_pixel_indices1_MSB, best_pixel_indices1_LSB);
+			norm_errA = tryalltables_3bittable2x4fast(img, width, height, startx, starty, avg_color_quant1,
+					best_table1, best_pixel_indices1_MSB, best_pixel_indices1_LSB, true);
 
 			// right part of block
-			norm_errA += tryalltables_3bittable2x4percep(img, width, height, startx + 2, starty, avg_color_quant2,
-					best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB);
+			norm_errA += tryalltables_3bittable2x4fast(img, width, height, startx + 2, starty, avg_color_quant2,
+					best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB, true);
 
 			PUTBITSHIGH(compressed1_normA, best_table1[0], 3, 39);
 			PUTBITSHIGH(compressed1_normA, best_table2[0], 3, 36);
@@ -758,17 +764,17 @@ public class QuickETC extends ETCPack {
 			PUTBITSHIGH(compressed1_flipA, diff[1], 3, 50);
 			PUTBITSHIGH(compressed1_flipA, diff[2], 3, 42);
 
-			int[] best_pixel_indices1_MSB = new int[1];
-			int[] best_pixel_indices1_LSB = new int[1];
-			int[] best_pixel_indices2_MSB = new int[1];
-			int[] best_pixel_indices2_LSB = new int[1];
+			best_pixel_indices1_MSB[0] = 0;
+			best_pixel_indices1_LSB[0] = 0;
+			best_pixel_indices2_MSB[0] = 0;
+			best_pixel_indices2_LSB[0] = 0;
 
 			// upper part of block
-			flip_errA = tryalltables_3bittable4x2percep(img, width, height, startx, starty, avg_color_quant1,
-					best_table1, best_pixel_indices1_MSB, best_pixel_indices1_LSB);
+			flip_errA = tryalltables_3bittable4x2fast(img, width, height, startx, starty, avg_color_quant1,
+					best_table1, best_pixel_indices1_MSB, best_pixel_indices1_LSB, true);
 			// lower part of block
-			flip_errA += tryalltables_3bittable4x2percep(img, width, height, startx, starty + 2, avg_color_quant2,
-					best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB);
+			flip_errA += tryalltables_3bittable4x2fast(img, width, height, startx, starty + 2, avg_color_quant2,
+					best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB, true);
 
 			PUTBITSHIGH(compressed1_flipA, best_table1[0], 3, 39);
 			PUTBITSHIGH(compressed1_flipA, best_table2[0], 3, 36);
@@ -811,17 +817,17 @@ public class QuickETC extends ETCPack {
 			PUTBITSHIGH(compressed1_flipA, enc_color2[1], 4, 51);
 			PUTBITSHIGH(compressed1_flipA, enc_color2[2], 4, 43);
 
-			int[] best_pixel_indices1_MSB = new int[1];
-			int[] best_pixel_indices1_LSB = new int[1];
-			int[] best_pixel_indices2_MSB = new int[1];
-			int[] best_pixel_indices2_LSB = new int[1];
+			best_pixel_indices1_MSB[0] = 0;
+			best_pixel_indices1_LSB[0] = 0;
+			best_pixel_indices2_MSB[0] = 0;
+			best_pixel_indices2_LSB[0] = 0;
 
 			// upper part of block
-			flip_errA = tryalltables_3bittable4x2percep(img, width, height, startx, starty, avg_color_quant1,
-					best_table1, best_pixel_indices1_MSB, best_pixel_indices1_LSB);
+			flip_errA = tryalltables_3bittable4x2fast(img, width, height, startx, starty, avg_color_quant1,
+					best_table1, best_pixel_indices1_MSB, best_pixel_indices1_LSB, true);
 			// lower part of block
-			flip_errA += tryalltables_3bittable4x2percep(img, width, height, startx, starty + 2, avg_color_quant2,
-					best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB);
+			flip_errA += tryalltables_3bittable4x2fast(img, width, height, startx, starty + 2, avg_color_quant2,
+					best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB, true);
 
 			PUTBITSHIGH(compressed1_flipA, best_table1[0], 3, 39);
 			PUTBITSHIGH(compressed1_flipA, best_table2[0], 3, 36);
@@ -920,28 +926,17 @@ public class QuickETC extends ETCPack {
 			PUTBITSHIGH(compressed1_normC, diff[1], 3, 50);
 			PUTBITSHIGH(compressed1_normC, diff[2], 3, 42);
 
-			int[] best_pixel_indices1_MSB = new int[1];
-			int[] best_pixel_indices1_LSB = new int[1];
-			int[] best_pixel_indices2_MSB = new int[1];
-			int[] best_pixel_indices2_LSB = new int[1];
+
 
 			norm_errC = 0;
 
-			if (perceptual) {
-				// left part of block
-				norm_errC = tryalltables_3bittable2x4percep(img, width, height, startx, starty, avg_color_quant1,
-						best_table1, best_pixel_indices1_MSB, best_pixel_indices1_LSB);
-				// right part of block
-				norm_errC += tryalltables_3bittable2x4percep(img, width, height, startx + 2, starty, avg_color_quant2,
-						best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB);
-			} else {
-				// left part of block
-				norm_errC = tryalltables_3bittable2x4(img, width, height, startx, starty, avg_color_quant1, best_table1,
-						best_pixel_indices1_MSB, best_pixel_indices1_LSB);
-				// right part of block
-				norm_errC += tryalltables_3bittable2x4(img, width, height, startx + 2, starty, avg_color_quant2,
-						best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB);
-			}
+			// left part of block
+			norm_errC = tryalltables_3bittable2x4fast(img, width, height, startx, starty, avg_color_quant1,
+					best_table1, best_pixel_indices1_MSB, best_pixel_indices1_LSB, perceptual);
+			// right part of block
+			norm_errC += tryalltables_3bittable2x4fast(img, width, height, startx + 2, starty, avg_color_quant2,
+					best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB, perceptual);
+			
 
 			PUTBITSHIGH(compressed1_normC, best_table1[0], 3, 39);
 			PUTBITSHIGH(compressed1_normC, best_table2[0], 3, 36);
@@ -991,27 +986,19 @@ public class QuickETC extends ETCPack {
 			PUTBITSHIGH(compressed1_normC, enc_color2[1], 4, 51);
 			PUTBITSHIGH(compressed1_normC, enc_color2[2], 4, 43);
 
-			int[] best_pixel_indices1_MSB = new int[1];
-			int[] best_pixel_indices1_LSB = new int[1];
-			int[] best_pixel_indices2_MSB = new int[1];
-			int[] best_pixel_indices2_LSB = new int[1];
+			best_pixel_indices1_MSB[0] = 0;
+			best_pixel_indices1_LSB[0] = 0;
+			best_pixel_indices2_MSB[0] = 0;
+			best_pixel_indices2_LSB[0] = 0;
 
-			if (perceptual) {
-				// left part of block
-				norm_errC = tryalltables_3bittable2x4percep(img, width, height, startx, starty, avg_color_quant1,
-						best_table1, best_pixel_indices1_MSB, best_pixel_indices1_LSB);
-				// right part of block
-				norm_errC += tryalltables_3bittable2x4percep(img, width, height, startx + 2, starty, avg_color_quant2,
-						best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB);
-			} else {
-				// left part of block
-				norm_errC = tryalltables_3bittable2x4(img, width, height, startx, starty, avg_color_quant1, best_table1,
-						best_pixel_indices1_MSB, best_pixel_indices1_LSB);
-				// right part of block
-				norm_errC += tryalltables_3bittable2x4(img, width, height, startx + 2, starty, avg_color_quant2,
-						best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB);
 
-			}
+			// left part of block
+			norm_errC = tryalltables_3bittable2x4fast(img, width, height, startx, starty, avg_color_quant1,
+					best_table1, best_pixel_indices1_MSB, best_pixel_indices1_LSB, perceptual);
+			// right part of block
+			norm_errC += tryalltables_3bittable2x4fast(img, width, height, startx + 2, starty, avg_color_quant2,
+					best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB, perceptual);
+			
 
 			PUTBITSHIGH(compressed1_normC, best_table1[0], 3, 39);
 			PUTBITSHIGH(compressed1_normC, best_table2[0], 3, 36);
@@ -1064,26 +1051,19 @@ public class QuickETC extends ETCPack {
 			PUTBITSHIGH(compressed1_flipC, diff[1], 3, 50);
 			PUTBITSHIGH(compressed1_flipC, diff[2], 3, 42);
 
-			int[] best_pixel_indices1_MSB = new int[1];
-			int[] best_pixel_indices1_LSB = new int[1];
-			int[] best_pixel_indices2_MSB = new int[1];
-			int[] best_pixel_indices2_LSB = new int[1];
+			best_pixel_indices1_MSB[0] = 0;
+			best_pixel_indices1_LSB[0] = 0;
+			best_pixel_indices2_MSB[0] = 0;
+			best_pixel_indices2_LSB[0] = 0;
 
-			if (perceptual) {
-				// upper part of block
-				flip_errC = tryalltables_3bittable4x2percep(img, width, height, startx, starty, avg_color_quant1,
-						best_table1, best_pixel_indices1_MSB, best_pixel_indices1_LSB);
-				// lower part of block
-				flip_errC += tryalltables_3bittable4x2percep(img, width, height, startx, starty + 2, avg_color_quant2,
-						best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB);
-			} else {
-				// upper part of block
-				flip_errC = tryalltables_3bittable4x2(img, width, height, startx, starty, avg_color_quant1, best_table1,
-						best_pixel_indices1_MSB, best_pixel_indices1_LSB);
-				// lower part of block
-				flip_errC += tryalltables_3bittable4x2(img, width, height, startx, starty + 2, avg_color_quant2,
-						best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB);
-			}
+
+			// upper part of block
+			flip_errC = tryalltables_3bittable4x2fast(img, width, height, startx, starty, avg_color_quant1,
+					best_table1, best_pixel_indices1_MSB, best_pixel_indices1_LSB, perceptual);
+			// lower part of block
+			flip_errC += tryalltables_3bittable4x2fast(img, width, height, startx, starty + 2, avg_color_quant2,
+					best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB, perceptual);
+
 
 			PUTBITSHIGH(compressed1_flipC, best_table1[0], 3, 39);
 			PUTBITSHIGH(compressed1_flipC, best_table2[0], 3, 36);
@@ -1131,26 +1111,19 @@ public class QuickETC extends ETCPack {
 			PUTBITSHIGH(compressed1_flipC, enc_color2[1], 4, 51);
 			PUTBITSHIGH(compressed1_flipC, enc_color2[2], 4, 43);
 
-			int[] best_pixel_indices1_MSB = new int[1];
-			int[] best_pixel_indices1_LSB = new int[1];
-			int[] best_pixel_indices2_MSB = new int[1];
-			int[] best_pixel_indices2_LSB = new int[1];
+			best_pixel_indices1_MSB[0] = 0;
+			best_pixel_indices1_LSB[0] = 0;
+			best_pixel_indices2_MSB[0] = 0;
+			best_pixel_indices2_LSB[0] = 0;
 
-			if (perceptual) {
-				// upper part of block
-				flip_errC = tryalltables_3bittable4x2percep(img, width, height, startx, starty, avg_color_quant1,
-						best_table1, best_pixel_indices1_MSB, best_pixel_indices1_LSB);
-				// lower part of block
-				flip_errC += tryalltables_3bittable4x2percep(img, width, height, startx, starty + 2, avg_color_quant2,
-						best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB);
-			} else {
-				// upper part of block
-				flip_errC = tryalltables_3bittable4x2(img, width, height, startx, starty, avg_color_quant1, best_table1,
-						best_pixel_indices1_MSB, best_pixel_indices1_LSB);
-				// lower part of block
-				flip_errC += tryalltables_3bittable4x2(img, width, height, startx, starty + 2, avg_color_quant2,
-						best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB);
-			}
+
+			// upper part of block
+			flip_errC = tryalltables_3bittable4x2fast(img, width, height, startx, starty, avg_color_quant1,
+					best_table1, best_pixel_indices1_MSB, best_pixel_indices1_LSB, perceptual);
+			// lower part of block
+			flip_errC += tryalltables_3bittable4x2fast(img, width, height, startx, starty + 2, avg_color_quant2,
+					best_table2, best_pixel_indices2_MSB, best_pixel_indices2_LSB, perceptual);
+		
 
 			PUTBITSHIGH(compressed1_flipC, best_table1[0], 3, 39);
 			PUTBITSHIGH(compressed1_flipC, best_table2[0], 3, 36);
@@ -1179,403 +1152,14 @@ public class QuickETC extends ETCPack {
 		}
 	}
 
-	//Finds all pixel indices for a 2x4 block using perceptual weighting of error.
-	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-	//address int[] pixel_indices_MSBp, int[] pixel_indices_LSBp
-//	@Override
-	float compressBlockWithTable2x4percep(	byte[] img, int width, int height, int startx, int starty, byte[] avg_color,
-											int table, int[] pixel_indices_MSBp, int[] pixel_indices_LSBp) {
-
-		byte[] orig = new byte[3];
-		byte[][] approx = new byte[4][3];
-		int[] pixel_indices_MSB = new int[] {0}, pixel_indices_LSB = new int[] {0};
-		int pixel_indices = 0;
-		float sum_error = 0;
-		int q, i;
-
-		double wR2 = PERCEPTUAL_WEIGHT_R_SQUARED;
-		double wG2 = PERCEPTUAL_WEIGHT_G_SQUARED;
-		double wB2 = PERCEPTUAL_WEIGHT_B_SQUARED;
-
-		//pre-compute
-		for (q = 0; q < 4; q++) {
-			approx[q][0] = (byte)CLAMP(0, (avg_color[0] & 0xff) + compressParams[table][q], 255);
-			approx[q][1] = (byte)CLAMP(0, (avg_color[1] & 0xff) + compressParams[table][q], 255);
-			approx[q][2] = (byte)CLAMP(0, (avg_color[2] & 0xff) + compressParams[table][q], 255);
-		}
-
-		i = 0;
-		for (int x = startx; x < startx + 2; x++) {
-			for (int y = starty; y < starty + 4; y++) {
-				float err;
-				int best = 0;
-				float min_error = 255 * 255 * 3 * 16;
-				orig[0] = RED(img, width, x, y);
-				orig[1] = GREEN(img, width, x, y);
-				orig[2] = BLUE(img, width, x, y);
-
-				for (q = 0; q < 4; q++) {
-					// Here we just use equal weights to R, G and B. Although this will
-					// give visually worse results, it will give a better PSNR score. 
-					err = (float)(wR2	* SQUARE(((approx[q][0] & 0xff) - (orig[0] & 0xff)))
-									+ (float)wG2 * SQUARE(((approx[q][1] & 0xff) - (orig[1] & 0xff)))
-									+ (float)wB2 * SQUARE(((approx[q][2] & 0xff) - (orig[2] & 0xff))));
-					if (err < min_error) {
-						min_error = err;
-						best = q;
-					}
-				}
-				// In order to simplify hardware, the table {-12, -4, 4, 12} is indexed {11, 10, 00, 01}
-				// so that first bit is sign bit and the other bit is size bit (4 or 12). 
-				// This means that we have to scramble the bits before storing them. 
-				pixel_indices = scramble[best];
-
-				PUTBITS(pixel_indices_MSB, (pixel_indices >> 1), 1, i);
-				PUTBITS(pixel_indices_LSB, (pixel_indices & 1), 1, i);
-
-				i++;
-
-				sum_error += min_error;
-			}
-		}
-
-		pixel_indices_MSBp[0] = pixel_indices_MSB[0];
-		pixel_indices_LSBp[0] = pixel_indices_LSB[0];
-
-		return sum_error;
-	}
-
-	//Finds all pixel indices for a 4x2 block using perceptual weighting of error.
-	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-	//address int[] pixel_indices_MSBp, int[] pixel_indices_LSBp
-//	@Override
-	float compressBlockWithTable4x2percep(	byte[] img, int width, int height, int startx, int starty, byte[] avg_color,
-											int table, int[] pixel_indices_MSBp, int[] pixel_indices_LSBp) {
-		byte[] orig = new byte[3];
-		byte[][] approx = new byte[4][3];
-		int[] pixel_indices_MSB = new int[] {0}, pixel_indices_LSB = new int[] {0};
-		int pixel_indices = 0;
-		float sum_error = 0;
-		int q;
-		int i;
-		float wR2 = (float)PERCEPTUAL_WEIGHT_R_SQUARED;
-		float wG2 = (float)PERCEPTUAL_WEIGHT_G_SQUARED;
-		float wB2 = (float)PERCEPTUAL_WEIGHT_B_SQUARED;
-
-		//pre-compute
-		for (q = 0; q < 4; q++) {
-			approx[q][0] = (byte)CLAMP(0, (avg_color[0] & 0xff) + compressParams[table][q], 255);
-			approx[q][1] = (byte)CLAMP(0, (avg_color[1] & 0xff) + compressParams[table][q], 255);
-			approx[q][2] = (byte)CLAMP(0, (avg_color[2] & 0xff) + compressParams[table][q], 255);
-		}
-
-		i = 0;
-		for (int x = startx; x < startx + 4; x++) {
-			for (int y = starty; y < starty + 2; y++) {
-				float err;
-				int best = 0;
-				float min_error = 255 * 255 * 3 * 16;
-				orig[0] = RED(img, width, x, y);
-				orig[1] = GREEN(img, width, x, y);
-				orig[2] = BLUE(img, width, x, y);
-
-				for (q = 0; q < 4; q++) {
-					// Here we just use equal weights to R, G and B. Although this will
-					// give visually worse results, it will give a better PSNR score. 
-					err = wR2	* SQUARE((approx[q][0] & 0xff) - (orig[0] & 0xff))
-							+ wG2 * SQUARE((approx[q][1] & 0xff) - (orig[1] & 0xff))
-							+ wB2 * SQUARE((approx[q][2] & 0xff) - (orig[2] & 0xff));
-					if (err < min_error) {
-						min_error = err;
-						best = q;
-					}
-				}
-				// In order to simplify hardware, the table {-12, -4, 4, 12} is indexed {11, 10, 00, 01}
-				// so that first bit is sign bit and the other bit is size bit (4 or 12). 
-				// This means that we have to scramble the bits before storing them. 
-				pixel_indices = scramble[best];
-
-				PUTBITS(pixel_indices_MSB, (pixel_indices >> 1), 1, i);
-				PUTBITS(pixel_indices_LSB, (pixel_indices & 1), 1, i);
-				i++;
-
-				sum_error += min_error;
-			}
-			i += 2;
-		}
-
-		pixel_indices_MSBp[0] = pixel_indices_MSB[0];
-		pixel_indices_LSBp[0] = pixel_indices_LSB[0];
-
-		return sum_error;
-	}
 	
-
-
-	//Finds all pixel indices for a 2x4 block.
-	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-//	@Override
-	int compressBlockWithTable2x4(	byte[] img, int width, int height, int startx, int starty, byte[] avg_color,
-									int table, int[] pixel_indices_MSBp, int[] pixel_indices_LSBp) {
-		int[] orig = new int[3];
-		byte[][] approx = new byte[4][3];
-		int[] pixel_indices_MSB = new int[] {0}, pixel_indices_LSB = new int[] {0};
-		int pixel_indices = 0;
-		int sum_error = 0;
-		int q, i;
-		
-		//pre-compute
-		for (q = 0; q < 4; q++) {
-			approx[q][0] = (byte)CLAMP(0, (avg_color[0] & 0xff) + compressParams[table][q], 255);
-			approx[q][1] = (byte)CLAMP(0, (avg_color[1] & 0xff) + compressParams[table][q], 255);
-			approx[q][2] = (byte)CLAMP(0, (avg_color[2] & 0xff) + compressParams[table][q], 255);
-		}
-
-		i = 0;
-		for (int x = startx; x < startx + 2; x++) {
-			for (int y = starty; y < starty + 4; y++) {
-				int err;
-				int best = 0;
-				int min_error = 255 * 255 * 3 * 16;
-				orig[0] = RED(img, width, x, y);
-				orig[1] = GREEN(img, width, x, y);
-				orig[2] = BLUE(img, width, x, y);
-
-				for (q = 0; q < 4; q++) {
-					// Here we just use equal weights to R, G and B. Although this will
-					// give visually worse results, it will give a better PSNR score. 
-					err = SQUARE(approx[q][0] - orig[0])	+ SQUARE(approx[q][1] - orig[1])
-							+ SQUARE(approx[q][2] - orig[2]);
-					if (err < min_error) {
-						min_error = err;
-						best = q;
-					}
-
-				}
-				// In order to simplify hardware, the table {-12, -4, 4, 12} is indexed {11, 10, 00, 01}
-				// so that first bit is sign bit and the other bit is size bit (4 or 12). 
-				// This means that we have to scramble the bits before storing them. 
-				pixel_indices = scramble[best];
-
-				PUTBITS(pixel_indices_MSB, (pixel_indices >> 1), 1, i);
-				PUTBITS(pixel_indices_LSB, (pixel_indices & 1), 1, i);
-
-				i++;
- 
-				sum_error += min_error;
-			}
-		}
-
-		pixel_indices_MSBp[0] = pixel_indices_MSB[0];
-		pixel_indices_LSBp[0] = pixel_indices_LSB[0];
-		return sum_error;
-	}
-
-	//Finds all pixel indices for a 4x2 block.
-		//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-		//address int[] pixel_indices_MSBp, int[] pixel_indices_LSBp
-//		@Override
-int compressBlockWithTable4x2(	byte[] img, int width, int height, int startx, int starty, byte[] avg_color,
-									int table, int[] pixel_indices_MSBp, int[] pixel_indices_LSBp) {
-			byte[] orig = new byte[3];
-			byte[][] approx = new byte[4][3];
-			int[] pixel_indices_MSB = new int[] {0}, pixel_indices_LSB = new int[] {0};
-			int pixel_indices = 0;
-			int sum_error = 0;
-			int q;
-			int i;
-
-			//pre-compute
-			for (q = 0; q < 4; q++) {
-				approx[q][0] = (byte)CLAMP(0, (avg_color[0] & 0xff) + compressParams[table][q], 255);
-				approx[q][1] = (byte)CLAMP(0, (avg_color[1] & 0xff) + compressParams[table][q], 255);
-				approx[q][2] = (byte)CLAMP(0, (avg_color[2] & 0xff) + compressParams[table][q], 255);
-			}
-			i = 0;
-			for (int x = startx; x < startx + 4; x++) {
-				for (int y = starty; y < starty + 2; y++) {
-					int err;
-					int best = 0;
-					int min_error = 255 * 255 * 3 * 16;
-					orig[0] = RED(img, width, x, y);
-					orig[1] = GREEN(img, width, x, y);
-					orig[2] = BLUE(img, width, x, y);
-
-					for (q = 0; q < 4; q++) {
-						// Here we just use equal weights to R, G and B. Although this will
-						// give visually worse results, it will give a better PSNR score. 
-						err = SQUARE((approx[q][0] & 0xff) - (orig[0] & 0xff))
-								+ SQUARE((approx[q][1] & 0xff) - (orig[1] & 0xff))
-								+ SQUARE((approx[q][2] & 0xff) - (orig[2] & 0xff));
-						if (err < min_error) {
-							min_error = err;
-							best = q;
-						}
-					}
-					// In order to simplify hardware, the table {-12, -4, 4, 12} is indexed {11, 10, 00, 01}
-					// so that first bit is sign bit and the other bit is size bit (4 or 12). 
-					// This means that we have to scramble the bits before storing them. 
-					pixel_indices = scramble[best];
-
-					PUTBITS(pixel_indices_MSB, (pixel_indices >> 1), 1, i);
-					PUTBITS(pixel_indices_LSB, (pixel_indices & 1), 1, i);
-					i++;
-
-					
-
-					sum_error += min_error;
-				}
-				i += 2;
-			}
-
-			pixel_indices_MSBp[0] = pixel_indices_MSB[0];
-			pixel_indices_LSBp[0] = pixel_indices_LSB[0];
-
-			return sum_error;
-		}
-	
-	//Finds all pixel indices for a 2x4 block using perceptual weighting of error.
-	//Done using fixed poinit arithmetics where weights are multiplied by 1000.
-	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-	//unsigned 
-//	@Override
-	int compressBlockWithTable2x4percep1000(byte[] img, int width, int height, int startx, int starty, byte[] avg_color,
-											int table, int[] pixel_indices_MSBp, int[] pixel_indices_LSBp) {
-		int[] orig = new int[3];
-		byte[][] approx = new byte[4][3];
-		int[] pixel_indices_MSB = new int[] {0}, pixel_indices_LSB = new int[] {0};
-		int pixel_indices = 0;
-		int sum_error = 0;
-		int q, i;
-
-		//pre-compute
-		for (q = 0; q < 4; q++) {
-			approx[q][0] = (byte)CLAMP(0, (avg_color[0] & 0xff) + compressParams[table][q], 255);
-			approx[q][1] = (byte)CLAMP(0, (avg_color[1] & 0xff) + compressParams[table][q], 255);
-			approx[q][2] = (byte)CLAMP(0, (avg_color[2] & 0xff) + compressParams[table][q], 255);
-		}
-
-		i = 0;
-		for (int x = startx; x < startx + 2; x++) {
-			for (int y = starty; y < starty + 4; y++) {
-				int err;
-				int best = 0;
-				int min_error = MAXERR1000;
-				orig[0] = RED(img, width, x, y);
-				orig[1] = GREEN(img, width, x, y);
-				orig[2] = BLUE(img, width, x, y);
-
-				for (q = 0; q < 4; q++) {
-					// Here we just use equal weights to R, G and B. Although this will
-					// give visually worse results, it will give a better PSNR score. 
-					err = (PERCEPTUAL_WEIGHT_R_SQUARED_TIMES1000	* SQUARE((approx[q][0] - orig[0]))
-							+ PERCEPTUAL_WEIGHT_G_SQUARED_TIMES1000 * SQUARE((approx[q][1] - orig[1]))
-							+ PERCEPTUAL_WEIGHT_B_SQUARED_TIMES1000 * SQUARE((approx[q][2] - orig[2])));
-					if (err < min_error) {
-						min_error = err;
-						best = q;
-					}
-
-				}
-				// In order to simplify hardware, the table {-12, -4, 4, 12} is indexed {11, 10, 00, 01}
-				// so that first bit is sign bit and the other bit is size bit (4 or 12). 
-				// This means that we have to scramble the bits before storing them. 
-				pixel_indices = scramble[best];
-
-				PUTBITS(pixel_indices_MSB, (pixel_indices >> 1), 1, i);
-				PUTBITS(pixel_indices_LSB, (pixel_indices & 1), 1, i);
-
-				i++;
-
-				sum_error += min_error;
-			}
-
-		}
-
-		pixel_indices_MSBp[0] = pixel_indices_MSB[0];
-		pixel_indices_LSBp[0] = pixel_indices_LSB[0];
-
-		return sum_error;
-	}
-
-	//Finds all pixel indices for a 4x2 block using perceptual weighting of error.
-	//Done using fixed point arithmetics where 1000 corresponds to 1.0.
-	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-	//address int[] pixel_indices_MSBp, int[] pixel_indices_LSBp
-//@Override
-	int compressBlockWithTable4x2percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,int table,int[] pixel_indices_MSBp, int[] pixel_indices_LSBp)
-	{
-		byte[] orig= new byte[3];
-		byte[][] approx= new byte[4][3];
-		int[] pixel_indices_MSB=new int[] {0}, pixel_indices_LSB=new int[] {0};
-		int pixel_indices=0;
-		int sum_error=0;
-		int q;
-		int i;
-		
-		//pre-compute
-		for(q=0;q<4;q++)
-		{
-			approx[q][0]=(byte)CLAMP(0, (avg_color[0]&0xff)+compressParams[table][q],255);
-			approx[q][1]=(byte)CLAMP(0, (avg_color[1]&0xff)+compressParams[table][q],255);
-			approx[q][2]=(byte)CLAMP(0, (avg_color[2]&0xff)+compressParams[table][q],255);
-		}
-		
-		
-		i = 0;
-		for(int x=startx; x<startx+4; x++)
-		{
-			for(int y=starty; y<starty+2; y++)
-			{
-				int err;
-				int best=0;
-				int min_error=MAXERR1000;
-				orig[0]=RED(img,width,x,y);
-				orig[1]=GREEN(img,width,x,y);
-				orig[2]=BLUE(img,width,x,y);
-
-				for(q=0;q<4;q++)
-				{
-					// Here we just use equal weights to R, G and B. Although this will
-					// give visually worse results, it will give a better PSNR score. 
-					err = PERCEPTUAL_WEIGHT_R_SQUARED_TIMES1000*SQUARE((approx[q][0]&0xff)-(orig[0]&0xff)) 
-						+ PERCEPTUAL_WEIGHT_G_SQUARED_TIMES1000*SQUARE((approx[q][1]&0xff)-(orig[1]&0xff)) 
-						+ PERCEPTUAL_WEIGHT_B_SQUARED_TIMES1000*SQUARE((approx[q][2]&0xff)-(orig[2]&0xff));
-					if(err<min_error)
-					{
-						min_error=err;
-						best=q;
-					}
-				}
-				pixel_indices = scramble[best];
-
-				PUTBITS( pixel_indices_MSB, (pixel_indices >> 1), 1, i);
-				PUTBITS( pixel_indices_LSB, (pixel_indices & 1) , 1, i);
-				i++;
-
-				// In order to simplify hardware, the table {-12, -4, 4, 12} is indexed {11, 10, 00, 01}
-				// so that first bit is sign bit and the other bit is size bit (4 or 12). 
-				// This means that we have to scramble the bits before storing them. 
-
-				sum_error+=min_error;
-			}
-			i+=2;
-
-		}
-
-		pixel_indices_MSBp[0] = pixel_indices_MSB[0];
-		pixel_indices_LSBp[0] = pixel_indices_LSB[0];
-
-		return sum_error;
-	}
-
 
 	//Find the best table to use for a 4x2 area by testing all.
 	//Uses perceptual weighting. 
 	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//addressint &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB
 //	@Override
-	int tryalltables_3bittable4x2percep(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,   int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
+	int tryalltables_3bittable4x2fast(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,   int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB, boolean weighted)
 	{
 		float min_error = 3*255*255*16;
 		int table;
@@ -1585,15 +1169,15 @@ int compressBlockWithTable4x2(	byte[] img, int width, int height, int startx, in
 		
 		byte[] orig = new byte[3];
 		byte[][] approx = new byte[4][3];
-		int[] pixel_indices_MSB2 = new int[] {0}, pixel_indices_LSB2 = new int[] {0};
+//		int[] pixel_indices_MSB2 = new int[] {0}, pixel_indices_LSB2 = new int[] {0};
 		int pixel_indices = 0;
 		int sum_error = 0;
 		int q;
 		int i;
 		
-		float wR2 = (float) PERCEPTUAL_WEIGHT_R_SQUARED;
-		float wG2 = (float) PERCEPTUAL_WEIGHT_G_SQUARED;
-		float wB2 = (float) PERCEPTUAL_WEIGHT_B_SQUARED;
+		double wR2 = weighted ? PERCEPTUAL_WEIGHT_R_SQUARED : 1.0;
+		double wG2 = weighted ? PERCEPTUAL_WEIGHT_G_SQUARED : 1.0;
+		double wB2 = weighted ? PERCEPTUAL_WEIGHT_B_SQUARED : 1.0;
 		
 
 		for(table=0;table<16;table+=2)		// try all the 8 tables. 
@@ -1613,9 +1197,9 @@ int compressBlockWithTable4x2(	byte[] img, int width, int height, int startx, in
 				i = 0;
 				for (int x = startx; x < startx + 4; x++) {
 					for (int y = starty; y < starty + 2; y++) {
-						float err2;
+						double err2;
 						int best = 0;
-						float min_error2=255*255*3*16;
+						double min_error2=255*255*3*16;
 						orig[0] = RED(img, width, x, y);
 						orig[1] = GREEN(img, width, x, y);
 						orig[2] = BLUE(img, width, x, y);
@@ -1636,8 +1220,8 @@ int compressBlockWithTable4x2(	byte[] img, int width, int height, int startx, in
 						// This means that we have to scramble the bits before storing them. 
 						pixel_indices = scramble[best];
 	
-						PUTBITS(pixel_indices_MSB2, (pixel_indices >> 1), 1, i);
-						PUTBITS(pixel_indices_LSB2, (pixel_indices & 1), 1, i);
+						PUTBITS(pixel_indices_MSB, (pixel_indices >> 1), 1, i);
+						PUTBITS(pixel_indices_LSB, (pixel_indices & 1), 1, i);
 						i++;
 	
 						sum_error += min_error2;
@@ -1646,8 +1230,8 @@ int compressBlockWithTable4x2(	byte[] img, int width, int height, int startx, in
 	
 				}
 	
-				pixel_indices_MSB[0] = pixel_indices_MSB2[0];
-				pixel_indices_LSB[0] = pixel_indices_LSB2[0];
+				//pixel_indices_MSB[0] = pixel_indices_MSB2[0];
+				//pixel_indices_LSB[0] = pixel_indices_LSB2[0];
 			
 			}
 			////////////////////////////////////////////
@@ -1669,7 +1253,7 @@ int compressBlockWithTable4x2(	byte[] img, int width, int height, int startx, in
 	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//addressint &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB
 //	@Override
-	int tryalltables_3bittable2x4percep(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,  int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
+	int tryalltables_3bittable2x4fast(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,  int[] best_table,int[] best_pixel_indices_MSB, int[] best_pixel_indices_LSB, boolean weighted)
 	{
 		float min_error = 3*255*255*16;
 		int table;
@@ -1678,19 +1262,19 @@ int compressBlockWithTable4x2(	byte[] img, int width, int height, int startx, in
 				
 		byte[] orig = new byte[3];
 		byte[][] approx = new byte[4][3];
-		int[] pixel_indices_MSB2 = new int[] {0}, pixel_indices_LSB2 = new int[] {0};
+//		int[] pixel_indices_MSB2 = new int[] {0}, pixel_indices_LSB2 = new int[] {0};
 		int pixel_indices = 0;
 		float sum_error = 0;
 		int q, i;
 		
-		double wR2 = PERCEPTUAL_WEIGHT_R_SQUARED;
-		double wG2 = PERCEPTUAL_WEIGHT_G_SQUARED;
-		double wB2 = PERCEPTUAL_WEIGHT_B_SQUARED;
+		double wR2 = weighted ? PERCEPTUAL_WEIGHT_R_SQUARED : 1;
+		double wG2 = weighted ? PERCEPTUAL_WEIGHT_G_SQUARED : 1;
+		double wB2 = weighted ? PERCEPTUAL_WEIGHT_B_SQUARED : 1;
 
 		for(table=0;table<16;table+=2)		// try all the 8 tables. 
 		{
 			//err=compressBlockWithTable2x4percep(img,width,height,startx,starty,avg_color,q,pixel_indices_MSB, pixel_indices_LSB);
-			
+
 			///////////////////////////////////
 			{
 				
@@ -1727,8 +1311,8 @@ int compressBlockWithTable4x2(	byte[] img, int width, int height, int startx, in
 						// This means that we have to scramble the bits before storing them. 
 						pixel_indices = scramble[best];
 
-						PUTBITS(pixel_indices_MSB2, (pixel_indices >> 1), 1, i);
-						PUTBITS(pixel_indices_LSB2, (pixel_indices & 1), 1, i);
+						PUTBITS(pixel_indices_MSB, (pixel_indices >> 1), 1, i);
+						PUTBITS(pixel_indices_LSB, (pixel_indices & 1), 1, i);
 
 						i++;
 
@@ -1736,8 +1320,8 @@ int compressBlockWithTable4x2(	byte[] img, int width, int height, int startx, in
 					}
 				}
 
-				pixel_indices_MSB[0] = pixel_indices_MSB2[0];
-				pixel_indices_LSB[0] = pixel_indices_LSB2[0];
+				//pixel_indices_MSB[0] = 6;//pixel_indices_MSB2[0];
+				//pixel_indices_LSB[0] = 7;//pixel_indices_LSB2[0];
 
 			 
 			}
@@ -1754,111 +1338,11 @@ int compressBlockWithTable4x2(	byte[] img, int width, int height, int startx, in
 		return (int) min_error;
 	}
 	
-	//Find the best table to use for a 2x4 area by testing all.
-	//Uses perceptual weighting. 
-	//Uses fixed point implementation where 1000 equals 1.0
-	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-	//addressint &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB
-	int tryalltables_3bittable2x4percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,  int[] best_table, int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
-	{
-		int min_error = MAXERR1000;
-		int q;
-		int err;
-		int[] pixel_indices_MSB = new int[1], pixel_indices_LSB = new int[1];
-
-		for(q=0;q<16;q+=2)		// try all the 8 tables. 
-		{
-
-			err=compressBlockWithTable2x4percep1000(img,width,height,startx,starty,avg_color,q,pixel_indices_MSB, pixel_indices_LSB);
-
-			if(err<min_error)
-			{
-
-				min_error=err;
-				best_pixel_indices_MSB[0] = pixel_indices_MSB[0];
-				best_pixel_indices_LSB[0] = pixel_indices_LSB[0];
-				best_table[0]=q >> 1;
-
-			}
-		}
-		return min_error;
-	}
 	
-	//Find the best table to use for a 4x2 area by testing all.
-	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-	//addressint &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB
-	int tryalltables_3bittable4x2(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,   int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
-	{
-		int min_error = 3*255*255*16;
-		int q;
-		int err;
-		int[] pixel_indices_MSB = new int[1], pixel_indices_LSB = new int[1];
-
-		for(q=0;q<16;q+=2)		// try all the 8 tables. 
-		{
-			err=compressBlockWithTable4x2(img,width,height,startx,starty,avg_color,q,pixel_indices_MSB, pixel_indices_LSB);
-
-			if(err<min_error)
-			{
-
-				min_error=err;
-				best_pixel_indices_MSB[0] = pixel_indices_MSB[0];
-				best_pixel_indices_LSB[0] = pixel_indices_LSB[0];
-				best_table[0]=q >> 1;
-			}
-		}
-		return min_error;
-	}
-
-	//Find the best table to use for a 4x2 area by testing all.
-	//Uses perceptual weighting. 
-	//Uses fixed point implementation where 1000 equals 1.0
-	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-	//addressint &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB
-	int tryalltables_3bittable4x2percep1000(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,   int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
-	{
-		int min_error = MAXERR1000;
-		int q;
-		int err;
-		int[] pixel_indices_MSB = new int[1], pixel_indices_LSB = new int[1];
-
-		for(q=0;q<16;q+=2)		// try all the 8 tables. 
-		{
-			err=compressBlockWithTable4x2percep1000(img,width,height,startx,starty,avg_color,q,pixel_indices_MSB, pixel_indices_LSB);
-
-			if(err<min_error)
-			{
-				min_error=err;
-				best_pixel_indices_MSB[0] = pixel_indices_MSB[0];
-				best_pixel_indices_LSB[0] = pixel_indices_LSB[0];
-				best_table[0]=q >> 1;
-			}
-		}
-		return min_error;
-	}
 	
-	//Find the best table to use for a 2x4 area by testing all.
-	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-	//address int &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB)
-	int tryalltables_3bittable2x4(byte[] img,int width,int height,int startx,int starty,byte[] avg_color, int[] best_table, int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB)
-	{
-		int min_error = 3*255*255*16;
-		int q;
-		int err;
-		int[] pixel_indices_MSB = new int[1], pixel_indices_LSB = new int[1];
+	
 
-		for(q=0;q<16;q+=2)		// try all the 8 tables. 
-		{
-			err=compressBlockWithTable2x4(img,width,height,startx,starty,avg_color,q,pixel_indices_MSB, pixel_indices_LSB);
-
-			if(err<min_error)
-			{
-				min_error=err;
-				best_pixel_indices_MSB[0] = pixel_indices_MSB[0];
-				best_pixel_indices_LSB[0] = pixel_indices_LSB[0];
-				best_table[0]=q >> 1;
-			}
-		}
-		return min_error;
-	}
+	
+	
+	
 }
