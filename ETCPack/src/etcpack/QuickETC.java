@@ -9,7 +9,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-
 /**
  * Amazing... https://github.com/wolfpld/etcpak/commit/da85020e690890f4356d42ab5802e4f957f220fd?diff=unified
  * https://nahjaeho.github.io/papers/SA20/QUICKETC2_SA20.pdf
@@ -40,6 +39,7 @@ public class QuickETC extends ETCPack {
 
 		ExecutorService es = Executors.newFixedThreadPool(NUM_THREADS);
 		List<Callable<Object>> todo = new ArrayList<Callable<Object>>();
+
 		// stride is either 8 bits alpha and 2 words or just 2 words
 		final int stride = (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA) ? 8+4+4 : 4+4;
 		
@@ -120,7 +120,7 @@ public class QuickETC extends ETCPack {
 		}
 		todo.clear();
 		dstBB.position(bbpos + (ymax * xmax * stride));		
-		
+	
 		es.shutdown();
 		return dstBB.position() - posAtStart;
 	}
@@ -129,7 +129,7 @@ public class QuickETC extends ETCPack {
 	//Compress a block with ETC2 RGB
 	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address  int &compressed1,  int &compressed2
-//	@Override
+	@Override
 	void compressBlockETC2Fast(	byte[] img, byte[] alphaimg, byte[] imgdec, int width, int height, int startx,
 								int starty, int[] compressed1, int[] compressed2) {
 
@@ -346,7 +346,7 @@ public class QuickETC extends ETCPack {
 	//Compress an ETC2 RGB block using perceptual error metric
 	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address  int &compressed1,  int &compressed2
-//	@Override
+	@Override
 	void compressBlockETC2FastPerceptual(	byte[] img, byte[] imgdec, int width, int height, int startx, int starty,
 											int[] compressed1, int[] compressed2) {
 		
@@ -520,7 +520,7 @@ public class QuickETC extends ETCPack {
 	//Compress an ETC1 block (or the individual and differential modes of an ETC2 block)
 	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address int &compressed1,  int &compressed2)
-//	@Override
+	@Override
 	void compressBlockDiffFlipFast(	byte[] img, byte[] imgdec, int width, int height, int startx, int starty,
 									int[] compressed1, int[] compressed2) {
 		int[] combined_both1 = new int[1];
@@ -534,7 +534,7 @@ public class QuickETC extends ETCPack {
 	//Uses perceptual error metric.
 	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address  int &compressed1,  int &compressed2)
-//	@Override
+	@Override
 	void compressBlockDiffFlipFastPerceptual(	byte[] img, byte[] imgdec, int width, int height, int startx, int starty,
 												int[] compressed1, int[] compressed2) {
 		int[] combined_both1 = new int[1];
@@ -558,8 +558,8 @@ public class QuickETC extends ETCPack {
 		float[] avg_color24_float1 = new float[3], avg_color24_float2 = new float[3];
 		float[] avg_color42_float1 = new float[3], avg_color42_float2 = new float[3];
 		int[] enc_color1 = new int[3], enc_color2 = new int[3], diff = new int[3];
-		int min_error = 255 * 255 * 8 * 3;
-		int best_table_indices1 = 0, best_table_indices2 = 0;
+//		int min_error = 255 * 255 * 8 * 3;
+//		int best_table_indices1 = 0, best_table_indices2 = 0;
 		int[] best_table1 = new int[1], best_table2 = new int[1];
 		int diffbit;
 
@@ -1155,11 +1155,10 @@ public class QuickETC extends ETCPack {
 
 	
 
+	
 	//Find the best table to use for a 4x2 area by testing all.
-	//Uses perceptual weighting. 
 	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//addressint &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB
-//	@Override
 	int tryalltables_3bittable4x2fast(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,   int[] best_table,int[] best_pixel_indices_MSB,  int[] best_pixel_indices_LSB, boolean weighted)
 	{
 		float min_error = 3*255*255*16;
@@ -1250,10 +1249,8 @@ public class QuickETC extends ETCPack {
 	
 	
 	//Find the best table to use for a 2x4 area by testing all.
-	//Uses perceptual weighting. 
 	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//addressint &best_table, int &best_pixel_indices_MSB,  int &best_pixel_indices_LSB
-//	@Override
 	int tryalltables_3bittable2x4fast(byte[] img,int width,int height,int startx,int starty,byte[] avg_color,  int[] best_table,int[] best_pixel_indices_MSB, int[] best_pixel_indices_LSB, boolean weighted)
 	{
 		float min_error = 3*255*255*16;
@@ -1341,7 +1338,180 @@ public class QuickETC extends ETCPack {
 	
 	
 	
-	
+// this is here because might be able to be optimised, but no changes yet
+	//Compresses the alpha part of a GL_COMPRESSED_RGBA8_ETC2_EAC block.
+	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
+	@Override
+	void compressBlockAlphaFast(byte[] data, int ix, int iy, int width, int height, byte[] returnData) 
+	{
+		int alphasum=0;
+		int maxdist=-2;
+		for(int x=0; x<4; x++) 
+		{
+			for(int y=0; y<4; y++) 
+			{
+				alphasum+=(data[ix+x+(iy+y)*width]&0xff);
+			}
+		}
+		int alpha = (int)( ((float)alphasum)/16.0f+0.5f); //average pixel value, used as guess for base value.
+		for(int x=0; x<4; x++) 
+		{
+			for(int y=0; y<4; y++) 
+			{
+				if(Math.abs(alpha-(data[ix+x+(iy+y)*width]&0xff))>maxdist)
+					maxdist=Math.abs(alpha-(data[ix+x+(iy+y)*width]&0xff)); //maximum distance from average
+			}
+		}
+		int approxPos = (maxdist*255)/160-4;  //experimentally derived formula for calculating approximate table position given a max distance from average
+		if(approxPos>255)
+			approxPos=255;
+		int startTable=approxPos-15; //first table to be tested
+		if(startTable<0)
+			startTable=0;
+		int endTable=clamp(approxPos+15);  //last table to be tested
+
+		int bestsum=1000000000;
+		int besttable=-3; 
+		int bestalpha=128;
+		int prevalpha=alpha;
+
+		//main loop: determine best base alpha value and offset table to use for compression
+		//try some different alpha tables.
+		for(int table = startTable; table<endTable&&bestsum>0; table++)
+		{
+			int tablealpha=prevalpha;
+			int tablebestsum=1000000000;
+			//test some different alpha values, trying to find the best one for the given table.	
+			for(int alphascale=16; alphascale>0; alphascale/=4) 
+			{
+				int startalpha;
+				int endalpha;
+				if(alphascale==16) 
+				{
+					startalpha = clamp(tablealpha-alphascale*4);
+					endalpha = clamp(tablealpha+alphascale*4);
+				}
+				else 
+				{
+					startalpha = clamp(tablealpha-alphascale*2);
+					endalpha = clamp(tablealpha+alphascale*2);
+				}
+				for(alpha=startalpha; alpha<=endalpha; alpha+=alphascale) 
+				{
+					int sum=0;
+					int val,diff,bestdiff=10000000,index;
+					for(int x=0; x<4; x++) 
+					{
+						for(int y=0; y<4; y++) 
+						{
+							//compute best offset here, add square difference to sum..
+							val=(data[ix+x+(iy+y)*width]&0xff);
+							bestdiff=1000000000;
+							//the values are always ordered from small to large, with the first 4 being negative and the last 4 positive
+							//search is therefore made in the order 0-1-2-3 or 7-6-5-4, stopping when error increases compared to the previous entry tested.
+							if(val>alpha) 
+							{ 
+								for(index=7; index>3; index--) 
+								{
+									diff=clamp_table[alpha+(int)(ETCDec.alphaTable[table][index])+255]-val;
+									diff*=diff;
+									if(diff<=bestdiff) 
+									{
+										bestdiff=diff;
+									}
+									else
+										break;
+								}
+							}
+							else 
+							{
+								for(index=0; index<4; index++) 
+								{
+									diff=clamp_table[alpha+(int)(ETCDec.alphaTable[table][index])+255]-val;
+									diff*=diff;
+									if(diff<bestdiff) 
+									{
+										bestdiff=diff;
+									}
+									else
+										break;
+								}
+							}
+
+							//best diff here is bestdiff, add it to sum!
+							sum+=bestdiff;
+							//if the sum here is worse than previously best already, there's no use in continuing the count..
+							//note that tablebestsum could be used for more precise estimation, but the speedup gained here is deemed more important.
+							if(sum>bestsum) 
+							{ 
+								x=9999; //just to make it large and get out of the x<4 loop
+								break;
+							}
+						}
+					}
+					if(sum<tablebestsum) 
+					{
+						tablebestsum=sum;
+						tablealpha=alpha;
+					}
+					if(sum<bestsum) 
+					{
+						bestsum=sum;
+						besttable=table;
+						bestalpha=alpha;
+				}
+			}
+			if(alphascale<=2)
+				alphascale=0;
+			}
+		}
+
+		alpha=bestalpha;	
+
+		//"good" alpha value and table are known!
+		//store them, then loop through the pixels again and print indices.
+
+		returnData[0]=(byte)alpha;
+		returnData[1]=(byte)besttable;
+		for(int pos=2; pos<8; pos++) 
+		{
+			returnData[pos]=0;
+		}
+		int byte_=2;
+		int bit=0;
+		for(int x=0; x<4; x++) 
+		{
+			for(int y=0; y<4; y++) 
+			{
+				//find correct index
+				int besterror=1000000;
+				int bestindex=99;
+				for(int index=0; index<8; index++) //no clever ordering this time, as this loop is only run once per block anyway
+				{ 
+					int error= (clamp(alpha +(int)(ETCDec.alphaTable[besttable][index]))-(data[ix+x+(iy+y)*width]&0xff));
+					error *= error;
+					if(error<besterror) 
+					{
+						besterror=error;
+						bestindex=index;
+					}
+				}
+				//best table index has been determined.
+				//pack 3-bit index into compressed data, one bit at a time
+				for(int numbit=0; numbit<3; numbit++) 
+				{
+					returnData[byte_] =(byte)((returnData[byte_]&0xff) | getbit(bestindex,2-numbit,7-bit));
+
+					bit++;
+					if(bit>7) 
+					{
+						bit=0;
+						byte_++;
+					}
+				}
+			}
+		}
+	}
 
 	
 	
