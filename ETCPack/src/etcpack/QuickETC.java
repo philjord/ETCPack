@@ -36,6 +36,13 @@ public class QuickETC extends ETCPack {
 			return 0;
 		
 		final byte[] alphaimg2 = alphaimg;
+		
+		if (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA) {
+			//Oblivion textures\\menus\\misc\\healthbar3dbw.ktx
+			if(alphaimg2==null)
+				System.out.println("wooh jolly");
+		}
+		
 
 		ExecutorService es = Executors.newFixedThreadPool(NUM_THREADS);
 		List<Callable<Object>> todo = new ArrayList<Callable<Object>>();
