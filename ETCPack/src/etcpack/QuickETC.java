@@ -61,11 +61,11 @@ public class QuickETC extends ETCPack {
 				@Override
 				public void run() {
 					try {
-						int[] block1 = new int[1], block2 = new int[1];// 2 ints?...
+						int[] block1 = new int[1], block2 = new int[1];// 2 ints?... yet mo longs!
 						byte[] imgdec = null; // not used by the quick methods
-						byte[] alphadata = new byte[8]; // it would be nice to have a primitive that was 2 ints long... like a long!
-						//uummm... I could return longs... ummm
-		
+						long alphadata = 0; // it would be nice to have a primitive that was 2 ints long... like a long!
+
+						
 						// use set to pick only the lines I should process
 						for (int y = set; y < ymax; y+=NUM_THREADS) {							
 							
@@ -82,8 +82,7 @@ public class QuickETC extends ETCPack {
 								} else {
 									//compression of alpha channel in case of 4-bit alpha. Uses 8-bit alpha channel as input, and has 8-bit precision.
 									if (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA) {
-										compressBlockAlphaFast(alphaimg2, 4 * x, 4 * y, expandedwidth, expandedheight,
-												alphadata);	
+										alphadata = compressBlockAlphaFast(alphaimg2, 4 * x, 4 * y, expandedwidth, expandedheight);	
 										//written together lower down									
 									}
 		
@@ -101,7 +100,7 @@ public class QuickETC extends ETCPack {
 									dstBB.position(bbpos + (y * xmax * stride) + (x * stride));
 									if (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA) {
 										//write the 8 bytes of alphadata into dstBB.
-										dstBB.put(alphadata); 
+										dstBB.putLong(alphadata); 
 									}
 									
 									//store compressed color channels									 
@@ -1348,8 +1347,8 @@ public class QuickETC extends ETCPack {
 // this is here because might be able to be optimised, but no changes yet
 	//Compresses the alpha part of a GL_COMPRESSED_RGBA8_ETC2_EAC block.
 	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-	@Override
-	void compressBlockAlphaFast(byte[] data, int ix, int iy, int width, int height, byte[] returnData) 
+	// 8 byte return byte array replaced with a long return type
+	long compressBlockAlphaFast(byte[] data, int ix, int iy, int width, int height) 
 	{
 		int alphasum=0;
 		int maxdist=-2;
@@ -1477,13 +1476,34 @@ public class QuickETC extends ETCPack {
 
 		//"good" alpha value and table are known!
 		//store them, then loop through the pixels again and print indices.
+		
+		//https://stackoverflow.com/questions/43219560/packing-bytes-into-a-long-with-is-giving-unexpected-results
+		
+		long returnData = 0;		
+		
+//		if(alpha != 255)
+//			System.out.println("pos and wees");
+//		byte[] rd = new byte[8];
+	
 
-		returnData[0]=(byte)alpha;
-		returnData[1]=(byte)besttable;
-		for(int pos=2; pos<8; pos++) 
-		{
-			returnData[pos]=0;
-		}
+//		rd[0]=(byte)alpha;
+		returnData = returnData | (alpha & 255);
+		returnData <<=8;// this is pushing byte towards the left making it byte[0] the left most equivalent
+
+//		rd[1]=(byte)besttable;
+		returnData = returnData | (besttable & 255);
+		returnData <<=8;
+
+//		for(int pos=2; pos<8; pos++) 
+//		{
+//			rd[pos]=0;
+			//returnData = returnData | (0 & 255);
+			//returnData <<=8;
+			
+//		}
+		
+
+		
 		int byte_=2;
 		int bit=0;
 		for(int x=0; x<4; x++) 
@@ -1507,17 +1527,36 @@ public class QuickETC extends ETCPack {
 				//pack 3-bit index into compressed data, one bit at a time
 				for(int numbit=0; numbit<3; numbit++) 
 				{
-					returnData[byte_] =(byte)((returnData[byte_]&0xff) | getbit(bestindex,2-numbit,7-bit));
+//					rd[byte_] =(byte)((rd[byte_]&0xff) | getbit(bestindex,2-numbit,7-bit));					
+					
+					returnData = returnData | ((byte)getbit(bestindex,2-numbit,7-bit) & 255);
+//					System.out.println("1a " + byte_ + " " + Long.toBinaryString(returnData));
 
 					bit++;
 					if(bit>7) 
 					{
 						bit=0;
 						byte_++;
+						if(byte_ < 8)// need to not overflow, could be tricky
+							returnData <<=8;
 					}
 				}
 			}
 		}
+		
+		
+		// to write out a long versus a 8-byte array
+		//System.out.println("1a " + returnData + " " + Long.toBinaryString(returnData));
+		//System.out.println("1b " 
+		//    +String.format("%8s", Integer.toBinaryString(rd[0] & 0xFF)).replace(' ', '0')+":"+String.format("%8s", Integer.toBinaryString(rd[1] & 0xFF)).replace(' ', '0')
+		//+":"+String.format("%8s", Integer.toBinaryString(rd[2] & 0xFF)).replace(' ', '0')+":"+String.format("%8s", Integer.toBinaryString(rd[3] & 0xFF)).replace(' ', '0')
+		//+":"+String.format("%8s", Integer.toBinaryString(rd[4] & 0xFF)).replace(' ', '0')+":"+String.format("%8s", Integer.toBinaryString(rd[5] & 0xFF)).replace(' ', '0')		
+		//+":"+String.format("%8s", Integer.toBinaryString(rd[6] & 0xFF)).replace(' ', '0')+":"+String.format("%8s", Integer.toBinaryString(rd[7] & 0xFF)).replace(' ', '0')		
+		//		);
+		
+		return returnData;
+	
+
 	}
 
 	
