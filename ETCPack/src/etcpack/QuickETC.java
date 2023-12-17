@@ -61,7 +61,9 @@ public class QuickETC extends ETCPack {
 				@Override
 				public void run() {
 					try {
-						int[] block1 = new int[1], block2 = new int[1];// 2 ints?... yet mo longs!
+						float[] lumas = new float[16]; // avoid burn one step in
+						DiffFlipAverageCombinedWorkings w = new DiffFlipAverageCombinedWorkings();// Deburning!
+						int[] block1 = new int[1], block2 = new int[1];//  not a major burn issue
 						byte[] imgdec = null; // not used by the quick methods
 						long alphadata = 0; // it would be nice to have a primitive that was 2 ints long... like a long!
 
@@ -89,10 +91,10 @@ public class QuickETC extends ETCPack {
 									if (format == FORMAT.ETC2PACKAGE_RGBA1	|| format == FORMAT.ETC2PACKAGE_sRGBA1
 										|| metric == METRIC.METRIC_NONPERCEPTUAL) {
 										compressBlockETC2Fast(img, alphaimg2, imgdec, expandedwidth, expandedheight, 4 * x,
-												4 * y, block1, block2);
+												4 * y, block1, block2, lumas, w);
 									} else {
 										compressBlockETC2FastPerceptual(img, imgdec, expandedwidth, expandedheight, 4 * x,
-												4 * y, block1, block2);
+												4 * y, block1, block2, lumas, w);
 									}
 								}
 								
@@ -135,9 +137,9 @@ public class QuickETC extends ETCPack {
 	//Compress a block with ETC2 RGB
 	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address  int &compressed1,  int &compressed2
-	@Override
+	// lumas array handed in to avoid burn
 	void compressBlockETC2Fast(	byte[] img, byte[] alphaimg, byte[] imgdec, int width, int height, int startx,
-								int starty, int[] compressed1, int[] compressed2) {
+								int starty, int[] compressed1, int[] compressed2, float[] lumas, DiffFlipAverageCombinedWorkings w) {
 
 		// get a list of 16 luma values		
 		// and at the same time work out if there exists a punch through alpha
@@ -147,7 +149,7 @@ public class QuickETC extends ETCPack {
 		float LR = 0.299f;
 		float LG = 0.587f;
 		float LB = 0.114f;
-		float[] lumas = new float[16];
+
 		float lmin = 1f;
 		float lmax = 0f;
 		// Load luma data into 1D array
@@ -224,12 +226,12 @@ public class QuickETC extends ETCPack {
 		if (alphaExists) {
 			//If a punch through exists we can only use ETC diff or T or H
 
-			int[] etc1_word1 = new int[1];
-			int[] etc1_word2 = new int[1];
-			compressBlockDifferentialWithAlpha(true, img, alphaimg, imgdec, width, height, startx, starty, etc1_word1,
-					etc1_word2);
-			compressed1[0] = etc1_word1[0];
-			compressed2[0] = etc1_word2[0];
+			//int[] etc1_word1 = new int[1];
+			//int[] etc1_word2 = new int[1];
+			compressBlockDifferentialWithAlpha(true, img, alphaimg, imgdec, width, height, startx, starty, compressed1,
+					compressed2);
+			//compressed1[0] = etc1_word1[0];
+			//compressed2[0] = etc1_word2[0];
 
 			/*
 				int[] thumbT59_word1=new int[1];
@@ -267,20 +269,22 @@ public class QuickETC extends ETCPack {
 		} else {
 
 			if (planar) {
-				int[] planar57_word1 = new int[1];
-				int[] planar57_word2 = new int[1];
-				int[] planar_word1 = new int[1];
-				int[] planar_word2 = new int[1];
-				compressBlockPlanar57(img, width, height, startx, starty, planar57_word1, planar57_word2);
-				stuff57bits(planar57_word1[0], planar57_word2[0], planar_word1, planar_word2);
-				compressed1[0] = planar_word1[0];
-				compressed2[0] = planar_word2[0];
+				//int[] planar57_word1 = new int[1];
+				//int[] planar57_word2 = new int[1];
+				//int[] planar_word1 = new int[1];
+				//int[] planar_word2 = new int[1];		
+				compressBlockPlanar57(img, width, height, startx, starty, compressed1, compressed2);
+				//then use the value pass and array pass to separate them 
+				stuff57bits(compressed1[0], compressed2[0], compressed1, compressed2);
+				
+				//compressed1[0] = planar_word1[0];
+				//compressed2[0] = planar_word2[0];
 			} else {
-				int[] etc1_word1 = new int[1];
-				int[] etc1_word2 = new int[1];
-				compressBlockDiffFlipFast(img, imgdec, width, height, startx, starty, etc1_word1, etc1_word2);
-				compressed1[0] = etc1_word1[0];
-				compressed2[0] = etc1_word2[0];
+				//int[] etc1_word1 = new int[1];
+				//int[] etc1_word2 = new int[1];
+				compressBlockDiffFlipFast(img, imgdec, width, height, startx, starty, compressed1, compressed2, w);
+				//compressed1[0] = etc1_word1[0];
+				//compressed2[0] = etc1_word2[0];
 			}
 
 			/*
@@ -352,9 +356,9 @@ public class QuickETC extends ETCPack {
 	//Compress an ETC2 RGB block using perceptual error metric
 	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address  int &compressed1,  int &compressed2
-	@Override
+	//lumas array handed in to avoid burn
 	void compressBlockETC2FastPerceptual(	byte[] img, byte[] imgdec, int width, int height, int startx, int starty,
-											int[] compressed1, int[] compressed2) {
+											int[] compressed1, int[] compressed2, float[] lumas, DiffFlipAverageCombinedWorkings w) {
 		
 //		if(startx == 468 && starty==(1024-480))
 //			System.out.println("hidyho");
@@ -364,7 +368,7 @@ public class QuickETC extends ETCPack {
 		float LR = 0.299f;
 		float LG = 0.587f;
 		float LB = 0.114f;
-		float[] lumas = new float[16];
+
 		float lmin = 1f;
 		float lmax = 0f;
 		// Load luma data into 1D array
@@ -442,20 +446,22 @@ public class QuickETC extends ETCPack {
 		}
 
 		if (planar) {
-			int[] planar57_word1 = new int[1];
-			int[] planar57_word2 = new int[1];
-			int[] planar_word1 = new int[1];
-			int[] planar_word2 = new int[1];
-			compressBlockPlanar57(img, width, height, startx, starty, planar57_word1, planar57_word2);
-			stuff57bits(planar57_word1[0], planar57_word2[0], planar_word1, planar_word2);
-			compressed1[0] = planar_word1[0];
-			compressed2[0] = planar_word2[0];
+			//int[] planar57_word1 = new int[1];
+			//int[] planar57_word2 = new int[1];
+			//int[] planar_word1 = new int[1];
+			//int[] planar_word2 = new int[1];
+			// reuse teh compressed as the return 
+			compressBlockPlanar57(img, width, height, startx, starty, compressed1, compressed2);
+			//then use the value pass and array pass to separate them 
+			stuff57bits(compressed1[0], compressed2[0], compressed1, compressed2);
+			//compressed1[0] = planar_word1[0];
+			//compressed2[0] = planar_word2[0];
 		} else {
-			int[] etc1_word1 = new int[1];
-			int[] etc1_word2 = new int[1];
-			compressBlockDiffFlipFastPerceptual(img, imgdec, width, height, startx, starty, etc1_word1, etc1_word2);
-			compressed1[0] = etc1_word1[0];
-			compressed2[0] = etc1_word2[0];
+			//int[] etc1_word1 = new int[1];
+			//int[] etc1_word2 = new int[1];
+			compressBlockDiffFlipFastPerceptual(img, imgdec, width, height, startx, starty, compressed1, compressed2, w);
+			//compressed1[0] = etc1_word1[0];
+			//compressed2[0] = etc1_word2[0];
 		}
 
 		/*
@@ -526,37 +532,32 @@ public class QuickETC extends ETCPack {
 	//Compress an ETC1 block (or the individual and differential modes of an ETC2 block)
 	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address int &compressed1,  int &compressed2)
-	@Override
 	void compressBlockDiffFlipFast(	byte[] img, byte[] imgdec, int width, int height, int startx, int starty,
-									int[] compressed1, int[] compressed2) {
-		int[] combined_both1 = new int[1];
-		int[] combined_both2 = new int[1];
-		compressBlockDiffFlipAverageCombined(img, width, height, startx, starty, combined_both1, combined_both2, false);
-		compressed1[0] = combined_both1[0];
-		compressed2[0] = combined_both2[0];
+									int[] compressed1, int[] compressed2, DiffFlipAverageCombinedWorkings w) {
+		//int[] combined_both1 = new int[1];
+		//int[] combined_both2 = new int[1];
+		compressBlockDiffFlipAverageCombined(img, width, height, startx, starty, compressed1, compressed2, false, w);
+		//compressed1[0] = combined_both1[0];
+		//compressed2[0] = combined_both2[0];
 	}
 
 	//Compress an ETC1 block (or the individual and differential modes of an ETC2 block)
 	//Uses perceptual error metric.
 	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	//address  int &compressed1,  int &compressed2)
-	@Override
 	void compressBlockDiffFlipFastPerceptual(	byte[] img, byte[] imgdec, int width, int height, int startx, int starty,
-												int[] compressed1, int[] compressed2) {
-		int[] combined_both1 = new int[1];
-		int[] combined_both2 = new int[1];
-		compressBlockDiffFlipAverageCombined(img, width, height, startx, starty, combined_both1, combined_both2, true);
-		compressed1[0] = combined_both1[0];
-		compressed2[0] = combined_both2[0];
+												int[] compressed1, int[] compressed2, DiffFlipAverageCombinedWorkings w) {
+		//int[] combined_both1 = new int[1];
+		//int[] combined_both2 = new int[1];
+		compressBlockDiffFlipAverageCombined(img, width, height, startx, starty, compressed1, compressed2, true, w);
+		//compressed1[0] = combined_both1[0];
+		//compressed2[0] = combined_both2[0];
 	}
 
-	/**
-	 * Merge of compressBlockDiffFlipAverage and compressBlockDiffFlipCombined both perceptual and non perceptual by way
-	 * of a simple boolean
-	 *
-	 */
-	void compressBlockDiffFlipAverageCombined(	byte[] img, int width, int height, int startx, int starty,
-												int[] compressed1, int[] compressed2, boolean perceptual) {
+	
+	
+	// The ultimate deburing for working array allocation, create once per thread and viola!
+	public class DiffFlipAverageCombinedWorkings {
 		int[] compressed1_normA = new int[1], compressed2_normA = new int[1];
 		int[] compressed1_flipA = new int[1], compressed2_flipA = new int[1];
 		byte[] avg_color_quant1 = new byte[3], avg_color_quant2 = new byte[3];
@@ -564,18 +565,48 @@ public class QuickETC extends ETCPack {
 		float[] avg_color24_float1 = new float[3], avg_color24_float2 = new float[3];
 		float[] avg_color42_float1 = new float[3], avg_color42_float2 = new float[3];
 		int[] enc_color1 = new int[3], enc_color2 = new int[3], diff = new int[3];
-//		int min_error = 255 * 255 * 8 * 3;
-//		int best_table_indices1 = 0, best_table_indices2 = 0;
 		int[] best_table1 = new int[1], best_table2 = new int[1];
-		int diffbit;
-
-		int norm_errA = 0;
-		int flip_errA = 0;
 		
 		int[] best_pixel_indices1_MSB = new int[1];
 		int[] best_pixel_indices1_LSB = new int[1];
 		int[] best_pixel_indices2_MSB = new int[1];
 		int[] best_pixel_indices2_LSB = new int[1];
+		
+		int[] compressed1_normC = new int[1], compressed2_normC = new int[1];
+		int[] compressed1_flipC = new int[1], compressed2_flipC = new int[1];
+		
+		byte[] dummyB = new byte[3];
+		float[] dummyF = new float[3];
+	}
+	
+	
+	
+	/**
+	 * Merge of compressBlockDiffFlipAverage and compressBlockDiffFlipCombined both perceptual and non perceptual by way
+	 * of a simple boolean
+	 *
+	 */
+	void compressBlockDiffFlipAverageCombined(	byte[] img, int width, int height, int startx, int starty,
+												int[] compressed1, int[] compressed2, boolean perceptual, DiffFlipAverageCombinedWorkings w) {
+		int[] compressed1_normA = w.compressed1_normA, compressed2_normA = w.compressed2_normA;
+		int[] compressed1_flipA = w.compressed1_flipA, compressed2_flipA = w.compressed2_flipA;
+		byte[] avg_color_quant1 = w.avg_color_quant1, avg_color_quant2 = w.avg_color_quant2;
+
+		float[] avg_color24_float1 = w.avg_color24_float1, avg_color24_float2 = w.avg_color24_float2;
+		float[] avg_color42_float1 = w.avg_color42_float1, avg_color42_float2 = w.avg_color42_float2;
+		int[] enc_color1 = w.enc_color1, enc_color2 = w.enc_color2, diff = w.diff;
+//		int min_error = 255 * 255 * 8 * 3;
+//		int best_table_indices1 = 0, best_table_indices2 = 0;
+		int[] best_table1 = w.best_table1, best_table2 = w.best_table2;
+		int diffbit;
+
+		int norm_errA = 0;
+		int flip_errA = 0;
+		
+		int[] best_pixel_indices1_MSB = w.best_pixel_indices1_MSB;
+		int[] best_pixel_indices1_LSB = w.best_pixel_indices1_LSB;
+		int[] best_pixel_indices2_MSB = w.best_pixel_indices2_MSB;
+		int[] best_pixel_indices2_LSB = w.best_pixel_indices2_LSB;
 
 		// First try normal blocks 2x4:
 		computeAverageColor2x4noQuantFloat(img, width, height, startx, starty, avg_color24_float1);
@@ -847,8 +878,8 @@ public class QuickETC extends ETCPack {
 									| (best_pixel_indices1_LSB[0] & 0xffff);
 		}
 
-		int[] compressed1_normC = new int[1], compressed2_normC = new int[1];
-		int[] compressed1_flipC = new int[1], compressed2_flipC = new int[1];
+		int[] compressed1_normC = w.compressed1_normC, compressed2_normC = w.compressed2_normC;
+		int[] compressed1_flipC = w.compressed1_flipC, compressed2_flipC = w.compressed2_flipC;
 		//		byte[] avg_color_quant1= new byte[3], avg_color_quant2= new byte[3];
 
 		//		float[] avg_color_float1= new float[3],avg_color_float2= new float[3];
@@ -870,8 +901,8 @@ public class QuickETC extends ETCPack {
 
 		//		float eps;
 
-		byte[] dummyB = new byte[3];
-		float[] dummyF = new float[3];
+		byte[] dummyB = w.dummyB;
+		float[] dummyF = w.dummyF;
 		if (perceptual) {
 			quantize555ColorCombinedPerceptual(avg_color24_float1, enc_color1, dummyB);
 			quantize555ColorCombinedPerceptual(avg_color24_float2, enc_color2, dummyB);
@@ -1344,7 +1375,7 @@ public class QuickETC extends ETCPack {
 	
 	
 	
-// this is here because might be able to be optimised, but no changes yet
+ 
 	//Compresses the alpha part of a GL_COMPRESSED_RGBA8_ETC2_EAC block.
 	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 	// 8 byte return byte array replaced with a long return type
@@ -1368,6 +1399,46 @@ public class QuickETC extends ETCPack {
 					maxdist=Math.abs(alpha-(data[ix+x+(iy+y)*width]&0xff)); //maximum distance from average
 			}
 		}
+		
+		// if all values are the same we can short cut, pack everything and return 
+		if (maxdist == 0) {
+			long returnData = 0;
+
+			// alpha is already the correct single alpha value
+			// these 2 are the no variation option
+			int besttable = 0;
+			int bestindex = 0;
+
+			returnData = returnData | (alpha & 255);
+			returnData <<= 8;// this is pushing byte towards the left making it byte[0] the left most equivalent
+
+			returnData = returnData | (besttable & 255);
+			returnData <<= 8;
+
+			int byte_ = 2;
+			int bit = 0;
+			for (int x = 0; x < 4; x++) {
+				for (int y = 0; y < 4; y++) {
+					//best table index has been determined.
+					//pack 3-bit index into compressed data, one bit at a time
+					for (int numbit = 0; numbit < 3; numbit++) {
+						returnData = returnData | ((byte)getbit(bestindex, 2 - numbit, 7 - bit) & 255);
+
+						bit++;
+						if (bit > 7) {
+							bit = 0;
+							byte_++;
+							if (byte_ < 8)// need to not overflow, could be tricky
+								returnData <<= 8;
+						}
+					}
+				}
+			}
+
+			return returnData;
+		}
+		
+		
 		int approxPos = (maxdist*255)/160-4;  //experimentally derived formula for calculating approximate table position given a max distance from average
 		if(approxPos>255)
 			approxPos=255;
@@ -1465,10 +1536,10 @@ public class QuickETC extends ETCPack {
 						bestsum=sum;
 						besttable=table;
 						bestalpha=alpha;
+					}
 				}
-			}
-			if(alphascale<=2)
-				alphascale=0;
+				if(alphascale<=2)
+					alphascale=0;
 			}
 		}
 
@@ -1523,6 +1594,7 @@ public class QuickETC extends ETCPack {
 						bestindex=index;
 					}
 				}
+
 				//best table index has been determined.
 				//pack 3-bit index into compressed data, one bit at a time
 				for(int numbit=0; numbit<3; numbit++) 
@@ -1553,6 +1625,10 @@ public class QuickETC extends ETCPack {
 		//+":"+String.format("%8s", Integer.toBinaryString(rd[4] & 0xFF)).replace(' ', '0')+":"+String.format("%8s", Integer.toBinaryString(rd[5] & 0xFF)).replace(' ', '0')		
 		//+":"+String.format("%8s", Integer.toBinaryString(rd[6] & 0xFF)).replace(' ', '0')+":"+String.format("%8s", Integer.toBinaryString(rd[7] & 0xFF)).replace(' ', '0')		
 		//		);
+		
+		
+		
+		
 		
 		return returnData;
 	
