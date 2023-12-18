@@ -1223,7 +1223,7 @@ public class QuickETC extends ETCPack {
 			
 			/////////////////
 			{
-				
+				sum_error = 0;
 				//pre-compute
 				for (q = 0; q < 4; q++) {
 					approx[q][0] = (byte)CLAMP(0, (avg_color[0] & 0xff) + compressParams[table][q], 255);
@@ -1312,7 +1312,7 @@ public class QuickETC extends ETCPack {
 
 			///////////////////////////////////
 			{
-				
+				sum_error = 0;
 				//pre-compute
 				for (q = 0; q < 4; q++) {
 					approx[q][0] = (byte)CLAMP(0, (avg_color[0] & 0xff) + compressParams[table][q], 255);
