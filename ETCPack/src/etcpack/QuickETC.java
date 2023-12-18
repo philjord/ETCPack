@@ -144,6 +144,8 @@ public class QuickETC extends ETCPack {
 		// get a list of 16 luma values		
 		// and at the same time work out if there exists a punch through alpha
 		boolean alphaExists = false;
+		// and just for speed are they all transparent
+		int transparentCount = 0;
 
 		//Y = 0.299R + 0.587G + 0.114B
 		float LR = 0.299f;
@@ -169,10 +171,13 @@ public class QuickETC extends ETCPack {
 
 				if ((format == FORMAT.ETC2PACKAGE_RGBA1 || format == FORMAT.ETC2PACKAGE_sRGBA1)
 					&& alphaimg[1 * width * (starty + y) + 1 * (startx + x) + 0] < 127) {
-					alphaExists = true;
+					transparentCount++;					
 				}
 
 			}
+		
+		
+		alphaExists = transparentCount > 0;
 
 		float LD = lmax - lmin;
 
@@ -225,13 +230,8 @@ public class QuickETC extends ETCPack {
 		// go alpha paths if there is an alpha 
 		if (alphaExists) {
 			//If a punch through exists we can only use ETC diff or T or H
-
-			//int[] etc1_word1 = new int[1];
-			//int[] etc1_word2 = new int[1];
-			compressBlockDifferentialWithAlpha(true, img, alphaimg, imgdec, width, height, startx, starty, compressed1,
+			compressBlockDifferentialWithAlphaFast(true, img, alphaimg, imgdec, width, height, startx, starty, compressed1,
 					compressed2);
-			//compressed1[0] = etc1_word1[0];
-			//compressed2[0] = etc1_word2[0];
 
 			/*
 				int[] thumbT59_word1=new int[1];
@@ -269,22 +269,11 @@ public class QuickETC extends ETCPack {
 		} else {
 
 			if (planar) {
-				//int[] planar57_word1 = new int[1];
-				//int[] planar57_word2 = new int[1];
-				//int[] planar_word1 = new int[1];
-				//int[] planar_word2 = new int[1];		
 				compressBlockPlanar57(img, width, height, startx, starty, compressed1, compressed2);
 				//then use the value pass and array pass to separate them 
 				stuff57bits(compressed1[0], compressed2[0], compressed1, compressed2);
-				
-				//compressed1[0] = planar_word1[0];
-				//compressed2[0] = planar_word2[0];
 			} else {
-				//int[] etc1_word1 = new int[1];
-				//int[] etc1_word2 = new int[1];
 				compressBlockDiffFlipFast(img, imgdec, width, height, startx, starty, compressed1, compressed2, w);
-				//compressed1[0] = etc1_word1[0];
-				//compressed2[0] = etc1_word2[0];
 			}
 
 			/*
@@ -359,9 +348,6 @@ public class QuickETC extends ETCPack {
 	//lumas array handed in to avoid burn
 	void compressBlockETC2FastPerceptual(	byte[] img, byte[] imgdec, int width, int height, int startx, int starty,
 											int[] compressed1, int[] compressed2, float[] lumas, DiffFlipAverageCombinedWorkings w) {
-		
-//		if(startx == 468 && starty==(1024-480))
-//			System.out.println("hidyho");
 		// get a list of 16 luma values			
 
 		//Y = 0.299R + 0.587G + 0.114B
@@ -374,15 +360,6 @@ public class QuickETC extends ETCPack {
 		// Load luma data into 1D array
 		for (int l = 0, y = 0; y < 4; y++)
 			for (int x = 0; x < 4; x++) {
-				
-				float r = ((img[3 * width * (starty + y) + 3 * (startx + x) + R] & 0xff));
-				float g =  ((img[3 * width * (starty + y) + 3 * (startx + x) + G] & 0xff) );
-				float b = ((img[3 * width * (starty + y) + 3 * (startx + x) + B] & 0xff) );
-				
-				
-				float rl = ((img[3 * width * (starty + y) + 3 * (startx + x) + R] & 0xff) / 255f) * LR;
-				float gl =  ((img[3 * width * (starty + y) + 3 * (startx + x) + G] & 0xff) / 255f) * LG;
-				float bl = ((img[3 * width * (starty + y) + 3 * (startx + x) + B] & 0xff) / 255f) * LB;
 				
 				float luma = ((img[3 * width * (starty + y) + 3 * (startx + x) + R] & 0xff) / 255f) * LR
 								+ ((img[3 * width * (starty + y) + 3 * (startx + x) + G] & 0xff) / 255f) * LG
@@ -446,22 +423,12 @@ public class QuickETC extends ETCPack {
 		}
 
 		if (planar) {
-			//int[] planar57_word1 = new int[1];
-			//int[] planar57_word2 = new int[1];
-			//int[] planar_word1 = new int[1];
-			//int[] planar_word2 = new int[1];
-			// reuse teh compressed as the return 
+			// reuse the compressed as the return 
 			compressBlockPlanar57(img, width, height, startx, starty, compressed1, compressed2);
 			//then use the value pass and array pass to separate them 
 			stuff57bits(compressed1[0], compressed2[0], compressed1, compressed2);
-			//compressed1[0] = planar_word1[0];
-			//compressed2[0] = planar_word2[0];
 		} else {
-			//int[] etc1_word1 = new int[1];
-			//int[] etc1_word2 = new int[1];
 			compressBlockDiffFlipFastPerceptual(img, imgdec, width, height, startx, starty, compressed1, compressed2, w);
-			//compressed1[0] = etc1_word1[0];
-			//compressed2[0] = etc1_word2[0];
 		}
 
 		/*
@@ -534,11 +501,7 @@ public class QuickETC extends ETCPack {
 	//address int &compressed1,  int &compressed2)
 	void compressBlockDiffFlipFast(	byte[] img, byte[] imgdec, int width, int height, int startx, int starty,
 									int[] compressed1, int[] compressed2, DiffFlipAverageCombinedWorkings w) {
-		//int[] combined_both1 = new int[1];
-		//int[] combined_both2 = new int[1];
 		compressBlockDiffFlipAverageCombined(img, width, height, startx, starty, compressed1, compressed2, false, w);
-		//compressed1[0] = combined_both1[0];
-		//compressed2[0] = combined_both2[0];
 	}
 
 	//Compress an ETC1 block (or the individual and differential modes of an ETC2 block)
@@ -547,16 +510,12 @@ public class QuickETC extends ETCPack {
 	//address  int &compressed1,  int &compressed2)
 	void compressBlockDiffFlipFastPerceptual(	byte[] img, byte[] imgdec, int width, int height, int startx, int starty,
 												int[] compressed1, int[] compressed2, DiffFlipAverageCombinedWorkings w) {
-		//int[] combined_both1 = new int[1];
-		//int[] combined_both2 = new int[1];
 		compressBlockDiffFlipAverageCombined(img, width, height, startx, starty, compressed1, compressed2, true, w);
-		//compressed1[0] = combined_both1[0];
-		//compressed2[0] = combined_both2[0];
 	}
 
 	
 	
-	// The ultimate deburing for working array allocation, create once per thread and viola!
+	// The ultimate deburning for working array allocation, create once per thread and viola!
 	public class DiffFlipAverageCombinedWorkings {
 		int[] compressed1_normA = new int[1], compressed2_normA = new int[1];
 		int[] compressed1_flipA = new int[1], compressed2_flipA = new int[1];
@@ -964,8 +923,6 @@ public class QuickETC extends ETCPack {
 			PUTBITSHIGH(compressed1_normC, diff[1], 3, 50);
 			PUTBITSHIGH(compressed1_normC, diff[2], 3, 42);
 
-
-
 			norm_errC = 0;
 
 			// left part of block
@@ -1028,7 +985,6 @@ public class QuickETC extends ETCPack {
 			best_pixel_indices1_LSB[0] = 0;
 			best_pixel_indices2_MSB[0] = 0;
 			best_pixel_indices2_LSB[0] = 0;
-
 
 			// left part of block
 			norm_errC = tryalltables_3bittable2x4fast(img, width, height, startx, starty, avg_color_quant1,
@@ -1094,7 +1050,6 @@ public class QuickETC extends ETCPack {
 			best_pixel_indices2_MSB[0] = 0;
 			best_pixel_indices2_LSB[0] = 0;
 
-
 			// upper part of block
 			flip_errC = tryalltables_3bittable4x2fast(img, width, height, startx, starty, avg_color_quant1,
 					best_table1, best_pixel_indices1_MSB, best_pixel_indices1_LSB, perceptual);
@@ -1154,7 +1109,6 @@ public class QuickETC extends ETCPack {
 			best_pixel_indices2_MSB[0] = 0;
 			best_pixel_indices2_LSB[0] = 0;
 
-
 			// upper part of block
 			flip_errC = tryalltables_3bittable4x2fast(img, width, height, startx, starty, avg_color_quant1,
 					best_table1, best_pixel_indices1_MSB, best_pixel_indices1_LSB, perceptual);
@@ -1189,8 +1143,6 @@ public class QuickETC extends ETCPack {
 			compressed2[0] = compressed2_flipC[0];
 		}
 	}
-
-	
 
 	
 	//Find the best table to use for a 4x2 area by testing all.
@@ -1373,8 +1325,6 @@ public class QuickETC extends ETCPack {
 		return (int) min_error;
 	}
 	
-	
-	
  
 	//Compresses the alpha part of a GL_COMPRESSED_RGBA8_ETC2_EAC block.
 	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
@@ -1383,18 +1333,14 @@ public class QuickETC extends ETCPack {
 	{
 		int alphasum=0;
 		int maxdist=-2;
-		for(int x=0; x<4; x++) 
-		{
-			for(int y=0; y<4; y++) 
-			{
+		for(int x=0; x<4; x++) {
+			for(int y=0; y<4; y++){
 				alphasum+=(data[ix+x+(iy+y)*width]&0xff);
 			}
 		}
 		int alpha = (int)( ((float)alphasum)/16.0f+0.5f); //average pixel value, used as guess for base value.
-		for(int x=0; x<4; x++) 
-		{
-			for(int y=0; y<4; y++) 
-			{
+		for(int x=0; x<4; x++) {
+			for(int y=0; y<4; y++) {
 				if(Math.abs(alpha-(data[ix+x+(iy+y)*width]&0xff))>maxdist)
 					maxdist=Math.abs(alpha-(data[ix+x+(iy+y)*width]&0xff)); //maximum distance from average
 			}
@@ -1454,64 +1400,50 @@ public class QuickETC extends ETCPack {
 
 		//main loop: determine best base alpha value and offset table to use for compression
 		//try some different alpha tables.
-		for(int table = startTable; table<endTable&&bestsum>0; table++)
-		{
+		for (int table = startTable; table < endTable && bestsum > 0; table++) {
 			int tablealpha=prevalpha;
 			int tablebestsum=1000000000;
 			//test some different alpha values, trying to find the best one for the given table.	
-			for(int alphascale=16; alphascale>0; alphascale/=4) 
-			{
+			for (int alphascale = 16; alphascale > 0; alphascale /= 4) {
 				int startalpha;
 				int endalpha;
-				if(alphascale==16) 
-				{
+				if (alphascale == 16) {
 					startalpha = clamp(tablealpha-alphascale*4);
 					endalpha = clamp(tablealpha+alphascale*4);
-				}
-				else 
-				{
+				} else {
 					startalpha = clamp(tablealpha-alphascale*2);
 					endalpha = clamp(tablealpha+alphascale*2);
 				}
-				for(alpha=startalpha; alpha<=endalpha; alpha+=alphascale) 
-				{
+				
+				for (alpha = startalpha; alpha <= endalpha; alpha += alphascale) {
 					int sum=0;
 					int val,diff,bestdiff=10000000,index;
-					for(int x=0; x<4; x++) 
-					{
-						for(int y=0; y<4; y++) 
-						{
+					for (int x = 0; x < 4; x++) {
+						for (int y = 0; y < 4; y++) {
 							//compute best offset here, add square difference to sum..
 							val=(data[ix+x+(iy+y)*width]&0xff);
 							bestdiff=1000000000;
 							//the values are always ordered from small to large, with the first 4 being negative and the last 4 positive
 							//search is therefore made in the order 0-1-2-3 or 7-6-5-4, stopping when error increases compared to the previous entry tested.
-							if(val>alpha) 
-							{ 
-								for(index=7; index>3; index--) 
-								{
+							if (val > alpha) {
+								for (index = 7; index > 3; index--) {
 									diff=clamp_table[alpha+(int)(ETCDec.alphaTable[table][index])+255]-val;
 									diff*=diff;
-									if(diff<=bestdiff) 
-									{
+									if (diff <= bestdiff) {
 										bestdiff=diff;
-									}
-									else
+									} else {
 										break;
+									}
 								}
-							}
-							else 
-							{
-								for(index=0; index<4; index++) 
-								{
+							} else {
+								for (index = 0; index < 4; index++) {
 									diff=clamp_table[alpha+(int)(ETCDec.alphaTable[table][index])+255]-val;
 									diff*=diff;
-									if(diff<bestdiff) 
-									{
+									if (diff < bestdiff) {
 										bestdiff=diff;
-									}
-									else
+									} else {
 										break;
+									}
 								}
 							}
 
@@ -1519,20 +1451,17 @@ public class QuickETC extends ETCPack {
 							sum+=bestdiff;
 							//if the sum here is worse than previously best already, there's no use in continuing the count..
 							//note that tablebestsum could be used for more precise estimation, but the speedup gained here is deemed more important.
-							if(sum>bestsum) 
-							{ 
+							if(sum>bestsum) { 
 								x=9999; //just to make it large and get out of the x<4 loop
 								break;
 							}
 						}
 					}
-					if(sum<tablebestsum) 
-					{
+					if (sum < tablebestsum) {
 						tablebestsum=sum;
 						tablealpha=alpha;
 					}
-					if(sum<bestsum) 
-					{
+					if (sum < bestsum) {
 						bestsum=sum;
 						besttable=table;
 						bestalpha=alpha;
@@ -1548,6 +1477,7 @@ public class QuickETC extends ETCPack {
 		//"good" alpha value and table are known!
 		//store them, then loop through the pixels again and print indices.
 		
+		// how to flip from a 8 byte array to a single long
 		//https://stackoverflow.com/questions/43219560/packing-bytes-into-a-long-with-is-giving-unexpected-results
 		
 		long returnData = 0;		
@@ -1572,24 +1502,19 @@ public class QuickETC extends ETCPack {
 			//returnData <<=8;
 			
 //		}
-		
-
-		
+				
 		int byte_=2;
 		int bit=0;
-		for(int x=0; x<4; x++) 
-		{
-			for(int y=0; y<4; y++) 
-			{
+		for (int x = 0; x < 4; x++) {
+			for (int y = 0; y < 4; y++) {
 				//find correct index
 				int besterror=1000000;
 				int bestindex=99;
-				for(int index=0; index<8; index++) //no clever ordering this time, as this loop is only run once per block anyway
-				{ 
+				 //no clever ordering this time, as this loop is only run once per block anyway
+				for(int index=0; index<8; index++) { 
 					int error= (clamp(alpha +(int)(ETCDec.alphaTable[besttable][index]))-(data[ix+x+(iy+y)*width]&0xff));
 					error *= error;
-					if(error<besterror) 
-					{
+					if(error<besterror) {
 						besterror=error;
 						bestindex=index;
 					}
@@ -1597,16 +1522,14 @@ public class QuickETC extends ETCPack {
 
 				//best table index has been determined.
 				//pack 3-bit index into compressed data, one bit at a time
-				for(int numbit=0; numbit<3; numbit++) 
-				{
+				for(int numbit=0; numbit<3; numbit++) {
 //					rd[byte_] =(byte)((rd[byte_]&0xff) | getbit(bestindex,2-numbit,7-bit));					
 					
 					returnData = returnData | ((byte)getbit(bestindex,2-numbit,7-bit) & 255);
 //					System.out.println("1a " + byte_ + " " + Long.toBinaryString(returnData));
 
 					bit++;
-					if(bit>7) 
-					{
+					if(bit>7) {
 						bit=0;
 						byte_++;
 						if(byte_ < 8)// need to not overflow, could be tricky
@@ -1625,16 +1548,241 @@ public class QuickETC extends ETCPack {
 		//+":"+String.format("%8s", Integer.toBinaryString(rd[4] & 0xFF)).replace(' ', '0')+":"+String.format("%8s", Integer.toBinaryString(rd[5] & 0xFF)).replace(' ', '0')		
 		//+":"+String.format("%8s", Integer.toBinaryString(rd[6] & 0xFF)).replace(' ', '0')+":"+String.format("%8s", Integer.toBinaryString(rd[7] & 0xFF)).replace(' ', '0')		
 		//		);
-		
-		
-		
-		
-		
+					
 		return returnData;
-	
-
 	}
+	
+	
+	//Compresses the differential mode of an ETC2 block with punchthrough alpha
+	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
+		//address int &etc1_word1,  int &etc1_word2) 
+	// no changes as hardly ever invoked
+	void compressBlockDifferentialWithAlphaFast(boolean isTransparent, byte[] img, byte[] alphaimg, byte[] imgdec, int width, int height, int startx, int starty,  int[] etc1_word1,  int[] etc1_word2) 
+	{
+		int[] compressed1_norm= new int[1], compressed2_norm= new int[1];
+		int[] compressed1_flip= new int[1], compressed2_flip= new int[1];
+		int[] compressed1_temp= new int[1], compressed2_temp= new int[1];
+		byte[] avg_color_quant1= new byte[3], avg_color_quant2= new byte[3];
 
+		float[] avg_color_float1= new float[3],avg_color_float2= new float[3];
+		int[] enc_color1= new int[3], enc_color2= new int[3], diff= new int[3];
+		int min_error=255*255*8*3;
+		
+		int norm_err=0;
+		int flip_err=0;
+		int temp_err=0;
+		for(int flipbit=0; flipbit<2; flipbit++) 
+		{
+			//compute average color for each half.
+			for(int c=0; c<3; c++) 
+			{
+				avg_color_float1[c]=0;
+				avg_color_float2[c]=0;
+				float sum1=0;
+				float sum2=0;
+				for(int x=0; x<4; x++) 
+				{
+					for(int y=0; y<4; y++) 
+					{
+						float fac=1;
+						int index = x+startx+(y+starty)*width;
+						//transparent pixels are only barely figured into the average. This ensures that they DO matter if we have only
+						//transparent pixels in one half of the block, and not otherwise. A bit ugly perhaps.
+						if((alphaimg[index]&0xff)<128)
+							fac=0.0001f;
+						float col = fac*(img[index*3+c]&0xff);
+						if( (flipbit==0&&x<2) || (flipbit==1&&y<2) ) 
+						{
+							sum1+=fac;
+							avg_color_float1[c]+=col;
+						}
+						else 
+						{
+							sum2+=fac;
+							avg_color_float2[c]+=col;
+						}						
+					}
+				}
+				avg_color_float1[c]/=sum1;
+				avg_color_float2[c]/=sum2;
+			}
+			float[] dummy= new float[3];
+			quantize555ColorCombined(avg_color_float1, enc_color1, dummy);
+			quantize555ColorCombined(avg_color_float2, enc_color2, dummy);
+
+			diff[0] = enc_color2[0]-enc_color1[0];	
+			diff[1] = enc_color2[1]-enc_color1[1];	
+			diff[2] = enc_color2[2]-enc_color1[2];
+
+			//make sure diff is small enough for diff-coding
+			for(int c=0; c<3; c++) 
+			{
+					if(diff[c]<-4)
+						diff[c]=-4;
+					if(diff[c]>3)
+						diff[c]=3;
+					enc_color2[c]=enc_color1[c]+diff[c];
+			}
+
+			avg_color_quant1[0] = (byte)(enc_color1[0] << 3 | (enc_color1[0] >> 2));
+			avg_color_quant1[1] = (byte)(enc_color1[1] << 3 | (enc_color1[1] >> 2));
+			avg_color_quant1[2] = (byte)(enc_color1[2] << 3 | (enc_color1[2] >> 2));
+			avg_color_quant2[0] = (byte)(enc_color2[0] << 3 | (enc_color2[0] >> 2));
+			avg_color_quant2[1] = (byte)(enc_color2[1] << 3 | (enc_color2[1] >> 2));
+			avg_color_quant2[2] = (byte)(enc_color2[2] << 3 | (enc_color2[2] >> 2));
+
+			// Pack bits into the first word. 
+			// see regular compressblockdiffflipfast for details
+
+			compressed1_temp[0] = 0;
+			PUTBITSHIGH( compressed1_temp, !isTransparent ? 1 : 0,       1, 33);
+			PUTBITSHIGH( compressed1_temp, enc_color1[0], 5, 63);
+			PUTBITSHIGH( compressed1_temp, enc_color1[1], 5, 55);
+			PUTBITSHIGH( compressed1_temp, enc_color1[2], 5, 47);
+			PUTBITSHIGH( compressed1_temp, diff[0],       3, 58);
+			PUTBITSHIGH( compressed1_temp, diff[1],       3, 50);
+			PUTBITSHIGH( compressed1_temp, diff[2],       3, 42);
+
+			temp_err = 0;
+			
+			int[] besterror= new int[2];
+			besterror[0]=255*255*3*16;
+			besterror[1]=255*255*3*16;
+			int[] besttable= new int[2];
+			int[] best_indices_LSB= new int[16];
+			int[] best_indices_MSB= new int[16];
+			//for each table, we're going to compute the indices required to get minimum error in each half.
+			//then we'll check if this was the best table for either half, and set besterror/besttable accordingly.
+			for(int table=0; table<8; table++) 
+			{
+				int[] taberror= new int[2];//count will be sort of an index of each pixel within a half, determining where the index will be placed in the bitstream.
+				
+				int[] pixel_indices_LSB= new int[16],pixel_indices_MSB= new int[16];
+				
+				for(int i=0; i<2; i++) 
+				{
+					taberror[i]=0;
+				}
+				for(int x=0; x<4; x++) 
+				{
+					for(int y=0; y<4; y++) 
+					{
+						int index = x+startx+(y+starty)*width;
+						byte[] basecol= new byte[3];
+						boolean transparentPixel=(alphaimg[index]&0xff)<128;
+						//determine which half of the block this pixel is in, based on the flipbit.
+						int half=0;
+						if( (flipbit==0&&x<2) || (flipbit!=0&&y<2) ) 
+						{
+							basecol[0]=avg_color_quant1[0];
+							basecol[1]=avg_color_quant1[1];
+							basecol[2]=avg_color_quant1[2];
+						}
+						else 
+						{
+							half=1;
+							basecol[0]=avg_color_quant2[0];
+							basecol[1]=avg_color_quant2[1];
+							basecol[2]=avg_color_quant2[2];
+						}
+						int besterri=255*255*3*2;
+						int besti=0;
+						int erri;
+						for(int i=0; i<4; i++) 
+						{
+							if(i==1&&isTransparent)
+								continue;
+							erri=0;
+							for(int c=0; c<3; c++) 
+							{
+								int col=CLAMP(0,((int)(basecol[c]&0xff))+compressParams[table*2][i],255);
+								if(i==2&&isTransparent) 
+								{
+									 col=(int)(basecol[c]&0xff);
+								}
+								int errcol=col-((int)((img[index*3+c]&0xff)));
+								erri=erri+(errcol*errcol);
+							}
+							if(erri<besterri) 
+							{
+								besterri=erri;
+								besti=i;
+							}
+						}
+						if(transparentPixel) 
+						{
+							besterri=0;
+							besti=1;
+						}
+						//the best index for this pixel using this table for its half is known.
+						//add its error to error for this table and half.
+						taberror[half]+=besterri;
+						//store the index! we might toss it later though if this was a bad table.
+
+						int pixel_index = scramble[besti];
+
+						pixel_indices_MSB[x*4+y]=(pixel_index >> 1);
+						pixel_indices_LSB[x*4+y]=(pixel_index & 1);
+					}
+				}
+				for(int half=0; half<2; half++) 
+				{
+					if(taberror[half]<besterror[half]) 
+					{
+						besterror[half]=taberror[half];
+						besttable[half]=table;
+						for(int i=0; i<16; i++) 
+						{
+							int thishalf=0;
+							int y=i%4;
+							int x=i/4;
+							if( !(flipbit==0&&x<2) && !(flipbit!=0&&y<2) )
+								thishalf=1;
+							if(half!=thishalf) //this pixel is not in given half, don't update best index!
+								continue;
+							best_indices_MSB[i]=pixel_indices_MSB[i];
+							best_indices_LSB[i]=pixel_indices_LSB[i];
+						}
+					}
+				}
+			}
+			PUTBITSHIGH( compressed1_temp, besttable[0],   3, 39);
+			PUTBITSHIGH( compressed1_temp, besttable[1],   3, 36);
+			PUTBITSHIGH( compressed1_temp,      0,   1, 32);
+
+			compressed2_temp[0] = 0;
+			for(int i=0; i<16; i++) 
+			{
+				PUTBITS( compressed2_temp, (best_indices_MSB[i]  ), 1, 16+i);
+				PUTBITS( compressed2_temp, (best_indices_LSB[i]  ), 1, i);
+			}
+			
+			if(flipbit!=0) 
+			{
+				flip_err=besterror[0]+besterror[1];
+				compressed1_flip[0]=compressed1_temp[0];
+				compressed2_flip[0]=compressed2_temp[0];
+			}
+			else 
+			{
+				norm_err=besterror[0]+besterror[1];
+				compressed1_norm[0]=compressed1_temp[0];
+				compressed2_norm[0]=compressed2_temp[0];
+			}
+		}
+		// Now to find out if flipping was a good idea or not
+
+		if(norm_err <= flip_err)
+		{
+			etc1_word1[0] = compressed1_norm[0] | 0;
+			etc1_word2[0] = compressed2_norm[0];
+		}
+		else
+		{
+			etc1_word1[0] = compressed1_flip[0] | 1;
+			etc1_word2[0] = compressed2_flip[0];
+		}
+	}
 	
 	
 	
