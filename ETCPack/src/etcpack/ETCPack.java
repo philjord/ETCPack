@@ -6,6 +6,7 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.util.Arrays;
 import java.util.Random;
 
 import etcpack.TargaReader.ImgData;
@@ -150,6 +151,8 @@ public class ETCPack {
 		bb.putInt(header.bytesOfKeyValueData);
 	}
 	
+	
+	
 	//helpers
 	protected static void strcpy(String[] string, String string2) {
 		string[0]=string2;	
@@ -170,13 +173,20 @@ public class ETCPack {
 	float sqrtW26 = (float)(2.0/Math.sqrt(1.0*6));
 	
 //Functions needed for decompression ---- in etcdec.cxx
-/*
-void read_big_endian_2byte_word(unsigned short *blockadr, FILE *f);
-void read_big_endian_4byte_word(unsigned int *blockadr, FILE *f);
-void unstuff57bits(unsigned int planar_word1, unsigned int planar_word2, unsigned int &planar57_word1, unsigned int &planar57_word2);
-void unstuff59bits(unsigned int thumbT_word1, unsigned int thumbT_word2, unsigned int &thumbT59_word1, unsigned int &thumbT59_word2);
-void unstuff58bits(unsigned int thumbH_word1, unsigned int thumbH_word2, unsigned int &thumbH58_word1, unsigned int &thumbH58_word2);
-*/
+
+static void read_big_endian_2byte_word(int[] blockadr, ByteBuffer f)
+{ETCDec.read_big_endian_2byte_word(blockadr, f);}
+static void fread(byte[] c, ByteBuffer f)
+{ETCDec.fread(c, f);}
+static void read_big_endian_4byte_word(int[] blockadr, ByteBuffer f)
+{ETCDec.read_big_endian_4byte_word(blockadr, f);}
+static void unstuff57bits(int planar_word1, int planar_word2, int[] planar57_word1, int[] planar57_word2)
+{ETCDec.unstuff57bits(planar_word1, planar_word2, planar57_word1, planar57_word2);}
+static void unstuff59bits(int thumbT_word1, int thumbT_word2, int[] thumbT59_word1, int[] thumbT59_word2)
+{ETCDec.unstuff59bits(thumbT_word1, thumbT_word2, thumbT59_word1, thumbT59_word2);}
+static void unstuff58bits(int thumbH_word1, int thumbH_word2, int[] thumbH58_word1, int[] thumbH58_word2)
+{ETCDec.unstuff58bits(thumbH_word1, thumbH_word2, thumbH58_word1, thumbH58_word2);}
+
 //uint8 (colors_RGB444)[2][3], uint8 (colors)[2][3]);
 static void decompressColor(int R_B, int G_B, int B_B, byte[][] colors_RGB444, byte[][] colors)
 {ETCDec.decompressColor(R_B, G_B, B_B, colors_RGB444, colors);}
@@ -704,9 +714,8 @@ boolean readSrcFile(String filename,byte[][] img,byte[][] imgalpha, int[] width,
 	else
 	{
 		System.out.println("Could not read tmp.ppm file");
-		System.exit(1);	
+		return false;
 	}
-	return false;
 
 }
 
@@ -3953,7 +3962,7 @@ static dMatrix multiplyMatrices( dMatrix Amat, dMatrix Bmat)
 	if(Amat.width != Bmat.height)
 	{
 		System.out.println("Cannot multiply matrices -- dimensions do not agree.");
-		System.exit(1);
+		return null;
 	}
 
 	// Allocate space for result
@@ -8871,7 +8880,7 @@ void readAlpha(byte[][] data, byte[] imgalpha, int width, int height, int[] exte
 	else 
 	{
 		System.out.println("invalid format for alpha reading!");
-		System.exit(1);
+		return;
 	}
 	//fReadPGM("alpha.pgm",width,height,tempdata,wantedBitDepth);
 	//NOTE! that alpha channel comes from the readSrcFile now in void compressFile(String srcfile,String dstfile)
@@ -9462,222 +9471,237 @@ double calculatePSNR(byte[] lossyimg, byte[] origimg, int width, int height)
 	return calculateWeightedPSNR(lossyimg, origimg, width, height, (1.0/3.0), (1.0/3.0), (1.0/3.0));
 }
 
-/*
-//Decompresses a file
+
+//Decompresses a file to a raw bytes, but only for mipmap level 0, in ARGB format
 //NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-void uncompressFile(char *srcfile, uint8* &img, uint8 *&alphaimg, int& active_width, int& active_height)
+public byte[] uncompressImageFromByteBuffer(ByteBuffer srcfile,  int[] active_width, int[] active_height, boolean ktxFile)
 {	
-	FILE *f;
+	//TODO: what is the min for a 4x4?
+	if(srcfile == null || srcfile.capacity() < 25 ) {
+		System.out.println("Null source hand to " + this.getClass());
+		return null;
+	}
+	this.ktxFile = ktxFile;
+	
+	byte[] img;
+	byte[] alphaimg = null;
 	int width,height;
-	unsigned int block_part1, block_part2;
-	uint8 *newimg, *newalphaimg, *alphaimg2;
-	unsigned short w, h;
+	int[] block_part1 = new int[1], block_part2 = new int[1];
+	byte[] newimg = null, alphaimg2 = null;//, newalphaimg = null
+	int[] w = new int[1], h = new int[1];
 	int xx, yy;
-	unsigned char magic[4];
-	unsigned char version[2];
-	unsigned short texture_type;
-	if(f=fopen(srcfile,"rb"))
+	byte[] magic = new byte[4];
+	byte[] version = new byte[2];
+	int[] texture_type = new int[1];
+	//if(f=fopen(srcfile,"rb"))
 	{
 		// Load table
-		readCompressParams();
+		//readCompressParams();
 		if(ktxFile) 
 		{
+			ktxByteOrder(srcfile);
 			//read ktx header..
-			KTX_header header;
-			fread(&header,sizeof(KTX_header),1,f);
+			KTX_header header = new KTX_header();
+			ETCDec.fread(header,srcfile);
 			//read size parameter, which we don't actually need..
-			unsigned int bitsize;
-			fread(&bitsize,sizeof(unsigned int),1,f);
+			int bitsize = srcfile.getInt();
 	
-			active_width=header.pixelWidth;
-			active_height = header.pixelHeight;
-			w = ((active_width+3)/4)*4;
-			h = ((active_height+3)/4)*4;
-			width=w;
-			height=h;
+			active_width[0]=header.pixelWidth;
+			active_height[0] = header.pixelHeight;
+			w[0] = ((active_width[0]+3)/4)*4;
+			h[0] = ((active_height[0]+3)/4)*4;
+			width=w[0];
+			height=h[0];
 
 			if(header.glInternalFormat==GL_COMPRESSED_SIGNED_R11_EAC) 
 			{
-				format=ETC2PACKAGE_R_NO_MIPMAPS;
+				format=FORMAT.ETC2PACKAGE_R;
 				formatSigned=1;
 			}
 			else if(header.glInternalFormat==GL_COMPRESSED_R11_EAC) 
 			{
-				format=ETC2PACKAGE_R_NO_MIPMAPS;
+				format=FORMAT.ETC2PACKAGE_R;
 			}
 			else if(header.glInternalFormat==GL_COMPRESSED_SIGNED_RG11_EAC) 
 			{
-				format=ETC2PACKAGE_RG_NO_MIPMAPS;
+				format=FORMAT.ETC2PACKAGE_RG;
 				formatSigned=1;
 			}
 			else if(header.glInternalFormat==GL_COMPRESSED_RG11_EAC) 
 			{
-				format=ETC2PACKAGE_RG_NO_MIPMAPS;
+				format=FORMAT.ETC2PACKAGE_RG;
 			}
 			else if(header.glInternalFormat==GL_COMPRESSED_RGB8_ETC2) 
 			{
-				format=ETC2PACKAGE_RGB_NO_MIPMAPS;
+				format=FORMAT.ETC2PACKAGE_RGB;
 			}
 			else if(header.glInternalFormat==GL_COMPRESSED_SRGB8_ETC2) 
 			{
-				format=ETC2PACKAGE_sRGB_NO_MIPMAPS;
+				format=FORMAT.ETC2PACKAGE_sRGB;
 			}
 			else if(header.glInternalFormat==GL_COMPRESSED_RGBA8_ETC2_EAC) 
 			{
-				format=ETC2PACKAGE_RGBA_NO_MIPMAPS;
+				format=FORMAT.ETC2PACKAGE_RGBA;
 			}
 			else if(header.glInternalFormat==GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC) 
 			{
-				format=ETC2PACKAGE_sRGBA_NO_MIPMAPS;
+				format=FORMAT.ETC2PACKAGE_sRGBA;
 			}
 			else if(header.glInternalFormat==GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2) 
 			{
-				format=ETC2PACKAGE_RGBA1_NO_MIPMAPS;
+				format=FORMAT.ETC2PACKAGE_RGBA1;
 			}
 			else if(header.glInternalFormat==GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2) 
 			{
-				format=ETC2PACKAGE_sRGBA1_NO_MIPMAPS;
+				format=FORMAT.ETC2PACKAGE_sRGBA1;
 			}
 			else if(header.glInternalFormat==GL_ETC1_RGB8_OES) 
 			{
-				format=ETC1_RGB_NO_MIPMAPS;
-				codec=CODEC_ETC;
+				format=FORMAT.ETC1_RGB;
+				codec=CODEC.CODEC_ETC;
 			}
 			else 
 			{
 				System.out.println("ktx file has unknown glInternalFormat (not etc compressed)!");
-				exit(1);
+				return null;
 			}
+			
+			this.generateMipMaps = header.numberOfMipmapLevels > 1;
+ 
 		}
 		else 
 		{
 			// Read magic number
-			fread(&magic[0], sizeof(unsigned char), 1, f);
-			fread(&magic[1], sizeof(unsigned char), 1, f);
-			fread(&magic[2], sizeof(unsigned char), 1, f);
-			fread(&magic[3], sizeof(unsigned char), 1, f);
+			magic[0] = srcfile.get();
+			magic[1] = srcfile.get();
+			magic[2] = srcfile.get();
+			magic[3] = srcfile.get();
 			if(!(magic[0] == 'P' && magic[1] == 'K' && magic[2] == 'M' && magic[3] == ' '))
 			{
-				System.out.println("\n The file %s is not a .pkm file.\n",srcfile);
-				exit(1);
+				System.out.println("\n The file %s is not a .pkm file.\n");
+				return null;
 			}
 		
 			// Read version
-			fread(&version[0], sizeof(unsigned char), 1, f);
-			fread(&version[1], sizeof(unsigned char), 1, f);
+			version[0] = srcfile.get();
+			version[1] = srcfile.get();
 			if( version[0] == '1' && version[1] == '0' )
 			{
-
 				// Read texture type
-				read_big_endian_2byte_word(&texture_type, f);
-				if(!(texture_type == ETC1_RGB_NO_MIPMAPS))
+				read_big_endian_2byte_word(texture_type, srcfile);
+				if(!(texture_type[0] == FORMAT.ETC1_RGB.ordinal()))
 				{
-					System.out.println("\n\n The file %s (of version %c.%c) does not contain a texture of known format.", srcfile, version[0],version[1]);
-					System.out.println("Known formats: ETC1_RGB_NO_MIPMAPS.", srcfile);
-					exit(1);
+					System.out.println("\n\n The file %s (of version %c.%c) does not contain a texture of known format.");
+					System.out.println("Known formats: ETC1_RGB_NO_MIPMAPS.");
+					return null;
 				}
 			}
 			else if( version[0] == '2' && version[1] == '0' )
 			{
 				// Read texture type
-				read_big_endian_2byte_word(&texture_type, f);
-				if(texture_type==ETC2PACKAGE_RG_SIGNED_NO_MIPMAPS) 
+				read_big_endian_2byte_word(texture_type, srcfile);
+				if(texture_type[0]==FORMAT.ETC2PACKAGE_RG_SIGNED.ordinal()) 
 				{
-					texture_type=ETC2PACKAGE_RG_NO_MIPMAPS;
+					texture_type[0]=(short)FORMAT.ETC2PACKAGE_RG.ordinal();
 					formatSigned=1;
 					//System.out.println("Decompressing 2-channel signed data");
 				}
-				if(texture_type==ETC2PACKAGE_R_SIGNED_NO_MIPMAPS) 
+				if(texture_type[0]==FORMAT.ETC2PACKAGE_R_SIGNED.ordinal()) 
 				{
-					texture_type=ETC2PACKAGE_R_NO_MIPMAPS;
+					texture_type[0]=(short)FORMAT.ETC2PACKAGE_R.ordinal();
 					formatSigned=1;
 					//System.out.println("Decompressing 1-channel signed data");
 				}
-		       if(texture_type==ETC2PACKAGE_sRGB_NO_MIPMAPS)
+		       if(texture_type[0]==FORMAT.ETC2PACKAGE_sRGB.ordinal())
 		       {
 		         // The SRGB formats are decoded just as RGB formats -- use RGB format for decompression.
-		         texture_type=ETC2PACKAGE_RGB_NO_MIPMAPS;
+		         texture_type[0]=(short)FORMAT.ETC2PACKAGE_RGB.ordinal();
 		       }
-		       if(texture_type==ETC2PACKAGE_sRGBA_NO_MIPMAPS)
+		       if(texture_type[0]==FORMAT.ETC2PACKAGE_sRGBA.ordinal())
 		       {
 		         // The SRGB formats are decoded just as RGB formats -- use RGB format for decompression.
-		         texture_type=ETC2PACKAGE_RGBA_NO_MIPMAPS;
+		         texture_type[0]=(short)FORMAT.ETC2PACKAGE_RGBA.ordinal();
 		       }
-		       if(texture_type==ETC2PACKAGE_sRGBA1_NO_MIPMAPS)
+		       if(texture_type[0]==FORMAT.ETC2PACKAGE_sRGBA1.ordinal())
 		       {
 		         // The SRGB formats are decoded just as RGB formats -- use RGB format for decompression.
-		         texture_type=ETC2PACKAGE_sRGBA1_NO_MIPMAPS;
+		         texture_type[0]=(short)FORMAT.ETC2PACKAGE_sRGBA1.ordinal();
 		       }
-				if(texture_type==ETC2PACKAGE_RGBA_NO_MIPMAPS_OLD) 
+				if(texture_type[0]==FORMAT.ETC2PACKAGE_RGBA_OLD.ordinal()) 
 				{
-					System.out.println("\n\nThe file %s contains a compressed texture created using an old version of ETCPACK.",srcfile);
+					System.out.println("\n\nThe file %s contains a compressed texture created using an old version of ETCPACK.");
 					System.out.println("decompression is not supported in this version.");
-					exit(1);
+					return null;
 				}
-				if(!(texture_type==ETC2PACKAGE_RGB_NO_MIPMAPS||texture_type==ETC2PACKAGE_sRGB_NO_MIPMAPS||texture_type==ETC2PACKAGE_RGBA_NO_MIPMAPS||texture_type==ETC2PACKAGE_sRGBA_NO_MIPMAPS||texture_type==ETC2PACKAGE_R_NO_MIPMAPS||texture_type==ETC2PACKAGE_RG_NO_MIPMAPS||texture_type==ETC2PACKAGE_RGBA1_NO_MIPMAPS||texture_type==ETC2PACKAGE_sRGBA1_NO_MIPMAPS))
+				if(!(texture_type[0]==FORMAT.ETC2PACKAGE_RGB.ordinal()||texture_type[0]==FORMAT.ETC2PACKAGE_sRGB.ordinal()||texture_type[0]==FORMAT.ETC2PACKAGE_RGBA.ordinal()
+						||texture_type[0]==FORMAT.ETC2PACKAGE_sRGBA.ordinal()||texture_type[0]==FORMAT.ETC2PACKAGE_R.ordinal()||texture_type[0]==FORMAT.ETC2PACKAGE_RG.ordinal()
+						||texture_type[0]==FORMAT.ETC2PACKAGE_RGBA1.ordinal()||texture_type[0]==FORMAT.ETC2PACKAGE_sRGBA1.ordinal()))
 				{
-					System.out.println("\n\n The file %s does not contain a texture of known format.", srcfile);
-					System.out.println("Known formats: ETC2PACKAGE_RGB_NO_MIPMAPS.", srcfile);
-					exit(1);
+					System.out.println("\n\n The file %s does not contain a texture of known format.");
+					System.out.println("Known formats: ETC2PACKAGE_RGB_NO_MIPMAPS.");
+					return null;
 				}
 			}
 			else
 			{
-				System.out.println("\n\n The file %s is not of version 1.0 or 2.0 but of version %c.%c.",srcfile, version[0], version[1]);
+				System.out.println("\n\n The file %s is not of version 1.0 or 2.0 but of version %c.%c.");
 				System.out.println("Aborting.");
-				exit(1);
+				return null;
 			}
-			format=texture_type;
-			System.out.println("textype: %d",texture_type);
+			format=FORMAT.values()[texture_type[0]];
+			System.out.println("textype: "+texture_type);
 			// ETC2 is backwards compatible, which means that an ETC2-capable decompressor can also handle
 			// old ETC1 textures without any problems. Thus a version 1.0 file with ETC1_RGB_NO_MIPMAPS and a 
 			// version 2.0 file with ETC2PACKAGE_RGB_NO_MIPMAPS can be handled by the same ETC2-capable decompressor
 
 			// Read how many pixels the blocks make up
 
-			read_big_endian_2byte_word(&w, f);
-			read_big_endian_2byte_word(&h, f);
-			width = w;
-			height = h;
+			read_big_endian_2byte_word(w, srcfile);
+			read_big_endian_2byte_word(h, srcfile);
+			width = w[0];
+			height = h[0];
 
 			// Read how many pixels contain active data (the rest are just
 			// for making sure we have a 4*a x 4*b size).
 
-			read_big_endian_2byte_word(&w, f);
-			read_big_endian_2byte_word(&h, f);
-			active_width = w;
-			active_height = h;
+			read_big_endian_2byte_word(w, srcfile);
+			read_big_endian_2byte_word(h, srcfile);
+			active_width[0] = w[0];
+			active_height[0] = h[0];
 		}
-		System.out.println("Width = %d, Height = %d",width, height);
-		System.out.println("active pixel area: top left %d x %d area.",active_width, active_height);
+		
+		
+		//System.out.println("Width = "+width+", Height = "+height);
+		//System.out.println("active pixel area: top left "+active_width[0]+" x "+active_height[0]+" area.");
 
-		if(format==ETC2PACKAGE_RG_NO_MIPMAPS)
-			img=(uint8*)malloc(3*width*height*2);
+		if(format==FORMAT.ETC2PACKAGE_RG)
+			img = new byte[3*width*height*2];
 		else
-			img=(uint8*)malloc(3*width*height);
-		if(!img)
+			img = new byte [3*width*height];
+		if(img == null)
 		{
 			System.out.println("Error: could not allocate memory");
-			exit(0);
+			return null;
 		}
-		if(format==ETC2PACKAGE_RGBA_NO_MIPMAPS||format==ETC2PACKAGE_R_NO_MIPMAPS||format==ETC2PACKAGE_RG_NO_MIPMAPS||format==ETC2PACKAGE_RGBA1_NO_MIPMAPS||format==ETC2PACKAGE_sRGBA_NO_MIPMAPS||format==ETC2PACKAGE_sRGBA1_NO_MIPMAPS)
+		if(format==FORMAT.ETC2PACKAGE_RGBA||format==FORMAT.ETC2PACKAGE_R||format==FORMAT.ETC2PACKAGE_RG||format==FORMAT.ETC2PACKAGE_RGBA1
+				||format==FORMAT.ETC2PACKAGE_sRGBA||format==FORMAT.ETC2PACKAGE_sRGBA1)
 		{
 			//System.out.println("alpha channel decompression");
-			alphaimg=(uint8*)malloc(width*height*2);
+			alphaimg = new byte[1*width*height];
 			setupAlphaTableAndValtab();
-			if(!alphaimg)
+			if(alphaimg == null)
 			{
 				System.out.println("Error: could not allocate memory for alpha");
-				exit(0);
+				return null;
 			}
 		}
-		if(format==ETC2PACKAGE_RG_NO_MIPMAPS) 
+		if(format==FORMAT.ETC2PACKAGE_RG) 
 		{
-			alphaimg2=(uint8*)malloc(width*height*2);
-			if(!alphaimg2)
+			alphaimg2 = new byte[width*height*2];
+			if(alphaimg2 == null)
 			{
 				System.out.println("Error: could not allocate memory");
-				exit(0);
+				return null;
 			}
 		}
 
@@ -9686,45 +9710,45 @@ void uncompressFile(char *srcfile, uint8* &img, uint8 *&alphaimg, int& active_wi
 			for(int x=0;x<width/4;x++)
 			{
 				//decode alpha channel for RGBA
-				if(format==ETC2PACKAGE_RGBA_NO_MIPMAPS||format==ETC2PACKAGE_sRGBA_NO_MIPMAPS) 
+				if(format==FORMAT.ETC2PACKAGE_RGBA||format==FORMAT.ETC2PACKAGE_sRGBA) 
 				{
-					uint8 alphablock[8];
-					fread(alphablock,1,8,f);
-					decompressBlockAlpha(alphablock,alphaimg,width,height,4*x,4*y);
+					byte[] alphablock = new byte[8];
+					fread(alphablock, srcfile);
+					ETCDec.decompressBlockAlpha(alphablock,alphaimg,width,height,4*x,4*y);
 				}
 				//color channels for most normal modes
-				if(format!=ETC2PACKAGE_R_NO_MIPMAPS&&format!=ETC2PACKAGE_RG_NO_MIPMAPS) 
+				if(format!=FORMAT.ETC2PACKAGE_R&&format!=FORMAT.ETC2PACKAGE_RG) 
 				{
 					//we have normal ETC2 color channels, decompress these
-					read_big_endian_4byte_word(&block_part1,f);
-					read_big_endian_4byte_word(&block_part2,f);
-					if(format==ETC2PACKAGE_RGBA1_NO_MIPMAPS||format==ETC2PACKAGE_sRGBA1_NO_MIPMAPS)
-						decompressBlockETC21BitAlpha(block_part1, block_part2,img,alphaimg,width,height,4*x,4*y);
+					read_big_endian_4byte_word(block_part1,srcfile);
+					read_big_endian_4byte_word(block_part2,srcfile);
+					if(format==FORMAT.ETC2PACKAGE_RGBA1||format==FORMAT.ETC2PACKAGE_sRGBA1)
+						ETCDec.decompressBlockETC21BitAlpha(block_part1[0], block_part2[0],img,alphaimg,width,height,4*x,4*y);
 					else
-						decompressBlockETC2(block_part1, block_part2,img,width,height,4*x,4*y);		
+						ETCDec.decompressBlockETC2(block_part1[0], block_part2[0],img,width,height,4*x,4*y);		
 				}
 				//one or two 11-bit alpha channels for R or RG.
-				if(format==ETC2PACKAGE_R_NO_MIPMAPS||format==ETC2PACKAGE_RG_NO_MIPMAPS) 
+				if(format==FORMAT.ETC2PACKAGE_R||format==FORMAT.ETC2PACKAGE_RG) 
 				{
-					uint8 alphablock[8];
-					fread(alphablock,1,8,f);
-					decompressBlockAlpha16bit(alphablock,alphaimg,width,height,4*x,4*y);
+					byte[] alphablock = new byte[8];
+					fread(alphablock, srcfile);
+					ETCDec.decompressBlockAlpha16bit(alphablock,alphaimg,width,height,4*x,4*y);
 				}
-				if(format==ETC2PACKAGE_RG_NO_MIPMAPS) 
+				if(format==FORMAT.ETC2PACKAGE_RG) 
 				{
-					uint8 alphablock[8];
-					fread(alphablock,1,8,f);
-					decompressBlockAlpha16bit(alphablock,alphaimg2,width,height,4*x,4*y);
+					byte[] alphablock = new byte[8];
+					fread(alphablock, srcfile);
+					ETCDec.decompressBlockAlpha16bit(alphablock,alphaimg2,width,height,4*x,4*y);
 				}
 			}
 		}
-		if(format==ETC2PACKAGE_RG_NO_MIPMAPS) 
+		if(format==FORMAT.ETC2PACKAGE_RG) 
 		{
 			for(int y=0;y<height;y++)
 			{
 				for(int x=0;x<width;x++)
 				{
-					img[6*(y*width+x)]=alphaimg[2*(y*width+x)];
+					img[6*(y*width+x)+0]=alphaimg[2*(y*width+x)];
 					img[6*(y*width+x)+1]=alphaimg[2*(y*width+x)+1];
 					img[6*(y*width+x)+2]=alphaimg2[2*(y*width+x)];
 					img[6*(y*width+x)+3]=alphaimg2[2*(y*width+x)+1];
@@ -9734,85 +9758,97 @@ void uncompressFile(char *srcfile, uint8* &img, uint8 *&alphaimg, int& active_wi
 			}
 		}
 
-		// Ok, and now only write out the active pixels to the .ppm file.
-		// (But only if the active pixels differ from the total pixels)
-
-		if( !(height == active_height && width == active_width) )
+		// now only write out the active pixels to the .ppm file. and also mix in the alpha into the ARGB output format
+		//if( !(height == active_height[0] && width == active_width[0]) )
 		{
-			if(format==ETC2PACKAGE_RG_NO_MIPMAPS)
-				newimg=(uint8*)malloc(3*active_width*active_height*2);
+			if(format==FORMAT.ETC2PACKAGE_RG)
+				newimg= new byte[3*active_width[0]*active_height[0]*2];
 			else
-				newimg=(uint8*)malloc(3*active_width*active_height);
+				newimg= new byte[4*active_width[0]*active_height[0]];
 			
-			if(format==ETC2PACKAGE_RGBA_NO_MIPMAPS||format==ETC2PACKAGE_RGBA1_NO_MIPMAPS||format==ETC2PACKAGE_R_NO_MIPMAPS||format==ETC2PACKAGE_sRGBA_NO_MIPMAPS||format==ETC2PACKAGE_sRGBA1_NO_MIPMAPS)
+			if(format==FORMAT.ETC2PACKAGE_R)
 			{
-				newalphaimg = (uint8*)malloc(active_width*active_height*2);
+				newimg = new byte[active_width[0]*active_height[0]*2];
 			}
 
-			if(!newimg)
+			if(newimg == null)
 			{
 				System.out.println("Error: could not allocate memory");
-				exit(0);
+				return null;
 			}
 			
 			// Convert from total area to active area:
 
-			for(yy = 0; yy<active_height; yy++)
+			for(yy = 0; yy<active_height[0]; yy++)
 			{
-				for(xx = 0; xx< active_width; xx++)
+				for(xx = 0; xx< active_width[0]; xx++)
 				{
-					if(format!=ETC2PACKAGE_R_NO_MIPMAPS&&format!=ETC2PACKAGE_RG_NO_MIPMAPS) 
+					if(format==FORMAT.ETC2PACKAGE_RG) 
 					{
-						newimg[ (yy*active_width)*3 + xx*3 + 0 ] = img[ (yy*width)*3 + xx*3 + 0];
-						newimg[ (yy*active_width)*3 + xx*3 + 1 ] = img[ (yy*width)*3 + xx*3 + 1];
-						newimg[ (yy*active_width)*3 + xx*3 + 2 ] = img[ (yy*width)*3 + xx*3 + 2];
+						//TODO: not sure
+						newimg[ (yy*active_width[0])*6 + xx*6 + 0 ] = img[ (yy*width)*6 + xx*6 + 0];
+						newimg[ (yy*active_width[0])*6 + xx*6 + 1 ] = img[ (yy*width)*6 + xx*6 + 1];
+						newimg[ (yy*active_width[0])*6 + xx*6 + 2 ] = img[ (yy*width)*6 + xx*6 + 2];
+						newimg[ (yy*active_width[0])*6 + xx*6 + 3 ] = img[ (yy*width)*6 + xx*6 + 3];
+						newimg[ (yy*active_width[0])*6 + xx*6 + 4 ] = img[ (yy*width)*6 + xx*6 + 4];
+						newimg[ (yy*active_width[0])*6 + xx*6 + 5 ] = img[ (yy*width)*6 + xx*6 + 5];
 					}
-					else if(format==ETC2PACKAGE_RG_NO_MIPMAPS) 
+					else if(format==FORMAT.ETC2PACKAGE_R) 
 					{
-						newimg[ (yy*active_width)*6 + xx*6 + 0 ] = img[ (yy*width)*6 + xx*6 + 0];
-						newimg[ (yy*active_width)*6 + xx*6 + 1 ] = img[ (yy*width)*6 + xx*6 + 1];
-						newimg[ (yy*active_width)*6 + xx*6 + 2 ] = img[ (yy*width)*6 + xx*6 + 2];
-						newimg[ (yy*active_width)*6 + xx*6 + 3 ] = img[ (yy*width)*6 + xx*6 + 3];
-						newimg[ (yy*active_width)*6 + xx*6 + 4 ] = img[ (yy*width)*6 + xx*6 + 4];
-						newimg[ (yy*active_width)*6 + xx*6 + 5 ] = img[ (yy*width)*6 + xx*6 + 5];
+						//TODO: not sure
+						newimg[ ((yy*active_width[0]) + xx)*2]   = alphaimg[2*((yy*width) + xx)];
+						newimg[ ((yy*active_width[0]) + xx)*2+1] = alphaimg[2*((yy*width) + xx)+1];
 					}
-					if(format==ETC2PACKAGE_R_NO_MIPMAPS) 
+					else
 					{
-						newalphaimg[ ((yy*active_width) + xx)*2]   = alphaimg[2*((yy*width) + xx)];
-						newalphaimg[ ((yy*active_width) + xx)*2+1] = alphaimg[2*((yy*width) + xx)+1];
+						newimg[ (yy*active_width[0])*4 + xx*4 + 0 ] = alphaimg != null ? alphaimg[((yy*width) + xx)] : (byte)255;
+						newimg[ (yy*active_width[0])*4 + xx*4 + 1 ] = img[ (yy*width)*3 + xx*3 + 0];
+						newimg[ (yy*active_width[0])*4 + xx*4 + 2 ] = img[ (yy*width)*3 + xx*3 + 1];
+						newimg[ (yy*active_width[0])*4 + xx*4 + 3 ] = img[ (yy*width)*3 + xx*3 + 2];
 					}
-					if(format==ETC2PACKAGE_RGBA_NO_MIPMAPS||format==ETC2PACKAGE_RGBA1_NO_MIPMAPS||format==ETC2PACKAGE_sRGBA_NO_MIPMAPS||format==ETC2PACKAGE_sRGBA1_NO_MIPMAPS) 
-					{
-						newalphaimg[ ((yy*active_width) + xx)]   = alphaimg[((yy*width) + xx)];
-					}
+					
 				}
-			}
-
-			free(img);
-			img = newimg;
-			if(format==ETC2PACKAGE_RGBA_NO_MIPMAPS||format==ETC2PACKAGE_RGBA1_NO_MIPMAPS||format==ETC2PACKAGE_R_NO_MIPMAPS||format==ETC2PACKAGE_sRGBA_NO_MIPMAPS||format==ETC2PACKAGE_sRGBA1_NO_MIPMAPS)
-			{
-				free(alphaimg);
-				alphaimg=newalphaimg;
-			}
-			if(format==ETC2PACKAGE_RG_NO_MIPMAPS) 
-			{
-				free(alphaimg);
-				free(alphaimg2);
-       alphaimg = NULL;
-       alphaimg2 = NULL;
 			}
 		}
 	}
+	
+	return newimg;
+}
+public static final int ENDIANNESS_OK = 0x04030201; 
+public static final int ENDIANNESS_OPPOSITE = 0x01020304; 
+private void ktxByteOrder(ByteBuffer buffer)  
+{
+	buffer.rewind();
+	ByteOrder oldOrder = buffer.order();
+	buffer.order(ByteOrder.nativeOrder());
+
+	byte[] fileIdentifier = new byte[KTX_header.KTX_IDENTIFIER_REF.length];
+	buffer.get(fileIdentifier);
+
+	if (!Arrays.equals(fileIdentifier, KTX_header.KTX_IDENTIFIER_REF))
+	{
+		System.out.println("Input doesn't start with KTX file identifier");
+		return;
+	}
+
+	int endianness = buffer.getInt();
+	ByteOrder _byteOrder = buffer.order();
+
+	if (endianness == ENDIANNESS_OK)
+	{
+		// nothing to do
+	}
+	else if (endianness == ENDIANNESS_OPPOSITE)
+	{
+		_byteOrder = (ByteOrder.BIG_ENDIAN == _byteOrder) ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN;
+		buffer.order(_byteOrder);
+	}
 	else
- {
-		System.out.println("Error: could not open <%s>.",srcfile);
-   exit(1);
- }
-	height=active_height;
-	width=active_width;
-	fclose(f);
-}*/
+	{
+		System.out.println(String.format("Endianness field has an unexpected value: %08x", endianness));
+	}
+	buffer.rewind();
+}
 
 /*
 //Writes output file 
@@ -10123,8 +10159,7 @@ void compressImageFile(byte[] img, byte[] alphaimg,int width,int height,String d
 			}
 			else 
 			{
-				System.out.println("internal error: bad format!");
-				System.exit(1);
+				throw new IOException("internal error: bad format!");
 			}
 			//write header
 			fwrite( header, 1,f);			
@@ -10195,8 +10230,7 @@ void compressImageFile(byte[] img, byte[] alphaimg,int width,int height,String d
 			setupAlphaTableAndValtab();
 			if(alphaimg==null||alphaimg2==null) 
 			{
-				System.out.println("failed allocating space for alpha buffers!");
-				System.exit(1);
+				throw new IOException("failed allocating space for alpha buffers!");
 			}
 			for(y=0;y<expandedheight;y++)
 			{
@@ -10647,7 +10681,6 @@ public ByteBuffer compressImageBytes(byte[] srcimg, byte[] srcimgalpha, int widt
 		e.printStackTrace();
 	}
 
-	System.out.println("No image decompressed, soz");
 	return null;
 }
 protected static int computeLog(int value) {
@@ -10752,8 +10785,7 @@ ByteBuffer compressImageBytes(byte[] img, byte[] alphaimg, int width, int height
 			header.glBaseInternalFormat = GL_RGB;
 			header.glInternalFormat = GL_ETC1_RGB8_OES;
 		} else {
-			System.out.println("internal error: bad format!");
-			System.exit(1);
+			throw new IOException("internal error: bad format!");
 		}
 
 		//write size of compressed data.. which depend on the expanded size..
@@ -10975,8 +11007,7 @@ int compressImageToBB(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int expande
 		alphaimg2 = new byte[expandedwidth * expandedheight * 2];
 		setupAlphaTableAndValtab();
 		if (alphaimg == null || alphaimg2 == null) {
-			System.out.println("failed allocating space for alpha buffers!");
-			System.exit(1);
+			throw new IOException("failed allocating space for alpha buffers!");
 		}
 		for (y = 0; y < expandedheight; y++) {
 			for (x = 0; x < expandedwidth; x++) {
@@ -11142,7 +11173,7 @@ public ETCPack(String args[]) {
 		if(!fileExist(srcfile[0]))
 		{
 			System.out.println("Error: file <"+srcfile[0]+"> does not exist.");
-			System.exit(0);
+			return;
 		}
 		
 		if(mode==MODE2.MODE_UNCOMPRESS)

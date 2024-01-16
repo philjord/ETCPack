@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
+import etcpack.ETCPack.KTX_header;
 import etcpack.ETCPack.PATTERN;
 
 /**
@@ -299,40 +300,39 @@ static void setupAlphaTable()
 
 // Read a word in big endian style
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-void read_big_endian_2byte_word(short[] blockadr, FileChannel f)
+//unsigned so notice int not short
+public static void read_big_endian_2byte_word(int[] blockadr, FileChannel f)
 {
 	byte[] bytes = new byte[2];
-	short block;
+	int block;
 
-	fread(bytes, 0, 1, f);
-	fread(bytes, 1, 1, f);
+	fread(bytes, f);
 
 	block = 0;
-	block = (short)(block | (bytes[0]&0xff));
-	block = (short)(block << 8);
-	block = (short)(block | (bytes[1]&0xff));
+	block = block | (bytes[0]&0xff);
+	block = block << 8;
+	block = block | (bytes[1]&0xff);
 
 	blockadr[0] = block;
 }
 
-// Read a word in big endian style
-// NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-private static void fread(byte[] c, int i, int j, FileChannel f) {
+//NOTE!!!! the i value here is an offset into the dest array, NOT the number of bytes per item like the cpp function
+public static void fread(byte[] c, FileChannel f) {
 	try {
-		f.read(ByteBuffer.wrap(c,i,j));
+		f.read(ByteBuffer.wrap(c));
 	} catch (IOException e) {
 		e.printStackTrace();
 	}
 }
-void read_big_endian_4byte_word(int[] blockadr, FileChannel f)
+
+//Read a word in big endian style
+//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
+public static void read_big_endian_4byte_word(int[] blockadr, FileChannel f)
 {
 	byte[] bytes = new byte[4];
 	int block;
 
-	fread(bytes,0, 1, f);
-	fread(bytes,1, 1, f);
-	fread(bytes,2, 1, f);
-	fread(bytes,3, 1, f);
+	fread(bytes, f);
 
 	block = 0;
 	block = block | (bytes[0]&0xff);
@@ -344,6 +344,71 @@ void read_big_endian_4byte_word(int[] blockadr, FileChannel f)
 	block = block | (bytes[3]&0xff);
 
 	blockadr[0] = block;
+}
+
+
+//Read a word in big endian style
+//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
+//unsigned so notice int not short
+public static void read_big_endian_2byte_word(int[] blockadr, ByteBuffer f)
+{
+	byte[] bytes = new byte[2];
+	int block;
+
+	fread(bytes, f);
+
+	block = 0;
+	block = (block | (bytes[0]&0xff));
+	block = (block << 8);
+	block = (block | (bytes[1]&0xff));
+
+	blockadr[0] = block;
+}
+
+
+public static void fread(byte[] c, ByteBuffer f) {
+	f.get(c);	
+}
+
+
+//Read a word in big endian style
+//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
+public static void read_big_endian_4byte_word(int[] blockadr, ByteBuffer f)
+{
+	byte[] bytes = new byte[4];
+	int block;
+
+	fread(bytes, f);
+
+	block = 0;
+	block = block | (bytes[0]&0xff);
+	block = block << 8;
+	block = block | (bytes[1]&0xff);
+	block = block << 8;
+	block = block | (bytes[2]&0xff);
+	block = block << 8;
+	block = block | (bytes[3]&0xff);
+
+	blockadr[0] = block;
+}
+
+
+public static void fread(ETCPack.KTX_header header, ByteBuffer bb) {
+	bb.get(KTX_header.KTX_IDENTIFIER_REF);//12
+	// now 13*4 bytes => 12+(13*4) = 64bytes
+	header.endianness = bb.getInt();
+	header.glType = bb.getInt();
+	header.glTypeSize = bb.getInt();
+	header.glFormat = bb.getInt();
+	header.glInternalFormat = bb.getInt();
+	header.glBaseInternalFormat = bb.getInt();
+	header.pixelWidth = bb.getInt();
+	header.pixelHeight = bb.getInt();
+	header.pixelDepth = bb.getInt();
+	header.numberOfArrayElements = bb.getInt();
+	header.numberOfFaces = bb.getInt();
+	header.numberOfMipmapLevels = bb.getInt();
+	header.bytesOfKeyValueData = bb.getInt();
 }
 
 // The format stores the bits for the three extra modes in a roundabout way to be able to
@@ -837,7 +902,7 @@ static void decompressBlockDiffFlipC(int block_part1, int block_part2, byte[] im
 					index |= ((pixel_indices_LSB >> shift) & 1);
 					shift++;
 					index=unscramble[index];
-					
+										
 					int idx = singleBlockDest ? (y - starty) * 4 + (x - startx) : (y * width + x);
 					img[channels*idx+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+compressParams[table][index],255);
 					img[channels*idx+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+compressParams[table][index],255);
@@ -1084,7 +1149,7 @@ static void decompressBlockDiffFlip(int block_part1, int block_part2, byte[] img
 static void decompressBlockETC2c(int block_part1, int block_part2, byte[] img, int width, int height, int startx, int starty, int channels)
 {
 	int diffbit;
-	byte[]  color1 = new byte[3]; //were chars? something to do with the method name?
+	byte[]  color1 = new byte[3];
 	byte[]  diff = new byte[3];
 	byte red, green, blue;
 
@@ -1221,24 +1286,20 @@ static void decompressBlockDifferentialWithAlphaC(int block_part1, int block_par
 					mod=0;
 				}
 				
-				int idx = singleBlockDest ? (y - starty) * 4 + (x - startx) : (y * width + x);
+				int idx = singleBlockDest ? (y - starty) * 4 + (x - startx) : (y * width + x);				
 				img[channelsRGB*idx+0]  =(byte)CLAMP(0,(avg_color[0]&0xff)+mod,255);
 				img[channelsRGB*idx+1]  =(byte)CLAMP(0,(avg_color[1]&0xff)+mod,255);
 				img[channelsRGB*idx+2]  =(byte)CLAMP(0,(avg_color[2]&0xff)+mod,255);
 				if(diffbit==0&&index==1) 
-				{
-					
-					//see above! alpha[(y*width+x)*channelsA]=0;
-					img[idx*channelsA + 3]=0;
-					
+				{					
+					alpha[idx*channelsA]=0;					
 					img[channelsRGB*idx+0]=0;
 					img[channelsRGB*idx+1]=0;
 					img[channelsRGB*idx+2]=0;
 				}
 				else 
 				{
-					//see above! alpha[(y*width+x)*channelsA]=(byte)255;
-					img[idx*channelsA + 3]=(byte)255;
+					alpha[idx*channelsA]=(byte)255;
 				}
 
 			}
@@ -1410,7 +1471,7 @@ static void decompressBlockTHUMB59TAlphaC(int block_part1, int block_part2, byte
     {
       // We will decode the RGB data and the alpha data to the same memory area, 
       // interleaved as RGBA. 
-      channelsA = 4;
+    	channelsA = 4;
       // I don't have any code lines that use 4 so I can't test how teh user uses this, so just ... edit the img data!
       // the calls with channelsRGB == 3 seem to set up a w x x h 1 byte array ready for filling
       // all other similar methods only come in with 3 channels!
@@ -1442,6 +1503,7 @@ static void decompressBlockTHUMB59TAlphaC(int block_part1, int block_part2, byte
 			block_mask[x][y] = (byte)(block_mask[x][y] | GETBITS(block_part2,1,(y+x*4)));
 			
 			int idx = singleBlockDest ? channelsRGB*((y)*BLOCKWIDTH+x) : channelsRGB*((starty+y)*width+startx+x);
+			int aIdx = singleBlockDest ? 1 *((y)*BLOCKWIDTH+x) : 1 *((starty+y)*width+startx+x);
 			
 			img[idx+R] = 
 				 CLAMP(0,paint_colors[block_mask[x][y]][R],255); // RED
@@ -1451,16 +1513,14 @@ static void decompressBlockTHUMB59TAlphaC(int block_part1, int block_part2, byte
 				 CLAMP(0,paint_colors[block_mask[x][y]][B],255); // BLUE
 			if(block_mask[x][y]==2)  
 			{
-				// see above! alpha[channelsA*(x+startx+(y+starty)*width)]=0;
-				img[idx  + 3]=0;
+				alpha[aIdx]=0;
 				
 				img[idx+R] =0;
 				img[idx+G] =0;
 				img[idx+B] =0;
 			}
 			else {
-				// see above! alpha[channelsA*(x+startx+(y+starty)*width)]=(byte)255;
-				img[idx  + 3]=(byte)255;
+				alpha[aIdx]=(byte)255;
 			}
 		}
 	}
@@ -1536,7 +1596,9 @@ static void decompressBlockTHUMB58HAlphaC(int block_part1, int block_part2, byte
 			block_mask[x][y] = (byte)(GETBITS(block_part2,1,(y+x*4)+16)<<1);
 			block_mask[x][y] = (byte)(block_mask[x][y] | GETBITS(block_part2,1,(y+x*4)));
 			
-			int idx = singleBlockDest ? channelsRGB*((y)*BLOCKWIDTH+x) : channelsRGB*((starty+y)*width+startx+x);
+			int idx = singleBlockDest ? channelsRGB*((y)*BLOCKWIDTH+x) : channelsRGB*((starty+y)*width+startx+x);			
+			int aIdx = singleBlockDest ? 1 *((y)*BLOCKWIDTH+x) : 1 *((starty+y)*width+startx+x);
+			
 			img[idx+R] =
 				CLAMP(0,paint_colors[block_mask[x][y]][R],255); // RED
 			img[idx+G] =
@@ -1546,16 +1608,14 @@ static void decompressBlockTHUMB58HAlphaC(int block_part1, int block_part2, byte
 			
 			if(block_mask[x][y]==2)  
 			{
-				//see above! alpha[channelsA*(x+startx+(y+starty)*width)]=0;
-				img[idx + 3]=0;
+				alpha[aIdx]=0;
 				
 				img[idx+R] =0;
 				img[idx+G] =0;
 				img[idx+B] =0;
 			}
 			else {
-				//see above! alpha[channelsA*(x+startx+(y+starty)*width)]=(byte)255;
-				img[idx + 3]=(byte)255;
+				alpha[aIdx]=(byte)255;
 			}
 		}
 	}
@@ -1648,10 +1708,8 @@ static void decompressBlockETC21BitAlphaC(int block_part1, int block_part2, byte
 		{
 			for(int y=starty; y<starty+4; y++) 
 			{
-				// see above! alphaimg[channelsA*(x+y*width)]=(byte)255;
-				
-				int idx = singleBlockDest ? channelsA*(x+y*BLOCKWIDTH) : channelsA*(x+y*width);
-				img[idx  + 3 ]=(byte)255;
+				int aIdx = singleBlockDest ? channelsA*(x+y*BLOCKWIDTH) : channelsA*(x+y*width);
+				alphaimg[aIdx]=(byte)255;
 			}
 		}
 	}
@@ -1702,9 +1760,8 @@ static void decompressBlockETC21BitAlphaC(int block_part1, int block_part2, byte
 			{
 				for(int y=starty; y<starty+4; y++) 
 				{
-					// see above! alphaimg[channelsA*(x+y*width)]=(byte)255;
-					int idx = singleBlockDest ? channelsA*(x+y*BLOCKWIDTH) : channelsA*(x+y*width);
-					img[idx +3]=(byte)255;
+					int aIdx = singleBlockDest ? channelsA*(x+y*BLOCKWIDTH) : channelsA*(x+y*width);
+					alphaimg[aIdx]=(byte)255;
 				}
 			}
 		}
@@ -1712,7 +1769,7 @@ static void decompressBlockETC21BitAlphaC(int block_part1, int block_part2, byte
 			decompressBlockDifferentialWithAlphaC(block_part1, block_part2, img,alphaimg, width, height, startx, starty, channelsRGB);
 	}
 }
-static void decompressBlockETC21BitAlpha(int block_part1, int block_part2, byte[] img, byte[] alphaimg, int width, int height, int startx, int starty)
+public static void decompressBlockETC21BitAlpha(int block_part1, int block_part2, byte[] img, byte[] alphaimg, int width, int height, int startx, int starty)
 {
   decompressBlockETC21BitAlphaC(block_part1, block_part2, img, alphaimg, width, height, startx, starty, 3);
 }
@@ -1748,7 +1805,7 @@ static int clamp(int val)
 	return val;
 }
 
-// Decodes tha alpha component in a block coded with GL_COMPRESSED_RGBA8_ETC2_EAC.
+// Decodes the alpha component in a block coded with GL_COMPRESSED_RGBA8_ETC2_EAC.
 // Note that this decoding is slightly different from that of GL_COMPRESSED_R11_EAC.
 // However, a hardware decoder can share gates between the two formats as explained
 // in the specification under GL_COMPRESSED_R11_EAC.
@@ -1758,7 +1815,7 @@ static void decompressBlockAlphaC(byte[] data, byte[] img, int width, int height
 	boolean singleBlockDest = img.length == 4 * 4 * 3; // special indicator for a small decompression target
 	
 	byte alpha = data[0];
-	byte table = data[1];
+	int table = data[1]&0xff;
 	
 	int bit=0;
 	int byte_=2;
