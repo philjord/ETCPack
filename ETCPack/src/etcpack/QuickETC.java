@@ -24,7 +24,8 @@ public class QuickETC extends ETCPack {
 	@Override 
 	int compressImageToBB(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int expandedwidth, int expandedheight)
 			throws IOException {
-		// fast only and R and RG not done
+		// fast only 
+		//FIXME: R and RG not done
 		if (speed != SPEED.SPEED_FAST || format == FORMAT.ETC2PACKAGE_R || format == FORMAT.ETC2PACKAGE_RG)
 			return super.compressImageToBB(dstBB, img, alphaimg, expandedwidth, expandedheight);
 		
