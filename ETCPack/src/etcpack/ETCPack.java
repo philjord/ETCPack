@@ -10308,7 +10308,7 @@ void compressImageFile(byte[] img, byte[] alphaimg,int width,int height,String d
 										+(currentAlphaimg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*1 +0]&0xff))/4);
 								a = a <= 127 ? 0 : 255;
 								alphaimg[y2*(expandedwidth)+x2] = (byte)a;
-							}
+							} 
 						}
 					}	
 				}
@@ -10913,50 +10913,64 @@ ByteBuffer compressImageBytes(byte[] img, byte[] alphaimg, int width, int height
 			byte[] currentImg = img;
 			byte[] currentAlphaimg = alphaimg;
 			
-			int newmipmapdatasize = img.length/(widthDropFactor*heightDropFactor);		
 			
-			img = new byte[newmipmapdatasize];
-			alphaimg = alphaimg == null ? null : new byte[newmipmapdatasize/3];
-			
-			for (int y2 = 0; y2 < expandedheight; y2++) {
-				for (int x2 = 0; x2 < expandedwidth; x2++) {									
-	
-					img[(y2*expandedwidth+x2)*3 +0] = (byte)((
-							 (currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +0]&0xff)
-							+(currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +0]&0xff)
-							+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +0]&0xff)
-							+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +0]&0xff))/4);
-					img[(y2*expandedwidth+x2)*3 +1] = (byte)((
-							 (currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +1]&0xff)
-							+(currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +1]&0xff)
-							+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +1]&0xff)
-							+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +1]&0xff))/4);
-					img[(y2*expandedwidth+x2)*3 +2] = (byte)((
-							 (currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +2]&0xff)
-							+(currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +2]&0xff)
-							+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +2]&0xff)
-							+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +2]&0xff))/4);
-	
+			if (format != FORMAT.ETC2PACKAGE_R) {
+				int newmipmapdatasize = img.length/(widthDropFactor*heightDropFactor);		
+				
+				img = new byte[newmipmapdatasize];
+				alphaimg = alphaimg == null ? null : new byte[newmipmapdatasize/3];
+				
+				for (int y2 = 0; y2 < expandedheight; y2++) {
+					for (int x2 = 0; x2 < expandedwidth; x2++) {									
+		
+						img[(y2*expandedwidth+x2)*3 +0] = (byte)((
+								 (currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +0]&0xff)
+								+(currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +0]&0xff)
+								+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +0]&0xff)
+								+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +0]&0xff))/4);
+						img[(y2*expandedwidth+x2)*3 +1] = (byte)((
+								 (currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +1]&0xff)
+								+(currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +1]&0xff)
+								+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +1]&0xff)
+								+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +1]&0xff))/4);
+						img[(y2*expandedwidth+x2)*3 +2] = (byte)((
+								 (currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +2]&0xff)
+								+(currentImg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +2]&0xff)
+								+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*3 +2]&0xff)
+								+(currentImg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*3 +2]&0xff))/4);
+		
+					}
 				}
+			} else {
+				//ETC2PACKAGE_R comes through in a 16bit alpha only
+				int newmipmapdatasize = alphaimg.length/(widthDropFactor*heightDropFactor);		
+				alphaimg = new byte[newmipmapdatasize];
 			}
 			if(alphaimg != null) {
 				for (int y2 = 0; y2 < expandedheight; y2++) {
 					for (int x2 = 0; x2 < expandedwidth; x2++) {
+						byte b = (byte)((
+								 (currentAlphaimg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*1 +0]&0xff)
+								+(currentAlphaimg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*1 +0]&0xff)
+								+(currentAlphaimg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*1 +0]&0xff)
+								+(currentAlphaimg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*1 +0]&0xff))/4);
 						if (format == FORMAT.ETC2PACKAGE_RGBA || format == FORMAT.ETC2PACKAGE_sRGBA) {
-							alphaimg[y2*(expandedwidth)+x2] = (byte)((
-									 (currentAlphaimg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*1 +0]&0xff)
-									+(currentAlphaimg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*1 +0]&0xff)
-									+(currentAlphaimg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*1 +0]&0xff)
-									+(currentAlphaimg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*1 +0]&0xff))/4);
-						}else if(format == FORMAT.ETC2PACKAGE_RGBA1 || format == FORMAT.ETC2PACKAGE_sRGBA1) {
-							int a = ((
-									 (currentAlphaimg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*1 +0]&0xff)
-									+(currentAlphaimg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*1 +0]&0xff)
-									+(currentAlphaimg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*1 +0]&0xff)
-									+(currentAlphaimg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*1 +0]&0xff))/4);
-							a = a <= 127 ? 0 : 255;
-							alphaimg[y2*(expandedwidth)+x2] = (byte)a;
-						}
+							alphaimg[y2*(expandedwidth)+x2] = b;
+						}else if(format == FORMAT.ETC2PACKAGE_RGBA1 || format == FORMAT.ETC2PACKAGE_sRGBA1) {							
+							alphaimg[y2*(expandedwidth)+x2] = (byte)(b <= 127 ? 0 : 255);
+						} else if (format == FORMAT.ETC2PACKAGE_R) {
+							//16 bit alphaimg							
+							alphaimg[(y2*expandedwidth+x2)*2 +0 ] = (byte)((
+									 (currentAlphaimg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*2 +0]&0xff)
+									+(currentAlphaimg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*2 +0]&0xff)
+									+(currentAlphaimg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*2 +0]&0xff)
+									+(currentAlphaimg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*2 +0]&0xff))/4);
+							alphaimg[(y2*expandedwidth+x2)*2 +1] = (byte)((
+									 (currentAlphaimg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*2 +1]&0xff)
+									+(currentAlphaimg [(((y2*heightDropFactor + (0*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*2 +1]&0xff)
+									+(currentAlphaimg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (0*(widthDropFactor-1)) ))*2 +1]&0xff)
+									+(currentAlphaimg [(((y2*heightDropFactor + (1*(heightDropFactor-1))) * (expandedwidth*widthDropFactor)) + ((x2*widthDropFactor) + (1*(widthDropFactor-1)) ))*2 +1]&0xff))/4);
+							}
 					}
 				}	
 			}
@@ -10983,9 +10997,11 @@ int compressImageToBB(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int expande
 	
 	// keep track of how much we've written to the buffer
 	int posAtStart = dstBB.position();
+
 	// can only compress a 4x4 block of RGB or A
-	if((img != null && img.length<4*4*3) && (alphaimg != null && alphaimg.length < 4*4*1))
+	if ((img != null && img.length < 4 * 4 * 3) && (alphaimg != null && alphaimg.length < 4 * 4 * 1))
 		return 0;
+
 	int x, y, w, h;
 	int[] block1 = new int[1], block2 = new int[1];
 	byte[] imgdec;
@@ -10999,10 +11015,14 @@ int compressImageToBB(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int expande
 	int countblocks = 0;
 	double percentageblocks = -1.0;
 	double oldpercentageblocks;
+	
+	//if (format == FORMAT.ETC2PACKAGE_R ) 
+	//see comment on compressBlockAlpha16 a pgm should have sent in 16bit single chaneel in the alphaimg bytes
 
 	if (format == FORMAT.ETC2PACKAGE_RG) {
+		//see comment on compressBlockAlpha16 a pgm should have sent in 16bit single chaneel in the img bytes
 		//extract data from red and green channel into two alpha channels.
-		//note that the image will be 16-bit per channel in this case.
+		//note that the image will be 16-bit per channel in this case. So it had better be a 4 bytes img array
 		alphaimg = new byte[expandedwidth * expandedheight * 2];
 		alphaimg2 = new byte[expandedwidth * expandedheight * 2];
 		setupAlphaTableAndValtab();
@@ -11011,6 +11031,7 @@ int compressImageToBB(ByteBuffer dstBB, byte[] img, byte[] alphaimg, int expande
 		}
 		for (y = 0; y < expandedheight; y++) {
 			for (x = 0; x < expandedwidth; x++) {
+				//FIXME: 4 bytes that like RGBA pushed into 2x16 bit?
 				alphaimg [2 * (y * expandedwidth + x)] = img [6 * (y * expandedwidth + x)];
 				alphaimg [2 * (y * expandedwidth + x) + 1] = img [6 * (y * expandedwidth + x) + 1];
 				alphaimg2 [2 * (y * expandedwidth + x)] = img [6 * (y * expandedwidth + x) + 2];
