@@ -3,11 +3,18 @@ package etcpack;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import etcpack.ETCPack.FORMAT;
 
 /**
  * Amazing... https://github.com/wolfpld/etcpak/commit/da85020e690890f4356d42ab5802e4f957f220fd?diff=unified
@@ -1553,6 +1560,382 @@ public class QuickETC extends ETCPack {
 		return returnData;
 	}
 	
+
+	//compressBlockAlpha16
+	//
+	//Compresses a block using the 11-bit EAC formats.
+	//Depends on the global variable formatSigned.
+	//
+	//COMPRESSED_R11_EAC (if formatSigned = 0)
+	//This is an 11-bit unsigned format. Since we do not have a good 11-bit file format, we use 16-bit pgm instead.
+	//Here we assume that, in the input 16-bit pgm file, 0 represents 0.0 and 65535 represents 1.0. The function compressBlockAlpha16 
+	//will find the compressed block which best matches the data. In detail, it will find the compressed block, which 
+	//if decompressed, will generate an 11-bit block that after bit replication to 16-bits will generate the closest 
+	//block to the original 16-bit pgm block.
+	//
+	//COMPRESSED_SIGNED_R11_EAC (if formatSigned = 1)
+	//This is an 11-bit signed format. Since we do not have any signed file formats, we use unsigned 16-bit pgm instead.
+	//Hence we assume that, in the input 16-bit pgm file, 1 represents -1.0, 32768 represents 0.0 and 65535 represents 1.0. 
+	//The function compresseBlockAlpha16 will find the compressed block, which if decompressed, will generate a signed
+	//11-bit block that after bit replication to 16-bits and conversion to unsigned (1 equals -1.0, 32768 equals 0.0 and 
+	//65535 equals 1.0) will generate the closest block to the original 16-bit pgm block. 
+	//
+	//COMPRESSED_RG11_EAC is compressed by calling the function twice, dito for COMPRESSED_SIGNED_RG11_EAC.
+	//
+	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
+	
+	
+	//FIXME:FORMAT.ETC2PACKAGE_R and FORMAT.ETC2PACKAGE_RG arrive here with 16 bit channels
+	// needs more stats and speed improvements to be usable
+	@Override
+	void compressBlockAlpha16(byte[] data, int ix, int iy, int width, int height, byte[] returnData) 
+	{
+		
+		long start = System.currentTimeMillis();
+		
+		
+		int bestbase=0, besttable=0, bestmul=0;
+		double besterror=1<<20;
+		besterror*=besterror;
+		
+		// short cut all the same
+		 
+		
+		//small range
+		int minValue = Integer.MAX_VALUE;
+		int maxValue = Integer.MIN_VALUE;
+	
+		for (int x=0; x<4; x++) 
+		{ 
+			for(int y=0; y<4; y++) 
+			{
+				int v = (data[2*(x+ix+(y+iy)*width)] & 0xff);
+				minValue = v< minValue?v:minValue; 
+				maxValue = v> maxValue?v:maxValue; 
+			}
+		}
+		
+		
+		boolean shortcut = false;
+		int range = maxValue-minValue;
+		
+		// these values are 'likely' inclusive ranges given the range of values in the grid 
+		// note setting these to the same min max value is the same as selecting one value
+		int basemin = 999;
+		int basemax = -1;
+		int tablemin = 999;
+		int tablemax = -1;
+		int mulmin = 999;
+		int mulmax = -1;
+		
+		// if there is no direct shortcut then these ranges will be tried
+		// if the best error (divided by 16 and sqrt) doesn't get below this threshold all values will be tried
+		int bestErrorThreshold = range < 4 ? 10 : range < 12 ? 36 : 46;
+		
+				
+		if (minValue == maxValue) {
+			bestmul = 0;
+			shortcut = true;
+			if (maxValue >= 136) {
+				bestbase = maxValue - 2;
+				besttable = 4;				
+			} else if (maxValue >= 2) {
+				bestbase = maxValue - 2;
+				besttable = 1;
+			} else if (maxValue == 1) {
+				bestbase = 0;
+				besttable = 2;
+			} else if (maxValue == 0) {
+				bestbase = 0;
+				besttable = 0;
+			} 
+		} else {
+						
+			// base is teh base clour for he alpha that the others will be derivedffrom
+			// if everyone is a low number then this has just got to be a similarly low number surely
+
+			// table comes form alpha base which looks a bit like a "spread out ness" so sure I can get a 
+			//metric on that from my 16 values and have a bit of a good solid guess
+
+			//mul is a bit harder ot figure out?
+			
+			// ok new news, range does dictate mul range strongly
+			// range widening seems to indicate higher upper limit ofr table
+			
+			
+			if (range == 1) {
+				bestmul = 0;
+				shortcut = true;
+				if (maxValue >= 137) {
+					bestbase = maxValue;
+					besttable = 2;					
+				} else if (maxValue == 136) {
+					bestbase = maxValue - 1;
+					besttable = 3;
+				} else { //maxValue>=135
+					bestbase = Math.max(maxValue - 2, 0);
+					besttable = 2;
+				}
+			} else if (range == 2) {
+				bestmul = 0;
+				shortcut = true;
+				if (maxValue >= 144) {
+					bestbase = maxValue - 1;
+					besttable = 3;
+				} else if (maxValue <= 143 && maxValue >= 136) {
+					bestbase = maxValue - 1;
+					besttable = 3;// or 2
+				} else if (maxValue <= 135 && maxValue >= 3) {
+					bestbase = maxValue - 2;
+					besttable = 3;// or 2
+				} else if (maxValue <= 2) {
+					bestbase = 0;
+					besttable = 2;//or 1 
+				}
+			} else if (range == 3) {
+				basemin = Math.max(maxValue - 2, 0);
+				basemax=basemin;
+				tablemin = 2;
+				tablemax = 4;
+				mulmin=0;
+				mulmax=0;
+			} else if (range == 4) {
+				basemin =minValue;
+				basemax=maxValue;
+				tablemin = 0;
+				tablemax = 3;
+				mulmin=0;
+				mulmax=0;
+			} else if (range == 5) {
+				basemin =minValue;
+				basemax=maxValue;
+				tablemin = 11;
+				tablemax = 15;
+				mulmin=0;
+				mulmax=1;
+			}else if (range == 6) {
+				basemin =minValue;
+				basemax=maxValue;
+				tablemin = 3;
+				tablemax = 15;
+				mulmin=1;
+				mulmax=1;
+			}else if (range == 7) {
+				basemin =minValue;
+				basemax=maxValue;
+				tablemin = 3;
+				tablemax = 15;
+				mulmin=1;
+				mulmax=2;
+			}else if (range == 8) {
+				basemin =minValue;
+				basemax=maxValue;
+				tablemin = 3;
+				tablemax = 13;
+				mulmin=1;
+				mulmax=2;
+			}else if (range >= 9 && range <= 20) {
+				basemin =minValue;
+				basemax=maxValue;
+				tablemin = 3;
+				tablemax = 13;
+				mulmin=1;
+				mulmax=2;
+			}else if (range >= 21) {
+				basemin =minValue;
+				basemax=maxValue;
+				tablemin = 0;
+				tablemax = 15;
+				mulmin=0;
+				mulmax=6;
+			}
+					
+		}
+				
+	
+		
+		
+		if(!shortcut) {			 
+	
+			for(int base=basemin; base<=basemax; base++) 
+			{
+				for(int table=tablemin; table<=tablemax; table++) 
+				{
+					for(int mul=mulmin; mul<=mulmax; mul++) 
+					{
+						double e = calcError(data, ix, iy, width, height,base,table,mul,besterror);								
+						if(e<besterror) 
+						{
+							bestbase=base;
+							besttable=table;
+							bestmul=mul;
+							besterror=e;
+						}
+					}
+				}
+			}
+			
+			double rangebest = besterror;
+			//see calcError for why /16 and sqrt
+			if((Math.sqrt(rangebest)/16) > bestErrorThreshold) {
+
+				// notice no reset the range might have been the best we had and it's not repeated
+				for(int base=0; base<256; base++) 
+				{					
+					if(base >= basemin && base <=basemax)
+						continue;//don't bother repeating
+					for(int table=0; table<16; table++) 
+					{
+						if(base >= tablemin && base <=tablemax)
+							continue;//don't bother repeating
+						for(int mul=0; mul<16; mul++) 
+						{
+							if(base >= mulmin && base <=mulmax)
+								continue;//don't bother repeating
+							
+							double e = calcError(data, ix, iy, width, height,base,table,mul,besterror);								
+							if(e<besterror) 
+							{
+								bestbase=base;
+								besttable=table;
+								bestmul=mul;
+								besterror=e;
+							}
+						}
+					}
+				}
+				
+					if (counts3.get(range) == null) {
+						counts3.put(range, 0);
+					}
+					counts3.put(range, counts3.get(range) + 1);
+				
+			}
+			 
+			if (rangebest != besterror) {
+				if (counts2.get(range) == null) {
+					counts2.put(range, 0);
+				}
+				counts2.put(range, counts2.get(range) + 1);
+			}
+			
+			
+			if(counts.get(range) == null) {
+				counts.put(range,0);
+			}
+			counts.put(range, counts.get(range)+1);
+			
+			 
+			
+			if (range == 20) {
+				dones.add("range"	+ range + " max=" + maxValue + " min=" + minValue + " mid "
+							+ ((maxValue + minValue) / 2) + " bestbase=" + bestbase + " besttable=" + besttable
+							+ " bestmul=" + bestmul + " rangebest " + rangebest + " besterror " + besterror);
+			}
+
+			if (dones.size() > 5 && dones.size() % 20 == 0) {
+				System.out.println("=============================");
+				for (String s : dones)
+					System.out.println("" + s);
+				
+				int totalC = 0;
+				int totalC2 = 0;
+				int totalC3 = 0;
+				for (Integer i : counts.keySet()) {
+					int c = counts.get(i) ;totalC+=c;
+					int c2 = counts2.get(i) ;totalC2+=c2;
+					int c3 = counts3.get(i);totalC3+=c3;
+					System.out.println("range " + i + " count " +c+ " range not the best/comp " + c2+ "/" + c3  );
+				}
+				System.out.println("totalC " + totalC + " totalC2 " + totalC2 + " totalC3 " + totalC3  );
+			}
+			 
+	
+			
+			
+			
+		
+		}
+		
+		returnData[0]=(byte)bestbase;
+		returnData[1]=(byte)((bestmul<<4)+besttable);
+		if(formatSigned!=0) 
+		{
+			//if we have a signed format, the base value should be given as a signed byte. 
+			byte signedbase = (byte)(bestbase-128);
+			returnData[0]=signedbase;//WTF?? *((uint8*)(&signedbase));
+		}
+
+		for(int i=2; i<8; i++) 
+		{
+			returnData[i]=0;
+		}
+
+		int byte_=2;
+		int bit=0;
+		for (int x=0; x<4; x++) 
+		{
+			for(int y=0; y<4; y++) 
+			{
+				besterror=255*255;
+				besterror*=besterror;
+				int bestindex=99;
+				byte byte1 = data[2*(x+ix+(y+iy)*width)];
+				byte byte2 = data[2*(x+ix+(y+iy)*width)+1];
+				int alpha = (byte1<<8)+(byte2&0xff);
+				for(int index=0; index<8; index++) 
+				{
+					double indexError;
+					if(formatSigned!=0)
+					{
+						int val16;
+						int val;
+	                    val16 = get16bits11signed(bestbase,besttable,bestmul,index);
+	                    val = val16 + 256*128;
+						indexError = alpha-val;
+					}
+					else
+						indexError = alpha-get16bits11bits(bestbase,besttable,bestmul,index);
+
+					indexError*=indexError;
+					if(indexError<besterror) 
+					{
+						besterror=indexError;
+						bestindex=index;
+					}
+				}
+
+				for(int numbit=0; numbit<3; numbit++) 
+				{
+					returnData[byte_] = (byte)((returnData[byte_]&0xff) |getbit(bestindex,2-numbit,7-bit));
+					bit++;
+					if(bit>7) 
+					{
+						bit=0;
+						byte_++;
+					}
+				}
+			}
+		}
+	}
+	
+	
+	long cumTime1 = 0;
+	long cumTime2 = 0;
+	long cumTime3 = 0;
+	long cumTime4 = 0;
+	long cumTime5 = 0;
+	long cumTime6 = 0;
+	long cumTime7 = 0;
+	
+	
+	
+	
+	public static TreeSet<String> dones = new TreeSet<String>();
+	
+	public static HashMap<Integer, Integer> counts = new HashMap<Integer, Integer>();
+	public static HashMap<Integer, Integer> counts2 = new HashMap<Integer, Integer>();
+	public static HashMap<Integer, Integer> counts3 = new HashMap<Integer, Integer>();
 	
 	//Compresses the differential mode of an ETC2 block with punchthrough alpha
 	//NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
